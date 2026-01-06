@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- Google Sheets API -->
+    <script src="https://apis.google.com/js/api.js"></script>
     <style>
         /* CSS Embedded Directly in HTML */
         * {
@@ -937,6 +941,54 @@
             }
         }
 
+        /* Export Options Panel */
+        .export-options-panel {
+            background: var(--light-gray);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--mustard);
+        }
+
+        .export-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Google Sheets Integration */
+        .google-sheets-connect {
+            background: rgba(66, 133, 244, 0.1);
+            border: 1px solid rgba(66, 133, 244, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .google-sheets-connect h4 {
+            color: #4285F4;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--mustard);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
@@ -998,6 +1050,10 @@
                 left: 20px;
                 right: 20px;
                 max-width: calc(100% - 40px);
+            }
+            
+            .export-buttons-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -1091,6 +1147,10 @@
                     <i class="fas fa-users"></i>
                     <span>Attendees</span>
                 </li>
+                <li class="nav-item" data-page="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports & Export</span>
+                </li>
                 <li class="nav-item" data-page="departments">
                     <i class="fas fa-building"></i>
                     <span>Departments</span>
@@ -1113,6 +1173,9 @@
                 <div class="header-actions">
                     <button class="btn btn-primary" id="create-meeting-btn">
                         <i class="fas fa-plus"></i> New Meeting
+                    </button>
+                    <button class="btn btn-secondary" id="backup-data-btn">
+                        <i class="fas fa-save"></i> Backup All Data
                     </button>
                 </div>
             </header>
@@ -1309,7 +1372,10 @@
                     <h3><i class="fas fa-users"></i> All Attendees</h3>
                     <div class="header-actions" style="margin-bottom: 20px;">
                         <button class="btn btn-success" id="export-attendees-btn">
-                            <i class="fas fa-file-excel"></i> Export All to Excel
+                            <i class="fas fa-file-csv"></i> Export to CSV
+                        </button>
+                        <button class="btn btn-danger" id="export-pdf-btn">
+                            <i class="fas fa-file-pdf"></i> Export to PDF
                         </button>
                         <button class="btn btn-warning" id="export-all-meetings-btn">
                             <i class="fas fa-file-excel"></i> Export All Meetings
@@ -1348,6 +1414,112 @@
                 </div>
             </div>
 
+            <!-- Reports & Export Content -->
+            <div class="page-content hidden" id="reports-content">
+                <div class="content-card">
+                    <h3><i class="fas fa-chart-bar"></i> Reports & Export Center</h3>
+                    
+                    <div class="export-options-panel">
+                        <h4><i class="fas fa-download"></i> Export Options</h4>
+                        <p>Select the type of report you want to generate:</p>
+                        
+                        <div class="export-buttons-grid">
+                            <button class="btn btn-success" id="export-attendees-full">
+                                <i class="fas fa-users"></i> All Attendees (Detailed)
+                            </button>
+                            <button class="btn btn-warning" id="export-meetings-summary">
+                                <i class="fas fa-calendar"></i> Meetings Summary
+                            </button>
+                            <button class="btn btn-info" id="export-departments-report">
+                                <i class="fas fa-building"></i> Departments Report
+                            </button>
+                            <button class="btn btn-danger" id="export-pdf-report">
+                                <i class="fas fa-file-pdf"></i> PDF Report
+                            </button>
+                            <button class="btn btn-primary" id="export-daily-report">
+                                <i class="fas fa-calendar-day"></i> Daily Report
+                            </button>
+                            <button class="btn btn-secondary" id="export-monthly-report">
+                                <i class="fas fa-calendar-alt"></i> Monthly Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Google Sheets Integration -->
+                    <div class="google-sheets-connect">
+                        <h4><i class="fab fa-google"></i> Google Sheets Integration</h4>
+                        <p>Export your data directly to Google Sheets:</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sheet-name">Sheet Name</label>
+                                <input type="text" id="sheet-name" class="form-control" value="Bank Meeting Data" placeholder="Enter sheet name">
+                            </div>
+                            <div class="form-group">
+                                <label for="export-type">Data Type</label>
+                                <select id="export-type" class="form-control">
+                                    <option value="attendees">Attendees</option>
+                                    <option value="meetings">Meetings</option>
+                                    <option value="departments">Departments</option>
+                                    <option value="all">All Data</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="header-actions" style="margin-top: 15px;">
+                            <button class="btn btn-success" id="connect-google-sheets">
+                                <i class="fab fa-google"></i> Connect to Google Sheets
+                            </button>
+                            <button class="btn btn-primary" id="export-to-sheets">
+                                <i class="fas fa-upload"></i> Export to Sheets
+                            </button>
+                            <button class="btn btn-secondary" id="sync-to-sheets">
+                                <i class="fas fa-sync"></i> Auto Sync
+                            </button>
+                        </div>
+                        
+                        <div id="google-sheets-status" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;">
+                            <!-- Status will be shown here -->
+                        </div>
+                    </div>
+
+                    <!-- Scheduled Exports -->
+                    <div class="content-card" style="margin-top: 20px;">
+                        <h4><i class="fas fa-clock"></i> Scheduled Exports</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="schedule-frequency">Schedule Frequency</label>
+                                <select id="schedule-frequency" class="form-control">
+                                    <option value="daily">Daily (5 PM)</option>
+                                    <option value="weekly">Weekly (Monday 9 AM)</option>
+                                    <option value="monthly">Monthly (1st of Month)</option>
+                                    <option value="manual">Manual Only</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="schedule-type">Export Type</label>
+                                <select id="schedule-type" class="form-control">
+                                    <option value="attendees">Attendees</option>
+                                    <option value="meetings">Meetings & Attendees</option>
+                                    <option value="summary">Summary Report</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="save-schedule">
+                            <i class="fas fa-save"></i> Save Schedule
+                        </button>
+                        <button class="btn btn-secondary" id="test-schedule">
+                            <i class="fas fa-play"></i> Test Export Now
+                        </button>
+                        
+                        <div id="schedule-status" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;">
+                            <!-- Schedule status will be shown here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Departments Content -->
             <div class="page-content hidden" id="departments-content">
                 <div class="content-card">
@@ -1358,6 +1530,9 @@
                     
                     <div class="tab-content active" id="view-departments">
                         <h3><i class="fas fa-building"></i> All Departments</h3>
+                        <button class="btn btn-info" id="export-departments-btn" style="margin-bottom: 15px;">
+                            <i class="fas fa-file-csv"></i> Export Departments Report
+                        </button>
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -1620,14 +1795,6 @@
                     <h3>Registration Successful!</h3>
                     <p>Thank you for registering for the meeting. Your details have been saved successfully.</p>
                     <p>You will receive a confirmation email shortly.</p>
-                    <div style="margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="window.location.href = window.location.origin + window.location.pathname;">
-                            <i class="fas fa-home"></i> Return to Home
-                        </button>
-                        <button class="btn btn-primary" id="register-another-btn">
-                            <i class="fas fa-user-plus"></i> Register Another Person
-                        </button>
-                    </div>
                 </div>
                 
                 <!-- Demo Notice -->
@@ -1885,6 +2052,88 @@
         </div>
     </div>
 
+    <!-- Export Options Modal -->
+    <div id="export-options-modal" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Export Options</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options-panel">
+                    <h4><i class="fas fa-cog"></i> Configure Export</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="export-format">Format</label>
+                            <select id="export-format" class="form-control">
+                                <option value="csv">CSV (Excel)</option>
+                                <option value="pdf">PDF Report</option>
+                                <option value="json">JSON Backup</option>
+                                <option value="excel">Excel (Advanced)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="export-date-range">Date Range</label>
+                            <select id="export-date-range" class="form-control">
+                                <option value="all">All Data</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="custom-date-range" style="display: none; margin-top: 15px;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="export-start-date">Start Date</label>
+                                <input type="date" id="export-start-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="export-end-date">End Date</label>
+                                <input type="date" id="export-end-date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="export-fields">Include Fields</label>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" name="export-fields" value="name" checked> Name
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" name="export-fields" value="email" checked> Email
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" name="export-fields" value="phone" checked> Phone
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" name="export-fields" value="department" checked> Department
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" name="export-fields" value="meeting" checked> Meeting
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" name="export-fields" value="date" checked> Date
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="header-actions" style="margin-top: 20px;">
+                        <button class="btn btn-primary" id="generate-export">
+                            <i class="fas fa-download"></i> Generate Export
+                        </button>
+                        <button class="btn btn-secondary" id="preview-export">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Application State
         const appState = {
@@ -1894,7 +2143,14 @@
             departments: [],
             admins: [],
             charts: {},
-            registeredAttendees: []
+            registeredAttendees: [],
+            googleSheets: {
+                isConnected: false,
+                clientId: 'YOUR_GOOGLE_CLIENT_ID', // You need to get this from Google Cloud Console
+                apiKey: 'YOUR_GOOGLE_API_KEY',     // You need to get this from Google Cloud Console
+                spreadsheetId: null,
+                accessToken: null
+            }
         };
 
         // Real-time Event System
@@ -1915,11 +2171,6 @@
                     if (e.key && e.key.startsWith('rt_notification_')) {
                         this.processNotification(e.newValue);
                     }
-                });
-                
-                // Custom event listener for QR registration updates
-                window.addEventListener('qrRegistrationSuccess', (e) => {
-                    this.handleQRRegistration(e.detail);
                 });
             },
             
@@ -1987,50 +2238,6 @@
                 if (typeof updateAllData === 'function') {
                     updateAllData();
                 }
-            },
-            
-            handleQRRegistration(attendeeData) {
-                console.log('Handling QR registration:', attendeeData);
-                
-                // Show notification
-                this.showNotification(attendeeData);
-                
-                // Update local storage
-                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                savedAttendees.push(attendeeData);
-                localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
-                
-                // Update meeting attendees
-                const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
-                const meeting = savedMeetings.find(m => m.id === attendeeData.meetingId);
-                if (meeting) {
-                    meeting.attendees = meeting.attendees || [];
-                    meeting.attendees.push(attendeeData);
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
-                }
-                
-                // Update appState
-                appState.attendees = savedAttendees;
-                appState.meetings = savedMeetings;
-                
-                // Trigger update for dashboard if open
-                if (appState.currentUser) {
-                    updateAllData();
-                }
-                
-                // Store notification for cross-tab
-                const notification = {
-                    id: Date.now(),
-                    type: 'new_registration',
-                    attendee: attendeeData,
-                    timestamp: new Date().toLocaleTimeString(),
-                    read: false
-                };
-                localStorage.setItem(`rt_notification_${notification.id}`, JSON.stringify(notification));
-                
-                // Trigger storage event for other tabs
-                const event = new Event('storage');
-                window.dispatchEvent(event);
             },
             
             showNotification(attendee) {
@@ -2323,6 +2530,1053 @@
         const loginAlert = document.getElementById('login-alert');
         const alertContainer = document.getElementById('alert-container');
 
+        // ==================== ENHANCED CSV & EXPORT FUNCTIONS ====================
+
+        // Enhanced CSV Export Functions
+        function exportToCSV(data, filename, headers = null) {
+            if (data.length === 0) {
+                showAlert('No data to export', 'error');
+                return;
+            }
+            
+            // Use provided headers or generate from first object
+            const csvHeaders = headers || Object.keys(data[0]);
+            
+            // Build CSV content
+            const csvContent = [
+                csvHeaders.join(','),
+                ...data.map(row => {
+                    return csvHeaders.map(header => {
+                        // Handle nested objects and special characters
+                        const value = getNestedValue(row, header);
+                        // Escape quotes and wrap in quotes if contains comma, quotes, or newline
+                        const escapedValue = String(value).replace(/"/g, '""');
+                        return escapedValue.includes(',') || escapedValue.includes('"') || escapedValue.includes('\n') 
+                            ? `"${escapedValue}"` 
+                            : escapedValue;
+                    }).join(',');
+                })
+            ].join('\n');
+            
+            // Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        // Helper function to get nested values
+        function getNestedValue(obj, path) {
+            return path.split('.').reduce((current, key) => {
+                return current && current[key] !== undefined ? current[key] : '';
+            }, obj);
+        }
+
+        // Export all attendees with detailed information
+        function exportAllAttendeesCSV() {
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            
+            // Transform data for CSV
+            const csvData = savedAttendees.map(attendee => ({
+                'ID': attendee.id,
+                'Full Name': attendee.name,
+                'Email': attendee.email,
+                'Phone': attendee.phone,
+                'Account Number': attendee.account || '',
+                'Meeting ID': attendee.meetingId,
+                'Meeting Title': attendee.meetingTitle || attendee.meeting,
+                'Meeting Date': attendee.meetingDate,
+                'Meeting Time': attendee.meetingTime,
+                'Department': attendee.departmentName || attendee.department,
+                'Purpose': attendee.purpose,
+                'Purpose Description': {
+                    'loan_consultation': 'Loan Consultation',
+                    'account_opening': 'Account Opening',
+                    'investment': 'Investment Advice',
+                    'business': 'Business Banking',
+                    'mortgage': 'Mortgage Inquiry',
+                    'credit_card': 'Credit Card Application',
+                    'other': 'Other'
+                }[attendee.purpose] || attendee.purpose,
+                'Registration Date': attendee.registrationDate,
+                'Status': attendee.status || 'registered',
+                'Notes': attendee.notes || ''
+            }));
+            
+            const headers = [
+                'ID', 'Full Name', 'Email', 'Phone', 'Account Number',
+                'Meeting ID', 'Meeting Title', 'Meeting Date', 'Meeting Time',
+                'Department', 'Purpose', 'Purpose Description', 
+                'Registration Date', 'Status', 'Notes'
+            ];
+            
+            exportToCSV(csvData, 'bank_meeting_attendees', headers);
+            showAlert(`Exported ${savedAttendees.length} attendees to CSV`, 'success');
+        }
+
+        // Export all meetings with statistics
+        function exportAllMeetingsCSV() {
+            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            
+            const csvData = savedMeetings.map(meeting => {
+                const meetingAttendees = savedAttendees.filter(a => a.meetingId === meeting.id);
+                
+                return {
+                    'Meeting ID': meeting.id,
+                    'Title': meeting.title,
+                    'Date': meeting.date,
+                    'Time': meeting.time,
+                    'Location': meeting.location,
+                    'Department': meeting.department,
+                    'Duration (hours)': meeting.duration,
+                    'Maximum Attendees': meeting.maxAttendees || 'Unlimited',
+                    'Current Attendees': meetingAttendees.length,
+                    'Attendance Rate': meeting.maxAttendees ? 
+                        `${((meetingAttendees.length / meeting.maxAttendees) * 100).toFixed(1)}%` : 
+                        'N/A',
+                    'Status': meeting.status,
+                    'Description': meeting.description || '',
+                    'Created Date': meeting.createdAt,
+                    'Last Updated': new Date().toISOString().split('T')[0]
+                };
+            });
+            
+            const headers = [
+                'Meeting ID', 'Title', 'Date', 'Time', 'Location',
+                'Department', 'Duration (hours)', 'Maximum Attendees',
+                'Current Attendees', 'Attendance Rate', 'Status',
+                'Description', 'Created Date', 'Last Updated'
+            ];
+            
+            exportToCSV(csvData, 'bank_meetings_summary', headers);
+            showAlert(`Exported ${savedMeetings.length} meetings to CSV`, 'success');
+        }
+
+        // Export department-wise report
+        function exportDepartmentsReportCSV() {
+            const savedDepartments = JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]');
+            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            
+            const csvData = savedDepartments.map(dept => {
+                const departmentMeetings = savedMeetings.filter(m => m.department === dept.name);
+                const departmentAttendees = savedAttendees.filter(a => 
+                    a.department === dept.name || a.departmentName === dept.name
+                );
+                
+                return {
+                    'Department ID': dept.id,
+                    'Department Name': dept.name,
+                    'Department Head': dept.head,
+                    'Email': dept.email,
+                    'Phone': dept.phone || '',
+                    'Total Meetings': departmentMeetings.length,
+                    'Active Meetings': departmentMeetings.filter(m => m.status === 'active').length,
+                    'Total Attendees': departmentAttendees.length,
+                    'Description': dept.description || '',
+                    'Created Date': dept.createdAt,
+                    'Performance Score': calculateDepartmentScore(departmentMeetings, departmentAttendees)
+                };
+            });
+            
+            const headers = [
+                'Department ID', 'Department Name', 'Department Head', 'Email', 'Phone',
+                'Total Meetings', 'Active Meetings', 'Total Attendees',
+                'Description', 'Created Date', 'Performance Score'
+            ];
+            
+            exportToCSV(csvData, 'departments_report', headers);
+            showAlert(`Exported ${savedDepartments.length} departments report to CSV`, 'success');
+        }
+
+        // Export detailed meeting with all attendees
+        function exportMeetingWithAttendees(meetingId) {
+            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            
+            const meeting = savedMeetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                showAlert('Meeting not found', 'error');
+                return;
+            }
+            
+            const meetingAttendees = savedAttendees.filter(a => a.meetingId === meetingId);
+            
+            if (meetingAttendees.length === 0) {
+                showAlert('No attendees found for this meeting', 'error');
+                return;
+            }
+            
+            // Create CSV for meeting details
+            const meetingData = [{
+                'Meeting ID': meeting.id,
+                'Title': meeting.title,
+                'Date': meeting.date,
+                'Time': meeting.time,
+                'Location': meeting.location,
+                'Department': meeting.department,
+                'Duration (hours)': meeting.duration,
+                'Status': meeting.status,
+                'Description': meeting.description || '',
+                'Total Attendees': meetingAttendees.length,
+                'Export Date': new Date().toLocaleString()
+            }];
+            
+            exportToCSV(meetingData, `${meeting.title.replace(/[^a-z0-9]/gi, '_')}_details`);
+            
+            // Create CSV for attendees
+            const attendeesData = meetingAttendees.map(attendee => ({
+                'Attendee ID': attendee.id,
+                'Full Name': attendee.name,
+                'Email': attendee.email,
+                'Phone': attendee.phone,
+                'Account Number': attendee.account || '',
+                'Purpose': {
+                    'loan_consultation': 'Loan Consultation',
+                    'account_opening': 'Account Opening',
+                    'investment': 'Investment Advice',
+                    'business': 'Business Banking',
+                    'other': 'Other'
+                }[attendee.purpose] || attendee.purpose,
+                'Registration Date': attendee.registrationDate,
+                'Notes': attendee.notes || ''
+            }));
+            
+            exportToCSV(attendeesData, `${meeting.title.replace(/[^a-z0-9]/gi, '_')}_attendees`);
+            
+            showAlert(`Exported meeting details and ${meetingAttendees.length} attendees to CSV files`, 'success');
+        }
+
+        // Helper function to calculate department performance score
+        function calculateDepartmentScore(meetings, attendees) {
+            if (meetings.length === 0) return 'N/A';
+            
+            const activeMeetings = meetings.filter(m => m.status === 'active').length;
+            const completionRate = meetings.length > 0 ? 
+                (meetings.filter(m => m.status === 'completed').length / meetings.length) * 100 : 0;
+            const avgAttendeesPerMeeting = meetings.length > 0 ? attendees.length / meetings.length : 0;
+            
+            const score = (activeMeetings * 10) + (completionRate * 0.5) + (avgAttendeesPerMeeting * 5);
+            return Math.min(100, Math.max(0, score)).toFixed(1);
+        }
+
+        // ==================== PDF REPORT GENERATION ====================
+
+        // Generate PDF Report
+        function generatePDFReport(type = 'summary') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            
+            // Get data
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+            const savedDepartments = JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]');
+            
+            // Set title
+            const today = new Date().toLocaleDateString();
+            doc.setFontSize(18);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Bank Meeting System Report', 40, 40);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${today}`, 40, 65);
+            doc.text(`Report Type: ${type.charAt(0).toUpperCase() + type.slice(1)} Report`, 40, 80);
+            
+            let yPos = 120;
+            
+            if (type === 'summary') {
+                // Summary statistics
+                doc.setFontSize(14);
+                doc.setTextColor(40, 40, 40);
+                doc.text('System Summary', 40, yPos);
+                yPos += 30;
+                
+                const stats = [
+                    ['Total Meetings', savedMeetings.length],
+                    ['Total Attendees', savedAttendees.length],
+                    ['Total Departments', savedDepartments.length],
+                    ['Active Meetings', savedMeetings.filter(m => m.status === 'active').length]
+                ];
+                
+                doc.setFontSize(11);
+                stats.forEach(([label, value]) => {
+                    doc.text(`${label}: ${value}`, 60, yPos);
+                    yPos += 20;
+                });
+                
+                yPos += 20;
+                
+                // Meetings table
+                if (savedMeetings.length > 0) {
+                    doc.setFontSize(14);
+                    doc.text('Meetings Overview', 40, yPos);
+                    yPos += 30;
+                    
+                    const meetingsData = savedMeetings.map(meeting => [
+                        meeting.title,
+                        meeting.date,
+                        meeting.department,
+                        meeting.status,
+                        meeting.attendees ? meeting.attendees.length : 0
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [['Title', 'Date', 'Department', 'Status', 'Attendees']],
+                        body: meetingsData,
+                        theme: 'grid',
+                        headStyles: { fillColor: [255, 219, 88] },
+                        margin: { top: 40 }
+                    });
+                    
+                    yPos = doc.lastAutoTable.finalY + 30;
+                }
+                
+                // Departments table
+                if (savedDepartments.length > 0) {
+                    doc.addPage();
+                    doc.setFontSize(14);
+                    doc.text('Departments Overview', 40, 40);
+                    
+                    const deptData = savedDepartments.map(dept => {
+                        const deptMeetings = savedMeetings.filter(m => m.department === dept.name);
+                        const deptAttendees = savedAttendees.filter(a => 
+                            a.department === dept.name || a.departmentName === dept.name
+                        );
+                        return [
+                            dept.name,
+                            dept.head,
+                            deptMeetings.length,
+                            deptAttendees.length
+                        ];
+                    });
+                    
+                    doc.autoTable({
+                        startY: 70,
+                        head: [['Department', 'Head', 'Meetings', 'Attendees']],
+                        body: deptData,
+                        theme: 'grid',
+                        headStyles: { fillColor: [66, 133, 244] }
+                    });
+                }
+                
+            } else if (type === 'detailed') {
+                // Detailed attendees report
+                doc.setFontSize(14);
+                doc.text('Detailed Attendees Report', 40, yPos);
+                yPos += 30;
+                
+                const attendeesData = savedAttendees.map(attendee => [
+                    attendee.name,
+                    attendee.email,
+                    attendee.phone,
+                    attendee.meetingTitle || 'N/A',
+                    attendee.departmentName || attendee.department || 'N/A',
+                    new Date(attendee.registrationDate).toLocaleDateString()
+                ]);
+                
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['Name', 'Email', 'Phone', 'Meeting', 'Department', 'Registration Date']],
+                    body: attendeesData,
+                    theme: 'grid',
+                    headStyles: { fillColor: [76, 175, 80] },
+                    styles: { fontSize: 8 },
+                    columnStyles: {
+                        0: { cellWidth: 60 },
+                        1: { cellWidth: 80 },
+                        2: { cellWidth: 60 },
+                        3: { cellWidth: 70 },
+                        4: { cellWidth: 50 },
+                        5: { cellWidth: 50 }
+                    },
+                    margin: { top: 40 }
+                });
+            }
+            
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 100, doc.internal.pageSize.height - 20);
+                doc.text('Bank Meeting System - Confidential', 40, doc.internal.pageSize.height - 20);
+            }
+            
+            // Save PDF
+            const fileName = `bank_meeting_report_${type}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+            showAlert(`PDF report generated: ${fileName}`, 'success');
+        }
+
+        // Generate Comprehensive PDF Report
+        function generateComprehensivePDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            
+            // Get all data
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+            const savedDepartments = JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]');
+            
+            // Cover Page
+            doc.setFillColor(255, 219, 88);
+            doc.rect(0, 0, doc.internal.pageSize.width, 100, 'F');
+            
+            doc.setFontSize(28);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Bank Meeting System', 40, 60);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(40, 40, 40);
+            doc.text('Comprehensive Report', 40, 90);
+            
+            const today = new Date().toLocaleDateString();
+            doc.setFontSize(12);
+            doc.text(`Generated: ${today}`, 40, 120);
+            
+            // Executive Summary
+            doc.addPage();
+            doc.setFontSize(18);
+            doc.text('Executive Summary', 40, 40);
+            
+            doc.setFontSize(11);
+            let y = 80;
+            
+            const summaryData = [
+                ['Total Meetings', savedMeetings.length],
+                ['Active Meetings', savedMeetings.filter(m => m.status === 'active').length],
+                ['Total Attendees', savedAttendees.length],
+                ['Total Departments', savedDepartments.length],
+                ['Avg Attendees per Meeting', savedMeetings.length > 0 ? (savedAttendees.length / savedMeetings.length).toFixed(1) : 0],
+                ['Completion Rate', savedMeetings.length > 0 ? 
+                    `${((savedMeetings.filter(m => m.status === 'completed').length / savedMeetings.length) * 100).toFixed(1)}%` : '0%']
+            ];
+            
+            summaryData.forEach(([label, value]) => {
+                doc.text(`${label}:`, 60, y);
+                doc.text(`${value}`, 200, y);
+                y += 20;
+            });
+            
+            // Meetings Analysis
+            y += 20;
+            doc.setFontSize(14);
+            doc.text('Meetings Analysis', 40, y);
+            y += 30;
+            
+            const meetingsData = savedMeetings.map(meeting => [
+                meeting.title,
+                meeting.date,
+                meeting.department,
+                meeting.status,
+                meeting.attendees ? meeting.attendees.length : 0,
+                meeting.maxAttendees || 'Unlimited'
+            ]);
+            
+            doc.autoTable({
+                startY: y,
+                head: [['Title', 'Date', 'Department', 'Status', 'Attendees', 'Max']],
+                body: meetingsData,
+                theme: 'grid',
+                headStyles: { fillColor: [255, 219, 88] }
+            });
+            
+            // Department Performance
+            doc.addPage();
+            doc.setFontSize(18);
+            doc.text('Department Performance', 40, 40);
+            
+            const deptData = savedDepartments.map(dept => {
+                const deptMeetings = savedMeetings.filter(m => m.department === dept.name);
+                const deptAttendees = savedAttendees.filter(a => 
+                    a.department === dept.name || a.departmentName === dept.name
+                );
+                
+                const active = deptMeetings.filter(m => m.status === 'active').length;
+                const completed = deptMeetings.filter(m => m.status === 'completed').length;
+                const score = calculateDepartmentScore(deptMeetings, deptAttendees);
+                
+                return [
+                    dept.name,
+                    dept.head,
+                    deptMeetings.length,
+                    active,
+                    completed,
+                    deptAttendees.length,
+                    score
+                ];
+            });
+            
+            doc.autoTable({
+                startY: 70,
+                head: [['Department', 'Head', 'Total Meetings', 'Active', 'Completed', 'Attendees', 'Score']],
+                body: deptData,
+                theme: 'grid',
+                headStyles: { fillColor: [66, 133, 244] },
+                columnStyles: {
+                    6: { fillColor: score => score > 70 ? [220, 255, 220] : score > 40 ? [255, 255, 220] : [255, 220, 220] }
+                }
+            });
+            
+            // Attendance Trend
+            if (savedAttendees.length > 0) {
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.text('Attendance Trends', 40, 40);
+                
+                // Group by date
+                const attendanceByDate = {};
+                savedAttendees.forEach(attendee => {
+                    const date = new Date(attendee.registrationDate).toLocaleDateString();
+                    attendanceByDate[date] = (attendanceByDate[date] || 0) + 1;
+                });
+                
+                const dates = Object.keys(attendanceByDate).slice(-7); // Last 7 days
+                const counts = dates.map(date => attendanceByDate[date]);
+                
+                // Simple chart using text
+                const maxCount = Math.max(...counts);
+                const chartWidth = 400;
+                const chartHeight = 200;
+                const chartX = 40;
+                const chartY = 80;
+                
+                // Draw axes
+                doc.setDrawColor(200, 200, 200);
+                doc.line(chartX, chartY, chartX, chartY + chartHeight);
+                doc.line(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);
+                
+                // Draw bars
+                const barWidth = chartWidth / dates.length;
+                dates.forEach((date, index) => {
+                    const barHeight = (counts[index] / maxCount) * chartHeight;
+                    const x = chartX + (index * barWidth) + 5;
+                    const y = chartY + chartHeight - barHeight;
+                    
+                    doc.setFillColor(76, 175, 80);
+                    doc.rect(x, y, barWidth - 10, barHeight, 'F');
+                    
+                    doc.setFontSize(8);
+                    doc.setTextColor(40, 40, 40);
+                    doc.text(date, x + 5, chartY + chartHeight + 15);
+                    doc.text(counts[index].toString(), x + 5, y - 5);
+                });
+            }
+            
+            // Recommendations
+            doc.addPage();
+            doc.setFontSize(18);
+            doc.text('Recommendations & Insights', 40, 40);
+            
+            doc.setFontSize(11);
+            y = 80;
+            
+            const recommendations = [
+                'Increase marketing for low-attendance meetings',
+                'Schedule meetings based on peak attendance periods',
+                'Consider expanding popular meeting topics',
+                'Review department performance quarterly',
+                'Implement feedback system for attendees'
+            ];
+            
+            recommendations.forEach((rec, index) => {
+                doc.text(`${index + 1}. ${rec}`, 60, y);
+                y += 20;
+            });
+            
+            // Save PDF
+            const fileName = `comprehensive_report_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+            showAlert(`Comprehensive PDF report generated: ${fileName}`, 'success');
+        }
+
+        // ==================== GOOGLE SHEETS INTEGRATION ====================
+
+        // Initialize Google Sheets API
+        function initGoogleSheets() {
+            gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: appState.googleSheets.apiKey,
+                    clientId: appState.googleSheets.clientId,
+                    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+                    scope: "https://www.googleapis.com/auth/spreadsheets"
+                }).then(() => {
+                    console.log('Google Sheets API initialized');
+                }).catch(error => {
+                    console.error('Error initializing Google Sheets:', error);
+                    showAlert('Google Sheets API initialization failed. Please check your credentials.', 'error');
+                });
+            });
+        }
+
+        // Connect to Google Sheets
+        function connectGoogleSheets() {
+            if (!gapi.auth2) {
+                showAlert('Google API not loaded. Please refresh the page.', 'error');
+                return;
+            }
+            
+            const authInstance = gapi.auth2.getAuthInstance();
+            if (!authInstance.isSignedIn.get()) {
+                authInstance.signIn().then(() => {
+                    appState.googleSheets.isConnected = true;
+                    appState.googleSheets.accessToken = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
+                    updateGoogleSheetsStatus('Connected to Google Sheets', 'success');
+                    showAlert('Successfully connected to Google Sheets!', 'success');
+                }).catch(error => {
+                    console.error('Sign-in error:', error);
+                    showAlert('Failed to connect to Google Sheets. Please try again.', 'error');
+                });
+            } else {
+                appState.googleSheets.isConnected = true;
+                updateGoogleSheetsStatus('Already connected to Google Sheets', 'success');
+                showAlert('Already connected to Google Sheets!', 'success');
+            }
+        }
+
+        // Export data to Google Sheets
+        async function exportToGoogleSheets(dataType = 'attendees') {
+            if (!appState.googleSheets.isConnected) {
+                showAlert('Please connect to Google Sheets first.', 'error');
+                return;
+            }
+            
+            const statusDiv = document.getElementById('google-sheets-status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<div class="spinner"></div> Exporting data to Google Sheets...';
+            statusDiv.className = 'alert alert-info';
+            
+            try {
+                // Get data
+                let data, sheetName, headers;
+                const sheetTitle = document.getElementById('sheet-name').value || 'Bank Meeting Data';
+                
+                if (dataType === 'attendees') {
+                    const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                    data = savedAttendees.map(attendee => [
+                        attendee.name,
+                        attendee.email,
+                        attendee.phone,
+                        attendee.account || '',
+                        attendee.meetingTitle || '',
+                        attendee.meetingDate || '',
+                        attendee.departmentName || attendee.department || '',
+                        attendee.registrationDate
+                    ]);
+                    headers = ['Name', 'Email', 'Phone', 'Account', 'Meeting', 'Date', 'Department', 'Registration'];
+                    sheetName = `${sheetTitle} - Attendees`;
+                    
+                } else if (dataType === 'meetings') {
+                    const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+                    data = savedMeetings.map(meeting => [
+                        meeting.title,
+                        meeting.date,
+                        meeting.time,
+                        meeting.department,
+                        meeting.location,
+                        meeting.status,
+                        meeting.attendees ? meeting.attendees.length : 0,
+                        meeting.maxAttendees || 'Unlimited'
+                    ]);
+                    headers = ['Title', 'Date', 'Time', 'Department', 'Location', 'Status', 'Attendees', 'Max'];
+                    sheetName = `${sheetTitle} - Meetings`;
+                    
+                } else if (dataType === 'departments') {
+                    const savedDepartments = JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]');
+                    data = savedDepartments.map(dept => [
+                        dept.name,
+                        dept.head,
+                        dept.email,
+                        dept.phone || '',
+                        dept.description || ''
+                    ]);
+                    headers = ['Department', 'Head', 'Email', 'Phone', 'Description'];
+                    sheetName = `${sheetTitle} - Departments`;
+                    
+                } else if (dataType === 'all') {
+                    // Export all data to different sheets
+                    await exportAllDataToSheets(sheetTitle);
+                    return;
+                }
+                
+                // Create or get spreadsheet
+                let spreadsheetId = appState.googleSheets.spreadsheetId;
+                if (!spreadsheetId) {
+                    spreadsheetId = await createNewSpreadsheet(sheetName);
+                    appState.googleSheets.spreadsheetId = spreadsheetId;
+                }
+                
+                // Update spreadsheet
+                await updateSpreadsheet(spreadsheetId, sheetName, headers, data);
+                
+                statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Successfully exported ${data.length} records to Google Sheets!`;
+                statusDiv.className = 'alert alert-success';
+                showAlert(`Exported ${data.length} records to Google Sheets`, 'success');
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Export failed: ${error.message}`;
+                statusDiv.className = 'alert alert-error';
+                showAlert('Export to Google Sheets failed', 'error');
+            }
+        }
+
+        // Create new spreadsheet
+        async function createNewSpreadsheet(title) {
+            const response = await gapi.client.sheets.spreadsheets.create({
+                properties: {
+                    title: title
+                }
+            });
+            
+            return response.result.spreadsheetId;
+        }
+
+        // Update spreadsheet with data
+        async function updateSpreadsheet(spreadsheetId, sheetName, headers, data) {
+            // Clear existing data
+            await gapi.client.sheets.spreadsheets.values.clear({
+                spreadsheetId: spreadsheetId,
+                range: 'A1:Z1000'
+            });
+            
+            // Write headers
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: spreadsheetId,
+                range: 'A1',
+                valueInputOption: 'RAW',
+                resource: {
+                    values: [headers]
+                }
+            });
+            
+            // Write data
+            if (data.length > 0) {
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: spreadsheetId,
+                    range: 'A2',
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: data
+                    }
+                });
+            }
+            
+            // Format headers
+            await gapi.client.sheets.spreadsheets.batchUpdate({
+                spreadsheetId: spreadsheetId,
+                resource: {
+                    requests: [{
+                        repeatCell: {
+                            range: {
+                                sheetId: 0,
+                                startRowIndex: 0,
+                                endRowIndex: 1
+                            },
+                            cell: {
+                                userEnteredFormat: {
+                                    backgroundColor: {
+                                        red: 0.9,
+                                        green: 0.9,
+                                        blue: 0.9
+                                    },
+                                    textFormat: {
+                                        bold: true
+                                    }
+                                }
+                            },
+                            fields: "userEnteredFormat(backgroundColor,textFormat)"
+                        }
+                    }]
+                }
+            });
+        }
+
+        // Export all data to Google Sheets
+        async function exportAllDataToSheets(mainTitle) {
+            try {
+                // Create new spreadsheet
+                const spreadsheetId = await createNewSpreadsheet(mainTitle);
+                appState.googleSheets.spreadsheetId = spreadsheetId;
+                
+                // Export attendees
+                const attendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                const attendeesData = attendees.map(attendee => [
+                    attendee.name,
+                    attendee.email,
+                    attendee.phone,
+                    attendee.account || '',
+                    attendee.meetingTitle || '',
+                    attendee.meetingDate || '',
+                    attendee.departmentName || attendee.department || '',
+                    attendee.registrationDate
+                ]);
+                
+                await gapi.client.sheets.spreadsheets.batchUpdate({
+                    spreadsheetId: spreadsheetId,
+                    resource: {
+                        requests: [
+                            {
+                                updateSheetProperties: {
+                                    properties: {
+                                        sheetId: 0,
+                                        title: "Attendees"
+                                    },
+                                    fields: "title"
+                                }
+                            },
+                            {
+                                addSheet: {
+                                    properties: {
+                                        title: "Meetings"
+                                    }
+                                }
+                            },
+                            {
+                                addSheet: {
+                                    properties: {
+                                        title: "Departments"
+                                    }
+                                }
+                            },
+                            {
+                                addSheet: {
+                                    properties: {
+                                        title: "Summary"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                });
+                
+                // Update all sheets
+                await updateSpreadsheet(spreadsheetId, "Attendees", 
+                    ['Name', 'Email', 'Phone', 'Account', 'Meeting', 'Date', 'Department', 'Registration'], 
+                    attendeesData);
+                
+                const meetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+                const meetingsData = meetings.map(meeting => [
+                    meeting.title,
+                    meeting.date,
+                    meeting.time,
+                    meeting.department,
+                    meeting.location,
+                    meeting.status,
+                    meeting.attendees ? meeting.attendees.length : 0,
+                    meeting.maxAttendees || 'Unlimited'
+                ]);
+                
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Meetings!A1',
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [['Title', 'Date', 'Time', 'Department', 'Location', 'Status', 'Attendees', 'Max'], ...meetingsData]
+                    }
+                });
+                
+                const departments = JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]');
+                const departmentsData = departments.map(dept => [
+                    dept.name,
+                    dept.head,
+                    dept.email,
+                    dept.phone || '',
+                    dept.description || ''
+                ]);
+                
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Departments!A1',
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [['Department', 'Head', 'Email', 'Phone', 'Description'], ...departmentsData]
+                    }
+                });
+                
+                // Summary sheet
+                const summaryData = [
+                    ['Metric', 'Value'],
+                    ['Total Attendees', attendees.length],
+                    ['Total Meetings', meetings.length],
+                    ['Total Departments', departments.length],
+                    ['Active Meetings', meetings.filter(m => m.status === 'active').length],
+                    ['Report Generated', new Date().toLocaleString()]
+                ];
+                
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: spreadsheetId,
+                    range: 'Summary!A1',
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: summaryData
+                    }
+                });
+                
+                const statusDiv = document.getElementById('google-sheets-status');
+                statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> All data exported successfully to Google Sheets!`;
+                statusDiv.className = 'alert alert-success';
+                showAlert('All data exported to Google Sheets successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Export all error:', error);
+                const statusDiv = document.getElementById('google-sheets-status');
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Export failed: ${error.message}`;
+                statusDiv.className = 'alert alert-error';
+                showAlert('Export to Google Sheets failed', 'error');
+            }
+        }
+
+        // Update Google Sheets status display
+        function updateGoogleSheetsStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('google-sheets-status');
+            if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${message}`;
+                statusDiv.className = `alert alert-${type}`;
+            }
+        }
+
+        // ==================== BACKUP FUNCTIONS ====================
+
+        // Backup all data to JSON file
+        function backupAllData() {
+            const data = {
+                backupDate: new Date().toISOString(),
+                version: '1.0',
+                meetings: JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]'),
+                attendees: JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]'),
+                departments: JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]'),
+                admins: JSON.parse(localStorage.getItem('bankMeetingAdmins') || '[]')
+            };
+            
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            link.href = url;
+            link.download = `bank_meeting_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            showAlert('All data backed up successfully!', 'success');
+        }
+
+        // Restore from backup
+        function restoreFromBackup(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.meetings) localStorage.setItem('bankMeetingMeetings', JSON.stringify(data.meetings));
+                    if (data.attendees) localStorage.setItem('bankMeetingAttendees', JSON.stringify(data.attendees));
+                    if (data.departments) localStorage.setItem('bankMeetingDepartments', JSON.stringify(data.departments));
+                    if (data.admins) localStorage.setItem('bankMeetingAdmins', JSON.stringify(data.admins));
+                    
+                    loadDataFromLocalStorage();
+                    updateAllData();
+                    showAlert('Data restored successfully from backup!', 'success');
+                } catch (error) {
+                    showAlert('Invalid backup file format', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ==================== SCHEDULED EXPORTS ====================
+
+        // Setup scheduled exports
+        function setupScheduledExports() {
+            const frequency = document.getElementById('schedule-frequency').value;
+            const type = document.getElementById('schedule-type').value;
+            
+            localStorage.setItem('exportSchedule', JSON.stringify({
+                frequency,
+                type,
+                lastRun: null,
+                enabled: true
+            }));
+            
+            const statusDiv = document.getElementById('schedule-status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Export schedule saved: ${frequency} ${type} exports`;
+            statusDiv.className = 'alert alert-success';
+            
+            showAlert(`Export schedule saved: ${frequency} ${type} exports`, 'success');
+        }
+
+        // Check and run scheduled exports
+        function checkScheduledExports() {
+            const schedule = JSON.parse(localStorage.getItem('exportSchedule') || '{}');
+            if (!schedule.enabled) return;
+            
+            const now = new Date();
+            const shouldRun = checkScheduleTime(schedule.frequency, schedule.lastRun);
+            
+            if (shouldRun) {
+                runScheduledExport(schedule.type);
+                schedule.lastRun = now.toISOString();
+                localStorage.setItem('exportSchedule', JSON.stringify(schedule));
+            }
+        }
+
+        // Check if it's time to run scheduled export
+        function checkScheduleTime(frequency, lastRun) {
+            if (!lastRun) return true;
+            
+            const lastRunDate = new Date(lastRun);
+            const now = new Date();
+            
+            switch(frequency) {
+                case 'daily':
+                    return now.getDate() !== lastRunDate.getDate() && now.getHours() >= 17;
+                case 'weekly':
+                    return now.getDay() === 1 && now.getHours() >= 9 && 
+                           (now.getDate() - lastRunDate.getDate() >= 7);
+                case 'monthly':
+                    return now.getDate() === 1 && now.getHours() >= 9;
+                default:
+                    return false;
+            }
+        }
+
+        // Run scheduled export
+        function runScheduledExport(type) {
+            switch(type) {
+                case 'attendees':
+                    exportAllAttendeesCSV();
+                    break;
+                case 'meetings':
+                    exportAllMeetingsCSV();
+                    break;
+                case 'summary':
+                    generatePDFReport('summary');
+                    break;
+            }
+            
+            console.log(`Scheduled ${type} export completed at ${new Date().toLocaleString()}`);
+        }
+
+        // ==================== INITIALIZATION ====================
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Bank Meeting System initializing...');
@@ -2332,6 +3586,12 @@
             
             // Initialize real-time system
             realTimeSystem.init();
+            
+            // Initialize Google Sheets API (requires proper credentials)
+            // initGoogleSheets();
+            
+            // Set up scheduled export check
+            setInterval(checkScheduledExports, 60 * 60 * 1000); // Check every hour
             
             // Only show login page initially
             loginPage.style.display = 'block';
@@ -2429,2125 +3689,56 @@
             }
         }
 
-        // Check for QR registration parameter in URL
-        function checkForQRRegistration() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const meetingId = urlParams.get('meeting');
-            
-            if (meetingId) {
-                // If we have a meeting ID in URL, show registration form
-                showQRRegistrationForm(parseInt(meetingId));
-                
-                // Remove the parameter from URL
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, newUrl);
+     
+
+        // Export Buttons
+        document.getElementById('export-attendees-btn').addEventListener('click', exportAllAttendeesCSV);
+        document.getElementById('export-all-meetings-btn').addEventListener('click', exportAllMeetingsCSV);
+        document.getElementById('export-departments-btn').addEventListener('click', exportDepartmentsReportCSV);
+        document.getElementById('export-pdf-btn').addEventListener('click', () => generatePDFReport('detailed'));
+        
+        // New Export Buttons in Reports section
+        document.getElementById('export-attendees-full').addEventListener('click', exportAllAttendeesCSV);
+        document.getElementById('export-meetings-summary').addEventListener('click', exportAllMeetingsCSV);
+        document.getElementById('export-departments-report').addEventListener('click', exportDepartmentsReportCSV);
+        document.getElementById('export-pdf-report').addEventListener('click', () => generateComprehensivePDFReport());
+        document.getElementById('export-daily-report').addEventListener('click', () => generatePDFReport('summary'));
+        document.getElementById('export-monthly-report').addEventListener('click', () => generatePDFReport('detailed'));
+        
+        // Google Sheets Buttons
+        document.getElementById('connect-google-sheets').addEventListener('click', connectGoogleSheets);
+        document.getElementById('export-to-sheets').addEventListener('click', () => {
+            const type = document.getElementById('export-type').value;
+            exportToGoogleSheets(type);
+        });
+        
+        // Backup Button
+        document.getElementById('backup-data-btn').addEventListener('click', backupAllData);
+        
+        // Schedule Buttons
+        document.getElementById('save-schedule').addEventListener('click', setupScheduledExports);
+        document.getElementById('test-schedule').addEventListener('click', () => {
+            const type = document.getElementById('schedule-type').value;
+            runScheduledExport(type);
+        });
+        
+        // Export Options Modal
+        document.getElementById('export-format').addEventListener('change', function() {
+            const customRangeDiv = document.getElementById('custom-date-range');
+            customRangeDiv.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        document.getElementById('generate-export').addEventListener('click', function() {
+            const format = document.getElementById('export-format').value;
+            if (format === 'pdf') {
+                generatePDFReport('detailed');
+            } else if (format === 'csv') {
+                exportAllAttendeesCSV();
+            } else if (format === 'json') {
+                backupAllData();
             }
-        }
-
-        // Show QR registration form (opens when QR code is scanned)
-        function showQRRegistrationForm(meetingId) {
-            // Load current meetings data to ensure we have latest
-            const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-            if (savedMeetings) {
-                const currentMeetings = JSON.parse(savedMeetings);
-                const meeting = currentMeetings.find(m => m.id === meetingId);
-                
-                if (!meeting) {
-                    // Hide all other pages
-                    loginPage.style.display = 'none';
-                    loginPage.classList.remove('active');
-                    dashboardPage.style.display = 'none';
-                    dashboardPage.classList.remove('active');
-                    
-                    // Show error message on registration portal
-                    registrationPortal.style.display = 'block';
-                    registrationPortal.classList.add('active');
-                    
-                    const qrAlertContainer = document.getElementById('qr-alert-container');
-                    if (qrAlertContainer) {
-                        qrAlertContainer.innerHTML = `
-                            <div class="alert alert-error" style="display: block;">
-                                <i class="fas fa-exclamation-circle"></i>
-                                Meeting not found! Please check the QR code or contact the organizer.
-                            </div>
-                        `;
-                    }
-                    return;
-                }
-                
-                // Hide all other pages
-                loginPage.style.display = 'none';
-                loginPage.classList.remove('active');
-                dashboardPage.style.display = 'none';
-                dashboardPage.classList.remove('active');
-                
-                // Show registration portal
-                registrationPortal.style.display = 'block';
-                registrationPortal.classList.add('active');
-                
-                // Update form with meeting details
-                updateQRRegistrationForm(meeting);
-                
-                // Setup QR registration form event listeners
-                setupQRRegistrationForm(meetingId);
-            } else {
-                // No meetings data found
-                registrationPortal.style.display = 'block';
-                registrationPortal.classList.add('active');
-                
-                const qrAlertContainer = document.getElementById('qr-alert-container');
-                if (qrAlertContainer) {
-                    qrAlertContainer.innerHTML = `
-                        <div class="alert alert-error" style="display: block;">
-                            <i class="fas fa-exclamation-circle"></i>
-                            Meeting system data not available. Please contact the administrator.
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        // Update QR registration form with meeting details
-        function updateQRRegistrationForm(meeting) {
-            if (!meeting) return;
-            
-            document.getElementById('meeting-title').textContent = 'Meeting Registration';
-            document.getElementById('current-meeting-title').textContent = meeting.title;
-            document.getElementById('meeting-date').textContent = meeting.date;
-            document.getElementById('meeting-time').textContent = meeting.time + ' (Duration: ' + meeting.duration + ' hour' + (meeting.duration > 1 ? 's' : '') + ')';
-            document.getElementById('meeting-location').textContent = meeting.location;
-            document.getElementById('meeting-department').textContent = meeting.department;
-            
-            // Set the meeting subtitle
-            document.getElementById('meeting-subtitle').textContent = `Register for: ${meeting.title}`;
-            
-            // Load departments
-            const savedDepartments = localStorage.getItem('bankMeetingDepartments');
-            const departments = savedDepartments ? JSON.parse(savedDepartments) : [];
-            
-            // Populate department dropdown
-            const departmentSelect = document.getElementById('department');
-            if (departmentSelect) {
-                departmentSelect.innerHTML = '<option value="">Select Department</option>';
-                departments.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.id;
-                    option.textContent = dept.name;
-                    departmentSelect.appendChild(option);
-                });
-                
-                // Pre-select the meeting's department
-                const meetingDept = departments.find(d => d.name === meeting.department);
-                if (meetingDept) {
-                    departmentSelect.value = meetingDept.id;
-                }
-            }
-        }
-
-        // Setup QR registration form event listeners
-        function setupQRRegistrationForm(meetingId) {
-            const registrationForm = document.getElementById('attendee-registration-form');
-            const successMessage = document.getElementById('success-message');
-            const registrationFormContainer = document.getElementById('registration-form-container');
-            const qrAlertContainer = document.getElementById('qr-alert-container');
-            
-            if (registrationForm) {
-                // Remove any existing event listeners
-                registrationForm.replaceWith(registrationForm.cloneNode(true));
-                const newForm = document.getElementById('attendee-registration-form');
-                
-                newForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    registerAttendeeViaQR(meetingId);
-                    return false;
-                });
-            }
-            
-            // Add event listener for "Register Another" button
-            const registerAnotherBtn = document.getElementById('register-another-btn');
-            if (registerAnotherBtn) {
-                registerAnotherBtn.addEventListener('click', function() {
-                    // Reset form and show it again
-                    document.getElementById('attendee-registration-form').reset();
-                    document.getElementById('success-message').style.display = 'none';
-                    document.getElementById('registration-form-container').style.display = 'block';
-                });
-            }
-        }
-
-        // Register attendee via QR code
-        function registerAttendeeViaQR(meetingId) {
-            // Prevent multiple submissions
-            const submitBtn = document.querySelector('#attendee-registration-form button[type="submit"]');
-            if (submitBtn.disabled) return;
-            
-            // Disable submit button
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            
-            try {
-                // Load current meetings data
-                const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                if (!savedMeetings) {
-                    showQRAlert('Meeting data not available!', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-                    return;
-                }
-                
-                const meetings = JSON.parse(savedMeetings);
-                const meeting = meetings.find(m => m.id === meetingId);
-                
-                if (!meeting) {
-                    showQRAlert('Meeting not found!', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-                    return;
-                }
-                
-                // Check if meeting is at capacity
-                if (meeting.maxAttendees && meeting.attendees && meeting.attendees.length >= meeting.maxAttendees) {
-                    showQRAlert('This meeting is already at full capacity!', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-                    return;
-                }
-                
-                // Get form values
-                const attendeeData = {
-                    id: Date.now() + Math.floor(Math.random() * 1000), // More unique ID
-                    meetingId: meetingId,
-                    meetingTitle: meeting.title,
-                    meetingDate: meeting.date,
-                    meetingTime: meeting.time,
-                    name: document.getElementById('full-name').value.trim(),
-                    phone: document.getElementById('phone-number').value.trim(),
-                    email: document.getElementById('email-address').value.trim(),
-                    account: document.getElementById('bank-account').value.trim(),
-                    departmentId: document.getElementById('department').value,
-                    departmentName: document.getElementById('department').options[document.getElementById('department').selectedIndex].text,
-                    purpose: document.getElementById('purpose').value,
-                    notes: document.getElementById('additional-notes').value.trim(),
-                    registrationDate: new Date().toLocaleString(),
-                    status: 'registered'
-                };
-                
-                // Validate form
-                if (!validateQRForm(attendeeData)) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-                    return;
-                }
-                
-                // Load current attendees
-                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                
-                // Check if attendee already registered for this meeting
-                const alreadyRegistered = savedAttendees.some(a => 
-                    a.email.toLowerCase() === attendeeData.email.toLowerCase() && 
-                    a.meetingId === meetingId
-                );
-                
-                if (alreadyRegistered) {
-                    showQRAlert('You are already registered for this meeting!', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-                    return;
-                }
-                
-                // Add new attendee
-                savedAttendees.push(attendeeData);
-                
-                // Update meeting attendees
-                meeting.attendees = meeting.attendees || [];
-                meeting.attendees.push(attendeeData);
-                
-                // Save updated data to localStorage
-                localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
-                localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                
-                // Update appState for real-time updates
-                appState.attendees = savedAttendees;
-                appState.meetings = meetings;
-                
-                // Show success message
-                showQRSuccessMessage(attendeeData);
-                
-                // Show alert
-                showQRAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
-                
-                console.log('New attendee registered via QR:', attendeeData);
-                
-                // IMPORTANT: Trigger real-time updates for dashboard
-                // This sends the attendee data to the dashboard immediately
-                const event = new CustomEvent('qrRegistrationSuccess', { detail: attendeeData });
-                window.dispatchEvent(event);
-                
-                // Also trigger storage event for cross-tab communication
-                const storageEvent = new Event('storage');
-                window.dispatchEvent(storageEvent);
-                
-            } catch (error) {
-                console.error('Error registering attendee:', error);
-                showQRAlert('An error occurred. Please try again.', 'error');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-            }
-        }
-
-        // Validate QR form data
-        function validateQRForm(data) {
-            // Check required fields
-            if (!data.name || !data.phone || !data.email || !data.departmentId || !data.purpose) {
-                showQRAlert('Please fill in all required fields marked with *', 'error');
-                return false;
-            }
-            
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(data.email)) {
-                showQRAlert('Please enter a valid email address', 'error');
-                return false;
-            }
-            
-            // Validate phone number (basic validation)
-            const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
-            if (!phoneRegex.test(data.phone.replace(/\D/g, ''))) {
-                showQRAlert('Please enter a valid phone number', 'error');
-                return false;
-            }
-            
-            return true;
-        }
-
-        // Show QR success message
-        function showQRSuccessMessage(attendeeData) {
-            const successMessage = document.getElementById('success-message');
-            const registrationFormContainer = document.getElementById('registration-form-container');
-            
-            if (successMessage && registrationFormContainer) {
-                // Hide registration form
-                registrationFormContainer.style.display = 'none';
-                
-                // Update success message with attendee name
-                const successTitle = successMessage.querySelector('h3');
-                successTitle.textContent = `Thank you, ${attendeeData.name}!`;
-                
-                // Show success message
-                successMessage.style.display = 'block';
-                
-                // Enable the submit button
-                const submitBtn = document.querySelector('#attendee-registration-form button[type="submit"]');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
-            }
-        }
-
-        // Show QR alert
-        function showQRAlert(message, type = 'success') {
-            const qrAlertContainer = document.getElementById('qr-alert-container');
-            if (qrAlertContainer) {
-                qrAlertContainer.innerHTML = '';
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `alert alert-${type}`;
-                alertDiv.innerHTML = `
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                    ${message}
-                `;
-                qrAlertContainer.appendChild(alertDiv);
-                alertDiv.style.display = 'block';
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    alertDiv.style.display = 'none';
-                }, 5000);
-            }
-        }
-
-        // Initialize Dashboard
-        function initializeDashboard() {
-            // Get all DOM elements for dashboard
-            const navItems = document.querySelectorAll('.nav-item');
-            const pageContents = document.querySelectorAll('.page-content');
-            const logoutBtn = document.getElementById('logout-btn');
-            const pageTitle = document.getElementById('page-title');
-            const createMeetingBtn = document.getElementById('create-meeting-btn');
-            const currentAdminEmail = document.getElementById('current-admin-email');
-            
-            // Set current admin email
-            if (currentAdminEmail) {
-                currentAdminEmail.textContent = appState.currentUser.email;
-            }
-            
-            // Update all data
-            updateAllData();
-            
-            // Navigation Functionality
-            if (navItems) {
-                navItems.forEach(item => {
-                    if (!item.id) { // Skip logout button
-                        item.addEventListener('click', function() {
-                            // Update active nav item
-                            navItems.forEach(nav => nav.classList.remove('active'));
-                            this.classList.add('active');
-                            
-                            // Get page to show
-                            const page = this.getAttribute('data-page');
-                            
-                            // Update page title
-                            const pageTitles = {
-                                'dashboard': 'Dashboard',
-                                'meetings': 'Meetings',
-                                'attendees': 'Attendees',
-                                'departments': 'Departments',
-                                'admins': 'Admins'
-                            };
-                            if (pageTitle) {
-                                pageTitle.textContent = pageTitles[page];
-                            }
-                            
-                            // Show corresponding content
-                            pageContents.forEach(content => {
-                                content.classList.add('hidden');
-                                if (content.id === `${page}-content`) {
-                                    content.classList.remove('hidden');
-                                }
-                            });
-                            
-                            // Update data for the specific page
-                            if (page === 'dashboard') {
-                                updateDashboard();
-                            } else if (page === 'meetings') {
-                                updateMeetingsPage();
-                            } else if (page === 'attendees') {
-                                updateAttendeesPage();
-                            } else if (page === 'departments') {
-                                updateDepartmentsPage();
-                            } else if (page === 'admins') {
-                                updateAdminsPage();
-                            }
-                        });
-                    }
-                });
-            }
-            
-            // Logout Functionality
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to logout?')) {
-                        // Clear current user
-                        appState.currentUser = null;
-                        
-                        // Destroy charts
-                        Object.values(appState.charts).forEach(chart => {
-                            if (chart) chart.destroy();
-                        });
-                        appState.charts = {};
-                        
-                        // Show login page, hide dashboard
-                        dashboardPage.style.display = 'none';
-                        dashboardPage.classList.remove('active');
-                        loginPage.style.display = 'block';
-                        loginPage.classList.add('active');
-                        
-                        showAlert('You have been logged out successfully.', 'success');
-                    }
-                });
-            }
-            
-            // Create Meeting Button
-            if (createMeetingBtn) {
-                createMeetingBtn.addEventListener('click', function() {
-                    const createTabBtn = document.querySelector('.tab-btn[data-tab="create-meeting"]');
-                    const meetingsNav = document.querySelector('.nav-item[data-page="meetings"]');
-                    
-                    if (createTabBtn) createTabBtn.click();
-                    if (meetingsNav) meetingsNav.click();
-                });
-            }
-            
-            // Setup all other event listeners
-            setupEventListeners();
-        }
-
-        // Setup all event listeners
-        function setupEventListeners() {
-            // Tab Navigation
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    const parent = this.closest('.content-card');
-                    
-                    // Update active tab button
-                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    parent.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    const targetTab = parent.querySelector(`#${tabId}`);
-                    if (targetTab) targetTab.classList.add('active');
-                    
-                    // Handle restricted access for non-super admins
-                    if (tabId === 'add-department' || tabId === 'add-admin') {
-                        checkAdminPermissions();
-                    }
-                });
-            });
-
-            // Create meeting form
-            const createMeetingForm = document.getElementById('create-meeting-form');
-            if (createMeetingForm) {
-                createMeetingForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get meetings from localStorage to ensure we have latest
-                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                    const currentMeetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                    
-                    const newMeeting = {
-                        id: currentMeetings.length > 0 ? Math.max(...currentMeetings.map(m => m.id)) + 1 : 1,
-                        title: document.getElementById('meeting-title').value,
-                        department: document.getElementById('meeting-department').value,
-                        date: document.getElementById('meeting-date').value,
-                        time: document.getElementById('meeting-time').value,
-                        location: document.getElementById('meeting-location').value,
-                        duration: parseFloat(document.getElementById('meeting-duration').value),
-                        description: document.getElementById('meeting-description').value,
-                        maxAttendees: document.getElementById('meeting-max-attendees').value ? 
-                            parseInt(document.getElementById('meeting-max-attendees').value) : null,
-                        status: 'active',
-                        createdAt: new Date().toISOString().split('T')[0],
-                        attendees: []
-                    };
-                    
-                    // Add to meetings array
-                    currentMeetings.push(newMeeting);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(currentMeetings));
-                    
-                    // Update appState
-                    appState.meetings = currentMeetings;
-                    
-                    // Update UI
-                    updateAllData();
-                    showAlert('Meeting created successfully!', 'success');
-                    this.reset();
-                    
-                    // Set default date to tomorrow
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    document.getElementById('meeting-date').valueAsDate = tomorrow;
-                    
-                    // Switch to active meetings tab
-                    const activeTabBtn = document.querySelector('.tab-btn[data-tab="active-meetings"]');
-                    if (activeTabBtn) activeTabBtn.click();
-                });
-            }
-
-            // Export to Excel
-            const exportBtn = document.getElementById('export-attendees-btn');
-            if (exportBtn) {
-                exportBtn.addEventListener('click', function() {
-                    exportAttendeesToExcel();
-                });
-            }
-
-            // Export All Meetings
-            const exportAllMeetingsBtn = document.getElementById('export-all-meetings-btn');
-            if (exportAllMeetingsBtn) {
-                exportAllMeetingsBtn.addEventListener('click', function() {
-                    exportAllMeetingsData();
-                });
-            }
-
-            // Add Attendee Button
-            const addAttendeeBtn = document.getElementById('add-attendee-btn');
-            if (addAttendeeBtn) {
-                addAttendeeBtn.addEventListener('click', function() {
-                    showAddAttendeeModal();
-                });
-            }
-
-            // Manual Attendee Form
-            const manualAttendeeForm = document.getElementById('manual-attendee-form');
-            if (manualAttendeeForm) {
-                manualAttendeeForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get meetings from localStorage
-                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                    const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                    
-                    const meetingSelect = document.getElementById('manual-attendee-meeting');
-                    const meetingTitle = meetingSelect.value;
-                    const selectedMeeting = meetings.find(m => m.title === meetingTitle);
-                    
-                    if (!selectedMeeting) {
-                        showAlert('Please select a valid meeting', 'error');
-                        return;
-                    }
-                    
-                    const newAttendee = {
-                        id: Date.now(),
-                        meetingId: selectedMeeting.id,
-                        meetingTitle: selectedMeeting.title,
-                        meetingDate: selectedMeeting.date,
-                        meetingTime: selectedMeeting.time,
-                        name: document.getElementById('manual-attendee-name').value,
-                        email: document.getElementById('manual-attendee-email').value,
-                        phone: document.getElementById('manual-attendee-phone').value,
-                        account: document.getElementById('manual-attendee-account').value,
-                        department: selectedMeeting.department,
-                        purpose: document.getElementById('manual-attendee-purpose').value,
-                        notes: document.getElementById('manual-attendee-notes').value,
-                        registrationDate: new Date().toLocaleString()
-                    };
-                    
-                    // Get current attendees
-                    const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                    savedAttendees.push(newAttendee);
-                    
-                    // Update meeting attendees
-                    selectedMeeting.attendees = selectedMeeting.attendees || [];
-                    selectedMeeting.attendees.push(newAttendee);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                    
-                    // Update appState
-                    appState.attendees = savedAttendees;
-                    appState.meetings = meetings;
-                    
-                    // Update UI
-                    updateAllData();
-                    showAlert('Attendee added successfully!', 'success');
-                    
-                    // Trigger real-time event
-                    const event = new CustomEvent('qrRegistrationSuccess', { detail: newAttendee });
-                    window.dispatchEvent(event);
-                    
-                    // Close modal and reset form
-                    document.getElementById('add-attendee-modal').classList.add('hidden');
-                    this.reset();
-                });
-            }
-
-            // Add department form
-            const addDeptForm = document.getElementById('add-department-form');
-            if (addDeptForm) {
-                addDeptForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get current departments
-                    const savedDepartments = localStorage.getItem('bankMeetingDepartments');
-                    const currentDepartments = savedDepartments ? JSON.parse(savedDepartments) : [];
-                    
-                    const newDept = {
-                        id: currentDepartments.length > 0 ? Math.max(...currentDepartments.map(d => d.id)) + 1 : 1,
-                        name: document.getElementById('department-name').value,
-                        head: document.getElementById('department-head').value,
-                        email: document.getElementById('department-email').value,
-                        phone: document.getElementById('department-phone').value,
-                        description: document.getElementById('department-description').value,
-                        createdAt: new Date().toISOString().split('T')[0]
-                    };
-                    
-                    currentDepartments.push(newDept);
-                    localStorage.setItem('bankMeetingDepartments', JSON.stringify(currentDepartments));
-                    
-                    appState.departments = currentDepartments;
-                    updateAllData();
-                    showAlert('Department added successfully!', 'success');
-                    this.reset();
-                    
-                    // Switch to view departments tab
-                    const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-departments"]');
-                    if (viewTabBtn) viewTabBtn.click();
-                });
-            }
-
-            // Add admin form
-            const addAdminForm = document.getElementById('add-admin-form');
-            if (addAdminForm) {
-                addAdminForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get current admins
-                    const savedAdmins = localStorage.getItem('bankMeetingAdmins');
-                    const currentAdmins = savedAdmins ? JSON.parse(savedAdmins) : [];
-                    
-                    const newAdmin = {
-                        id: currentAdmins.length > 0 ? Math.max(...currentAdmins.map(a => a.id)) + 1 : 1,
-                        name: document.getElementById('admin-name').value,
-                        email: document.getElementById('admin-email').value,
-                        department: document.getElementById('admin-department').value,
-                        role: document.getElementById('admin-role').value,
-                        phone: document.getElementById('admin-phone').value,
-                        password: document.getElementById('admin-password').value,
-                        lastLogin: 'Never',
-                        status: 'active',
-                        createdAt: new Date().toISOString().split('T')[0]
-                    };
-                    
-                    // Check if admin already exists
-                    const existingAdmin = currentAdmins.find(a => a.email.toLowerCase() === newAdmin.email.toLowerCase());
-                    if (existingAdmin) {
-                        showAlert('An admin with this email already exists!', 'error');
-                        return;
-                    }
-                    
-                    currentAdmins.push(newAdmin);
-                    localStorage.setItem('bankMeetingAdmins', JSON.stringify(currentAdmins));
-                    
-                    appState.admins = currentAdmins;
-                    updateAllData();
-                    showAlert('Admin added successfully!', 'success');
-                    this.reset();
-                    
-                    // Switch to view admins tab
-                    const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
-                    if (viewTabBtn) viewTabBtn.click();
-                });
-            }
-
-            // Edit meeting form
-            const editMeetingForm = document.getElementById('edit-meeting-form');
-            if (editMeetingForm) {
-                editMeetingForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get meetings from localStorage
-                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                    const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                    
-                    const meetingId = parseInt(document.getElementById('edit-meeting-id').value);
-                    const meeting = meetings.find(m => m.id === meetingId);
-                    
-                    if (meeting) {
-                        meeting.title = document.getElementById('edit-meeting-title').value;
-                        meeting.department = document.getElementById('edit-meeting-department').value;
-                        meeting.date = document.getElementById('edit-meeting-date').value;
-                        meeting.time = document.getElementById('edit-meeting-time').value;
-                        meeting.location = document.getElementById('edit-meeting-location').value;
-                        meeting.duration = parseFloat(document.getElementById('edit-meeting-duration').value);
-                        meeting.description = document.getElementById('edit-meeting-description').value;
-                        meeting.maxAttendees = document.getElementById('edit-meeting-max-attendees').value ? 
-                            parseInt(document.getElementById('edit-meeting-max-attendees').value) : null;
-                        meeting.status = document.getElementById('edit-meeting-status').value;
-                        
-                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                        appState.meetings = meetings;
-                        updateAllData();
-                        showAlert('Meeting updated successfully!', 'success');
-                        document.getElementById('edit-meeting-modal').classList.add('hidden');
-                    }
-                });
-            }
-
-            // Edit department form
-            const editDepartmentForm = document.getElementById('edit-department-form');
-            if (editDepartmentForm) {
-                editDepartmentForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    // Get departments from localStorage
-                    const savedDepartments = localStorage.getItem('bankMeetingDepartments');
-                    const departments = savedDepartments ? JSON.parse(savedDepartments) : [];
-                    
-                    const deptId = parseInt(document.getElementById('edit-department-id').value);
-                    const dept = departments.find(d => d.id === deptId);
-                    
-                    if (dept) {
-                        dept.name = document.getElementById('edit-department-name').value;
-                        dept.head = document.getElementById('edit-department-head').value;
-                        dept.email = document.getElementById('edit-department-email').value;
-                        dept.phone = document.getElementById('edit-department-phone').value;
-                        dept.description = document.getElementById('edit-department-description').value;
-                        
-                        // Get meetings from localStorage
-                        const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                        const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                        
-                        // Update department in meetings
-                        meetings.forEach(meeting => {
-                            if (meeting.department === dept.name) {
-                                meeting.department = dept.name;
-                            }
-                        });
-                        
-                        // Update department in admins
-                        const savedAdmins = localStorage.getItem('bankMeetingAdmins');
-                        const admins = savedAdmins ? JSON.parse(savedAdmins) : [];
-                        
-                        admins.forEach(admin => {
-                            if (admin.department === dept.name) {
-                                admin.department = dept.name;
-                            }
-                        });
-                        
-                        // Save all updated data
-                        localStorage.setItem('bankMeetingDepartments', JSON.stringify(departments));
-                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                        localStorage.setItem('bankMeetingAdmins', JSON.stringify(admins));
-                        
-                        // Update appState
-                        appState.departments = departments;
-                        appState.meetings = meetings;
-                        appState.admins = admins;
-                        
-                        updateAllData();
-                        showAlert('Department updated successfully!', 'success');
-                        document.getElementById('edit-department-modal').classList.add('hidden');
-                    }
-                });
-            }
-
-            // QR Modal functionality
-            const closeModalBtns = document.querySelectorAll('.close-modal');
-            
-            closeModalBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    this.closest('.modal').classList.add('hidden');
-                });
-            });
-
-            // Close modal when clicking outside
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.classList.add('hidden');
-                    }
-                });
-            });
-
-            // Close modal with Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal').forEach(modal => {
-                        modal.classList.add('hidden');
-                    });
-                }
-            });
-
-            // Download QR Code
-            const downloadQrBtn = document.getElementById('download-qr-btn');
-            if (downloadQrBtn) {
-                downloadQrBtn.addEventListener('click', function() {
-                    const qrcodeDiv = document.getElementById('qrcode');
-                    const canvas = qrcodeDiv.querySelector('canvas');
-                    
-                    if (canvas) {
-                        const link = document.createElement('a');
-                        link.download = 'meeting-qr-code.png';
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
-                        showAlert('QR Code downloaded successfully!', 'success');
-                    } else {
-                        showAlert('No QR code found to download', 'error');
-                    }
-                });
-            }
-
-            // Copy link to clipboard
-            const copyLinkBtn = document.getElementById('copy-link-btn');
-            if (copyLinkBtn) {
-                copyLinkBtn.addEventListener('click', function() {
-                    const link = document.getElementById('qr-meeting-link');
-                    if (link) {
-                        const textToCopy = link.textContent || link.innerText;
-                        
-                        // Use the modern clipboard API
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(textToCopy).then(() => {
-                                showAlert('Registration link copied to clipboard!', 'success');
-                            }).catch(err => {
-                                console.error('Failed to copy: ', err);
-                                // Fallback for older browsers
-                                copyTextFallback(textToCopy);
-                            });
-                        } else {
-                            // Fallback for older browsers
-                            copyTextFallback(textToCopy);
-                        }
-                    }
-                    
-                    function copyTextFallback(text) {
-                        const textArea = document.createElement('textarea');
-                        textArea.value = text;
-                        textArea.style.position = 'fixed';
-                        textArea.style.opacity = '0';
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        
-                        try {
-                            document.execCommand('copy');
-                            showAlert('Registration link copied to clipboard!', 'success');
-                        } catch (err) {
-                            console.error('Fallback copy failed: ', err);
-                            showAlert('Failed to copy link', 'error');
-                        }
-                        
-                        document.body.removeChild(textArea);
-                    }
-                });
-            }
-
-            // Send email (demo function)
-            const sendEmailBtn = document.getElementById('send-email-btn');
-            if (sendEmailBtn) {
-                sendEmailBtn.addEventListener('click', function() {
-                    const meetingTitle = document.getElementById('qr-meeting-title').textContent;
-                    const meetingDate = document.getElementById('qr-meeting-date').textContent;
-                    const meetingTime = document.getElementById('qr-meeting-time').textContent;
-                    const registrationLink = document.getElementById('qr-meeting-link').textContent;
-                    
-                    const emailBody = `Meeting Details:\n\nMeeting: ${meetingTitle}\nDate: ${meetingDate}\nTime: ${meetingTime}\nRegistration Link: ${registrationLink}`;
-                    
-                    alert(`Demo: Email would be sent with meeting details:\n\n${emailBody}\n\nIn a real app, this would trigger an email service.`);
-                });
-            }
-        }
-
-        // Check admin permissions for restricted access
-        function checkAdminPermissions() {
-            const currentUser = appState.currentUser;
-            
-            // Check for department form access
-            const deptFormContainer = document.getElementById('department-form-container');
-            const restrictedDeptAccess = document.getElementById('restricted-department-access');
-            const addDeptTabBtn = document.querySelector('.tab-btn[data-tab="add-department"]');
-            
-            if (deptFormContainer && restrictedDeptAccess && addDeptTabBtn) {
-                if (currentUser.role === 'super_admin') {
-                    deptFormContainer.style.display = 'block';
-                    restrictedDeptAccess.style.display = 'none';
-                    addDeptTabBtn.style.display = 'block';
-                } else {
-                    deptFormContainer.style.display = 'none';
-                    restrictedDeptAccess.style.display = 'block';
-                    addDeptTabBtn.style.display = 'none';
-                    
-                    // If on the add-department tab and not super admin, switch to view tab
-                    if (addDeptTabBtn.classList.contains('active')) {
-                        const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-departments"]');
-                        if (viewTabBtn) viewTabBtn.click();
-                    }
-                }
-            }
-            
-            // Check for admin form access
-            const adminFormContainer = document.getElementById('admin-form-container');
-            const restrictedAdminAccess = document.getElementById('restricted-admin-access');
-            const addAdminTabBtn = document.querySelector('.tab-btn[data-tab="add-admin"]');
-            
-            if (adminFormContainer && restrictedAdminAccess && addAdminTabBtn) {
-                if (currentUser.role === 'super_admin') {
-                    adminFormContainer.style.display = 'block';
-                    restrictedAdminAccess.style.display = 'none';
-                    addAdminTabBtn.style.display = 'block';
-                } else {
-                    adminFormContainer.style.display = 'none';
-                    restrictedAdminAccess.style.display = 'block';
-                    addAdminTabBtn.style.display = 'none';
-                    
-                    // If on the add-admin tab and not super admin, switch to view tab
-                    if (addAdminTabBtn.classList.contains('active')) {
-                        const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
-                        if (viewTabBtn) viewTabBtn.click();
-                    }
-                }
-            }
-        }
-
-        // Update all data
-        function updateAllData() {
-            // Load latest data from localStorage
-            loadDataFromLocalStorage();
-            
-            updateStats();
-            updateDashboard();
-            updateMeetingsPage();
-            updateAttendeesPage();
-            updateDepartmentsPage();
-            updateAdminsPage();
-            initializeCharts();
-        }
-
-        // Update statistics
-        function updateStats() {
-            const statMeetings = document.getElementById('stat-meetings');
-            const statAttendees = document.getElementById('stat-attendees');
-            const statDepartments = document.getElementById('stat-departments');
-            const statAdmins = document.getElementById('stat-admins');
-            
-            if (!statMeetings || !statAttendees || !statDepartments || !statAdmins) return;
-            
-            const activeMeetings = appState.meetings.filter(m => m.status === 'active').length;
-            const totalAttendees = appState.attendees.length;
-            const totalDepartments = appState.departments.length;
-            const totalAdmins = appState.admins.length;
-            
-            statMeetings.textContent = activeMeetings;
-            statAttendees.textContent = totalAttendees;
-            statDepartments.textContent = totalDepartments;
-            statAdmins.textContent = totalAdmins;
-        }
-
-        // Update dashboard
-        function updateDashboard() {
-            // Update recent meetings table
-            const recentMeetingsTable = document.getElementById('recent-meetings-table');
-            if (!recentMeetingsTable) return;
-            
-            recentMeetingsTable.innerHTML = '';
-            
-            // Sort meetings by date (newest first) and take top 5
-            const recentMeetings = [...appState.meetings]
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 5);
-            
-            recentMeetings.forEach(meeting => {
-                const row = document.createElement('tr');
-                const statusClass = meeting.status === 'active' ? 'active' : 
-                                  meeting.status === 'completed' ? 'completed' : 'cancelled';
-                
-                row.innerHTML = `
-                    <td>${meeting.title}</td>
-                    <td>${meeting.date} ${meeting.time}</td>
-                    <td>${meeting.department}</td>
-                    <td>${meeting.attendees ? meeting.attendees.length : 0}</td>
-                    <td><span class="status ${statusClass}">${meeting.status}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
-                            <i class="fas fa-eye"></i> View
-                        </button>
-                        <button class="btn btn-sm btn-primary generate-qr-btn" data-id="${meeting.id}">
-                            <i class="fas fa-qrcode"></i> QR
-                        </button>
-                    </td>
-                `;
-                recentMeetingsTable.appendChild(row);
-            });
-            
-            // Add event listeners to view buttons
-            document.querySelectorAll('.view-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    showMeetingDetails(meetingId);
-                });
-            });
-            
-            // Add event listeners to QR buttons
-            document.querySelectorAll('.generate-qr-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    generateQRCode(meetingId);
-                });
-            });
-        }
-
-        // Update meetings page
-        function updateMeetingsPage() {
-            // Update department select in create meeting form
-            const departmentSelect = document.getElementById('meeting-department');
-            if (departmentSelect) {
-                departmentSelect.innerHTML = '<option value="">Select Department</option>';
-                appState.departments.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.name;
-                    option.textContent = dept.name;
-                    departmentSelect.appendChild(option);
-                });
-            }
-            
-            // Set default date to tomorrow
-            const meetingDateInput = document.getElementById('meeting-date');
-            if (meetingDateInput) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                meetingDateInput.valueAsDate = tomorrow;
-            }
-            
-            // Update active meetings table
-            const activeTable = document.getElementById('active-meetings-table');
-            if (activeTable) {
-                activeTable.innerHTML = '';
-                
-                const activeMeetings = appState.meetings.filter(m => m.status === 'active');
-                activeMeetings.forEach(meeting => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${meeting.title}</td>
-                        <td>${meeting.date} ${meeting.time}</td>
-                        <td>${meeting.department}</td>
-                        <td>${meeting.location}</td>
-                        <td>${meeting.attendees ? meeting.attendees.length : 0}${meeting.maxAttendees ? '/' + meeting.maxAttendees : ''}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary generate-qr-btn" data-id="${meeting.id}">
-                                <i class="fas fa-qrcode"></i> Generate QR
-                            </button>
-                            ${meeting.attendees && meeting.attendees.length > 0 ? `
-                                <button class="btn btn-sm btn-success export-meeting-btn" data-meeting="${meeting.title}" style="margin-top: 5px;">
-                                    <i class="fas fa-file-excel"></i> Export
-                                </button>
-                            ` : ''}
-                        </td>
-                        <td class="action-buttons">
-                            <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-warning edit-meeting-btn" data-id="${meeting.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger cancel-meeting-btn" data-id="${meeting.id}">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </td>
-                    `;
-                    activeTable.appendChild(row);
-                });
-            }
-            
-            // Update past meetings table
-            const pastTable = document.getElementById('past-meetings-table');
-            if (pastTable) {
-                pastTable.innerHTML = '';
-                
-                const pastMeetings = appState.meetings.filter(m => m.status !== 'active');
-                pastMeetings.forEach(meeting => {
-                    const row = document.createElement('tr');
-                    const statusClass = meeting.status === 'completed' ? 'completed' : 'cancelled';
-                    row.innerHTML = `
-                        <td>${meeting.title}</td>
-                        <td>${meeting.date} ${meeting.time}</td>
-                        <td>${meeting.department}</td>
-                        <td>${meeting.location}</td>
-                        <td>${meeting.attendees ? meeting.attendees.length : 0}</td>
-                        <td><span class="status ${statusClass}">${meeting.status}</span></td>
-                    `;
-                    pastTable.appendChild(row);
-                });
-            }
-            
-            // Add event listeners for dynamic buttons
-            document.querySelectorAll('.generate-qr-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    generateQRCode(meetingId);
-                });
-            });
-            
-            document.querySelectorAll('.cancel-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    cancelMeeting(meetingId);
-                });
-            });
-            
-            document.querySelectorAll('.view-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    showMeetingDetails(meetingId);
-                });
-            });
-            
-            document.querySelectorAll('.edit-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    editMeeting(meetingId);
-                });
-            });
-            
-            document.querySelectorAll('.export-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingName = this.getAttribute('data-meeting');
-                    exportMeetingAttendees(meetingName);
-                });
-            });
-        }
-
-        // Update attendees page
-        function updateAttendeesPage() {
-            const attendeesTable = document.getElementById('attendees-table');
-            if (!attendeesTable) return;
-            
-            attendeesTable.innerHTML = '';
-            
-            // Get attendees from localStorage (most up-to-date)
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            savedAttendees.forEach(attendee => {
-                const row = document.createElement('tr');
-                const purposeText = {
-                    'loan_consultation': 'Loan Consultation',
-                    'account_opening': 'Account Opening',
-                    'investment': 'Investment',
-                    'business': 'Business',
-                    'mortgage': 'Mortgage Inquiry',
-                    'credit_card': 'Credit Card Application',
-                    'other': 'Other'
-                }[attendee.purpose] || attendee.purpose;
-                
-                row.innerHTML = `
-                    <td>${attendee.name}</td>
-                    <td>${attendee.email}</td>
-                    <td>${attendee.phone}</td>
-                    <td>${attendee.account || 'N/A'}</td>
-                    <td>${attendee.meetingTitle || attendee.meeting || 'N/A'}</td>
-                    <td>${attendee.meetingDate || 'N/A'}</td>
-                    <td>${attendee.departmentName || attendee.department || 'N/A'}</td>
-                    <td>${attendee.registrationDate}</td>
-                    <td class="action-buttons">
-                        <button class="btn btn-sm btn-secondary view-attendee-btn" data-id="${attendee.id}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-attendee-btn" data-id="${attendee.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                attendeesTable.appendChild(row);
-            });
-            
-            // Add event listeners
-            document.querySelectorAll('.view-attendee-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const attendeeId = parseInt(this.getAttribute('data-id'));
-                    viewAttendeeDetails(attendeeId);
-                });
-            });
-            
-            document.querySelectorAll('.delete-attendee-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const attendeeId = parseInt(this.getAttribute('data-id'));
-                    deleteAttendee(attendeeId);
-                });
-            });
-            
-            // Update meeting summary section
-            updateMeetingSummary();
-        }
-
-        // Update meeting summary section
-        function updateMeetingSummary() {
-            const meetingsSummaryDiv = document.getElementById('meetings-summary');
-            if (!meetingsSummaryDiv) return;
-            
-            // Get attendees from localStorage
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            // Group by meeting
-            const groupedByMeeting = {};
-            savedAttendees.forEach(attendee => {
-                const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
-                if (!groupedByMeeting[meetingKey]) {
-                    groupedByMeeting[meetingKey] = {
-                        attendees: [],
-                        date: attendee.meetingDate || 'Unknown Date',
-                        department: attendee.departmentName || attendee.department || 'Unknown'
-                    };
-                }
-                groupedByMeeting[meetingKey].attendees.push(attendee);
-            });
-            
-            // Create summary cards
-            meetingsSummaryDiv.innerHTML = '';
-            
-            if (Object.keys(groupedByMeeting).length === 0) {
-                meetingsSummaryDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No meeting attendees yet.</p>';
-                return;
-            }
-            
-            Object.entries(groupedByMeeting).forEach(([meetingName, data]) => {
-                const card = document.createElement('div');
-                card.className = 'meeting-summary-card';
-                
-                card.innerHTML = `
-                    <div>
-                        <h4 style="color: var(--mustard); margin-bottom: 5px;">${meetingName}</h4>
-                        <p style="color: #ccc; font-size: 0.9rem;">
-                            <i class="fas fa-calendar"></i> ${data.date} | 
-                            <i class="fas fa-users"></i> ${data.attendees.length} attendees | 
-                            <i class="fas fa-building"></i> ${data.department}
-                        </p>
-                    </div>
-                    <button class="btn btn-sm btn-primary export-meeting-btn" data-meeting="${meetingName}">
-                        <i class="fas fa-file-excel"></i> Export
-                    </button>
-                `;
-                
-                meetingsSummaryDiv.appendChild(card);
-            });
-            
-            // Add event listeners to export buttons
-            document.querySelectorAll('.export-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingName = this.getAttribute('data-meeting');
-                    exportMeetingAttendees(meetingName);
-                });
-            });
-        }
-
-        // Update departments page
-        function updateDepartmentsPage() {
-            const departmentsTable = document.getElementById('departments-table');
-            if (!departmentsTable) return;
-            
-            departmentsTable.innerHTML = '';
-            
-            appState.departments.forEach(dept => {
-                const meetingCount = appState.meetings.filter(m => m.department === dept.name).length;
-                const attendeeCount = appState.attendees.filter(a => a.department === dept.name).length;
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${dept.name}</td>
-                    <td>${dept.head}</td>
-                    <td>${dept.email}</td>
-                    <td>${meetingCount}</td>
-                    <td>${attendeeCount}</td>
-                    <td class="action-buttons">
-                        ${appState.currentUser.role === 'super_admin' ? `
-                            <button class="btn btn-sm btn-warning edit-dept-btn" data-id="${dept.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        ` : ''}
-                        ${appState.currentUser.role === 'super_admin' ? `
-                            <button class="btn btn-sm btn-danger delete-dept-btn" data-id="${dept.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </td>
-                `;
-                departmentsTable.appendChild(row);
-            });
-            
-            // Add event listeners
-            document.querySelectorAll('.delete-dept-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const deptId = parseInt(this.getAttribute('data-id'));
-                    deleteDepartment(deptId);
-                });
-            });
-            
-            document.querySelectorAll('.edit-dept-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const deptId = parseInt(this.getAttribute('data-id'));
-                    editDepartment(deptId);
-                });
-            });
-            
-            // Update department selects
-            updateDepartmentSelects();
-        }
-
-        // Update admins page
-        function updateAdminsPage() {
-            const adminsTable = document.getElementById('admins-table');
-            if (!adminsTable) return;
-            
-            adminsTable.innerHTML = '';
-            
-            appState.admins.forEach(admin => {
-                const row = document.createElement('tr');
-                const statusBadge = admin.status === 'active' ? 
-                    '<span class="badge badge-success">Active</span>' : 
-                    '<span class="badge badge-warning">Inactive</span>';
-                
-                row.innerHTML = `
-                    <td>${admin.name}</td>
-                    <td>${admin.email}</td>
-                    <td>${admin.department}</td>
-                    <td>${admin.role.replace('_', ' ').toUpperCase()}</td>
-                    <td>${admin.lastLogin}</td>
-                    <td>${statusBadge}</td>
-                    <td class="action-buttons">
-                        ${appState.currentUser.role === 'super_admin' ? `
-                            <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </td>
-                `;
-                adminsTable.appendChild(row);
-            });
-            
-            // Add event listeners
-            document.querySelectorAll('.delete-admin-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const adminId = parseInt(this.getAttribute('data-id'));
-                    deleteAdmin(adminId);
-                });
-            });
-            
-            // Update department select in admin form
-            updateDepartmentSelects();
-        }
-
-        // Update department selects
-        function updateDepartmentSelects() {
-            const selects = [
-                document.getElementById('meeting-department'),
-                document.getElementById('admin-department'),
-                document.getElementById('edit-meeting-department')
-            ];
-            
-            selects.forEach(select => {
-                if (select) {
-                    const currentValue = select.value;
-                    select.innerHTML = '<option value="">Select Department</option>';
-                    appState.departments.forEach(dept => {
-                        const option = document.createElement('option');
-                        option.value = dept.name;
-                        option.textContent = dept.name;
-                        select.appendChild(option);
-                    });
-                    select.value = currentValue;
-                }
-            });
-        }
-
-        // Initialize charts
-        function initializeCharts() {
-            // Destroy existing charts
-            Object.values(appState.charts).forEach(chart => {
-                if (chart) chart.destroy();
-            });
-            
-            // Meeting attendance chart
-            const attendanceCtx = document.getElementById('attendanceChart');
-            if (attendanceCtx) {
-                const attendanceCtx2d = attendanceCtx.getContext('2d');
-                
-                // Get last 7 days
-                const last7Days = [];
-                for (let i = 6; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    last7Days.push(date.toISOString().split('T')[0]);
-                }
-                
-                // Count attendees per day
-                const attendanceData = last7Days.map(date => {
-                    return appState.attendees.filter(a => {
-                        const attendeeDate = new Date(a.registrationDate).toISOString().split('T')[0];
-                        return attendeeDate === date;
-                    }).length;
-                });
-                
-                appState.charts.attendance = new Chart(attendanceCtx2d, {
-                    type: 'line',
-                    data: {
-                        labels: last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })),
-                        datasets: [{
-                            label: 'Daily Registrations',
-                            data: attendanceData,
-                            borderColor: '#FFDB58',
-                            backgroundColor: 'rgba(255, 219, 88, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#FFDB58',
-                            pointBorderColor: '#000000',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: { 
-                                    color: '#FFFFFF',
-                                    font: { size: 14 }
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Meeting Registration Trend (Last 7 Days)',
-                                color: '#FFFFFF',
-                                font: { size: 16, weight: 'bold' }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                ticks: { 
-                                    color: '#CCCCCC',
-                                    font: { size: 12 }
-                                },
-                                grid: { 
-                                    color: '#444444',
-                                    drawBorder: false
-                                }
-                            },
-                            y: {
-                                ticks: { 
-                                    color: '#CCCCCC',
-                                    font: { size: 12 }
-                                },
-                                grid: { 
-                                    color: '#444444',
-                                    drawBorder: false
-                                },
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Number of Registrations',
-                                    color: '#CCCCCC',
-                                    font: { size: 14 }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Department distribution chart
-            const departmentCtx = document.getElementById('departmentChart');
-            if (departmentCtx) {
-                const departmentCtx2d = departmentCtx.getContext('2d');
-                
-                // Get department data
-                const departmentLabels = appState.departments.map(d => d.name);
-                const departmentData = appState.departments.map(dept => {
-                    return appState.meetings.filter(m => m.department === dept.name).length;
-                });
-                
-                // Use department data, if no data, show placeholder
-                const hasData = departmentData.some(count => count > 0);
-                
-                if (!hasData) {
-                    departmentLabels.push('No Meetings');
-                    departmentData.push(1);
-                }
-                
-                const departmentColors = ['#FFDB58', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#E91E63', '#00BCD4'];
-                
-                appState.charts.department = new Chart(departmentCtx2d, {
-                    type: 'doughnut',
-                    data: {
-                        labels: departmentLabels,
-                        datasets: [{
-                            data: departmentData,
-                            backgroundColor: departmentColors.slice(0, departmentLabels.length),
-                            borderColor: '#1a1a1a',
-                            borderWidth: 2,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: { 
-                                    color: '#FFFFFF',
-                                    font: { size: 12 },
-                                    padding: 20
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Meetings Distribution by Department',
-                                color: '#FFFFFF',
-                                font: { size: 16, weight: 'bold' }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = Math.round((value / total) * 100);
-                                        return `${label}: ${value} meetings (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '60%',
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
-                        }
-                    }
-                });
-            }
-        }
-
-        // Generate QR Code
-        function generateQRCode(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) {
-                showAlert('Meeting not found!', 'error');
-                return;
-            }
-            
-            // Generate unique registration link
-            const registrationLink = `${window.location.origin}${window.location.pathname}?meeting=${meetingId}`;
-            
-            // Clear previous QR code
-            const qrcodeDiv = document.getElementById('qrcode');
-            if (qrcodeDiv) {
-                qrcodeDiv.innerHTML = '';
-                
-                // Generate new QR code using QRCode.js
-                try {
-                    new QRCode(qrcodeDiv, {
-                        text: registrationLink,
-                        width: 200,
-                        height: 200,
-                        colorDark: "#000000",
-                        colorLight: "#FFFFFF",
-                        correctLevel: QRCode.CorrectLevel.H
-                    });
-                } catch (error) {
-                    console.error('QR Code generation error:', error);
-                    // Fallback if QRCode library fails
-                    qrcodeDiv.innerHTML = `
-                        <div style="width: 200px; height: 200px; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-                            <div style="text-align: center; padding: 20px;">
-                                <i class="fas fa-exclamation-triangle" style="font-size: 40px; color: #ff9800; margin-bottom: 10px;"></i>
-                                <p style="color: #000; font-size: 12px;">QR Code Error<br>Link: ${registrationLink}</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-            
-            // Update modal content
-            const qrTitle = document.getElementById('qr-meeting-title');
-            const qrDate = document.getElementById('qr-meeting-date');
-            const qrTime = document.getElementById('qr-meeting-time');
-            const qrLocation = document.getElementById('qr-meeting-location');
-            const qrLink = document.getElementById('qr-meeting-link');
-            
-            if (qrTitle) qrTitle.textContent = meeting.title;
-            if (qrDate) qrDate.textContent = meeting.date;
-            if (qrTime) qrTime.textContent = meeting.time;
-            if (qrLocation) qrLocation.textContent = meeting.location;
-            if (qrLink) qrLink.textContent = registrationLink;
-            
-            // Show modal
-            const qrModal = document.getElementById('qr-modal');
-            if (qrModal) qrModal.classList.remove('hidden');
-            
-            showAlert(`QR Code generated for "${meeting.title}"`, 'success');
-        }
-
-        // Show meeting details
-        function showMeetingDetails(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) return;
-            
-            const detailsDiv = document.getElementById('meeting-details-content');
-            if (!detailsDiv) return;
-            
-            const statusClass = meeting.status === 'active' ? 'active' : 
-                              meeting.status === 'completed' ? 'completed' : 'cancelled';
-            
-            detailsDiv.innerHTML = `
-                <div class="meeting-header" style="margin-bottom: 20px;">
-                    <h3 style="color: var(--mustard); margin-bottom: 10px;">${meeting.title}</h3>
-                    <p><strong>Status:</strong> <span class="status ${statusClass}">${meeting.status}</span></p>
-                </div>
-                
-                <div class="meeting-info" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-                    <div>
-                        <p><strong>Date & Time:</strong><br>${meeting.date} at ${meeting.time}</p>
-                        <p><strong>Duration:</strong><br>${meeting.duration} hour${meeting.duration > 1 ? 's' : ''}</p>
-                        <p><strong>Location:</strong><br>${meeting.location}</p>
-                    </div>
-                    <div>
-                        <p><strong>Department:</strong><br>${meeting.department}</p>
-                        <p><strong>Maximum Attendees:</strong><br>${meeting.maxAttendees || 'Unlimited'}</p>
-                        <p><strong>Current Attendees:</strong><br>${meeting.attendees ? meeting.attendees.length : 0}</p>
-                    </div>
-                </div>
-                
-                <div class="meeting-description" style="margin-bottom: 20px;">
-                    <p><strong>Description:</strong></p>
-                    <p>${meeting.description || 'No description provided.'}</p>
-                </div>
-                
-                <div class="attendees-section" style="margin-bottom: 25px;">
-                    <h4 style="color: var(--mustard); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                        <i class="fas fa-users"></i> Attendees (${meeting.attendees ? meeting.attendees.length : 0})
-                    </h4>
-                    ${meeting.attendees && meeting.attendees.length > 0 ? 
-                        `<div style="max-height: 200px; overflow-y: auto;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Name</th>
-                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Email</th>
-                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Phone</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${meeting.attendees.map(a => `
-                                        <tr>
-                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.name}</td>
-                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.email}</td>
-                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.phone}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>` : 
-                        '<p style="text-align: center; color: #999; padding: 20px;">No attendees yet.</p>'
-                    }
-                </div>
-                
-                <div class="meeting-actions" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" onclick="generateQRCode(${meeting.id})">
-                        <i class="fas fa-qrcode"></i> Generate QR Code
-                    </button>
-                    ${meeting.attendees && meeting.attendees.length > 0 ? `
-                        <button class="btn btn-success" onclick="exportMeetingAttendees('${meeting.title}'); document.getElementById('meeting-details-modal').classList.add('hidden');">
-                            <i class="fas fa-file-excel"></i> Export Attendees
-                        </button>
-                    ` : ''}
-                    ${meeting.status === 'active' ? 
-                        `<button class="btn btn-danger" onclick="cancelMeeting(${meeting.id}); document.getElementById('meeting-details-modal').classList.add('hidden');">
-                            <i class="fas fa-times"></i> Cancel Meeting
-                        </button>` : ''
-                    }
-                    <button class="btn btn-secondary" onclick="document.getElementById('meeting-details-modal').classList.add('hidden');">
-                        <i class="fas fa-times"></i> Close
-                    </button>
-                </div>
-            `;
-            
-            const detailsModal = document.getElementById('meeting-details-modal');
-            if (detailsModal) detailsModal.classList.remove('hidden');
-        }
-
-        // Cancel meeting
-        function cancelMeeting(meetingId) {
-            if (confirm('Are you sure you want to cancel this meeting?')) {
-                const meeting = appState.meetings.find(m => m.id === meetingId);
-                if (meeting) {
-                    meeting.status = 'cancelled';
-                    
-                    // Save to localStorage
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
-                    
-                    updateAllData();
-                    showAlert('Meeting cancelled successfully!', 'success');
-                }
-            }
-        }
-
-        // Edit meeting
-        function editMeeting(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) return;
-            
-            // Populate edit form
-            document.getElementById('edit-meeting-id').value = meeting.id;
-            document.getElementById('edit-meeting-title').value = meeting.title;
-            document.getElementById('edit-meeting-date').value = meeting.date;
-            document.getElementById('edit-meeting-time').value = meeting.time;
-            document.getElementById('edit-meeting-location').value = meeting.location;
-            document.getElementById('edit-meeting-duration').value = meeting.duration;
-            document.getElementById('edit-meeting-description').value = meeting.description || '';
-            document.getElementById('edit-meeting-max-attendees').value = meeting.maxAttendees || '';
-            document.getElementById('edit-meeting-status').value = meeting.status;
-            
-            // Populate department dropdown
-            const deptSelect = document.getElementById('edit-meeting-department');
-            deptSelect.innerHTML = '<option value="">Select Department</option>';
-            appState.departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept.name;
-                option.textContent = dept.name;
-                if (dept.name === meeting.department) {
-                    option.selected = true;
-                }
-                deptSelect.appendChild(option);
-            });
-            
-            // Show modal
-            document.getElementById('edit-meeting-modal').classList.remove('hidden');
-        }
-
-        // Edit department
-        function editDepartment(deptId) {
-            const dept = appState.departments.find(d => d.id === deptId);
-            if (!dept) return;
-            
-            // Populate edit form
-            document.getElementById('edit-department-id').value = dept.id;
-            document.getElementById('edit-department-name').value = dept.name;
-            document.getElementById('edit-department-head').value = dept.head;
-            document.getElementById('edit-department-email').value = dept.email;
-            document.getElementById('edit-department-phone').value = dept.phone || '';
-            document.getElementById('edit-department-description').value = dept.description || '';
-            
-            // Show modal
-            document.getElementById('edit-department-modal').classList.remove('hidden');
-        }
-
-        // View attendee details
-        function viewAttendeeDetails(attendeeId) {
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            const attendee = savedAttendees.find(a => a.id === attendeeId);
-            if (!attendee) return;
-            
-            const purposeText = {
-                'loan_consultation': 'Loan Consultation',
-                'account_opening': 'Account Opening',
-                'investment': 'Investment',
-                'business': 'Business',
-                'mortgage': 'Mortgage Inquiry',
-                'credit_card': 'Credit Card Application',
-                'other': 'Other'
-            }[attendee.purpose] || attendee.purpose;
-            
-            const detailsDiv = document.getElementById('attendee-details-content');
-            detailsDiv.innerHTML = `
-                <div class="attendee-info-item">
-                    <label>Full Name</label>
-                    <p>${attendee.name}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Email Address</label>
-                    <p>${attendee.email}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Phone Number</label>
-                    <p>${attendee.phone}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Bank Account</label>
-                    <p>${attendee.account || 'Not provided'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Meeting</label>
-                    <p>${attendee.meetingTitle || attendee.meeting || 'N/A'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Meeting Date</label>
-                    <p>${attendee.meetingDate || 'N/A'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Department</label>
-                    <p>${attendee.departmentName || attendee.department || 'N/A'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Purpose of Meeting</label>
-                    <p>${purposeText}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Registration Date</label>
-                    <p>${attendee.registrationDate}</p>
-                </div>
-                ${attendee.notes ? `
-                <div class="attendee-info-item">
-                    <label>Additional Notes</label>
-                    <p>${attendee.notes}</p>
-                </div>
-                ` : ''}
-            `;
-            
-            document.getElementById('view-attendee-modal').classList.remove('hidden');
-        }
-
-        // Delete attendee
-        function deleteAttendee(attendeeId) {
-            if (confirm('Are you sure you want to delete this attendee?')) {
-                // Remove from localStorage attendees
-                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                const updatedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
-                localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedAttendees));
-                
-                // Remove from meetings attendees
-                const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
-                savedMeetings.forEach(meeting => {
-                    if (meeting.attendees) {
-                        meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
-                    }
-                });
-                localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
-                
-                // Update appState
-                appState.attendees = updatedAttendees;
-                appState.meetings = savedMeetings;
-                
-                updateAllData();
-                showAlert('Attendee deleted successfully!', 'success');
-            }
-        }
-
-        // Delete department
-        function deleteDepartment(deptId) {
-            if (confirm('Are you sure you want to delete this department? This will affect all related meetings and admins.')) {
-                const dept = appState.departments.find(d => d.id === deptId);
-                appState.departments = appState.departments.filter(d => d.id !== deptId);
-                
-                // Remove department from meetings
-                appState.meetings.forEach(meeting => {
-                    if (meeting.department === dept.name) {
-                        meeting.department = 'General';
-                    }
-                });
-                
-                // Remove department from admins
-                appState.admins.forEach(admin => {
-                    if (admin.department === dept.name) {
-                        admin.department = 'General';
-                    }
-                });
-                
-                // Save all data
-                saveDataToLocalStorage();
-                
-                updateAllData();
-                showAlert('Department deleted successfully!', 'success');
-            }
-        }
-
-        // Delete admin
-        function deleteAdmin(adminId) {
-            if (adminId === 1) {
-                showAlert('Cannot delete the super admin account!', 'error');
-                return;
-            }
-            
-            if (confirm('Are you sure you want to delete this admin?')) {
-                appState.admins = appState.admins.filter(a => a.id !== adminId);
-                saveDataToLocalStorage();
-                updateAllData();
-                showAlert('Admin deleted successfully!', 'success');
-            }
-        }
-
-        // Export specific meeting attendees
-        function exportMeetingAttendees(meetingName) {
-            // Get attendees from localStorage
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            // Filter by meeting
-            const meetingAttendees = savedAttendees.filter(attendee => 
-                (attendee.meetingTitle === meetingName) || (attendee.meeting === meetingName)
-            );
-            
-            if (meetingAttendees.length === 0) {
-                showAlert('No attendees found for this meeting', 'error');
-                return;
-            }
-            
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += `Meeting: ${meetingName}\n`;
-            csvContent += `Total Attendees: ${meetingAttendees.length}\n\n`;
-            csvContent += "Name,Email,Phone,Account Number,Department,Purpose,Registration Date,Notes\n";
-            
-            meetingAttendees.forEach(attendee => {
-                const purposeText = {
-                    'loan_consultation': 'Loan Consultation',
-                    'account_opening': 'Account Opening',
-                    'investment': 'Investment',
-                    'business': 'Business',
-                    'mortgage': 'Mortgage Inquiry',
-                    'credit_card': 'Credit Card Application',
-                    'other': 'Other'
-                }[attendee.purpose] || attendee.purpose;
-                
-                const row = [
-                    `"${attendee.name}"`,
-                    `"${attendee.email}"`,
-                    `"${attendee.phone}"`,
-                    `"${attendee.account || ''}"`,
-                    `"${attendee.departmentName || attendee.department || ''}"`,
-                    `"${purposeText}"`,
-                    `"${attendee.registrationDate}"`,
-                    `"${attendee.notes || ''}"`
-                ].join(',');
-                
-                csvContent += row + "\n";
-            });
-            
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const fileName = `attendees_${meetingName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported ${meetingAttendees.length} attendees for "${meetingName}"`, 'success');
-        }
-
-        // Export all attendees to Excel
-        function exportAttendeesToExcel() {
-            // Get attendees from localStorage
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            if (savedAttendees.length === 0) {
-                showAlert('No attendees to export', 'error');
-                return;
-            }
-            
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Name,Email,Phone,Account Number,Meeting,Meeting Date,Department,Purpose,Registration Date,Notes\n";
-            
-            savedAttendees.forEach(attendee => {
-                const purposeText = {
-                    'loan_consultation': 'Loan Consultation',
-                    'account_opening': 'Account Opening',
-                    'investment': 'Investment',
-                    'business': 'Business',
-                    'mortgage': 'Mortgage Inquiry',
-                    'credit_card': 'Credit Card Application',
-                    'other': 'Other'
-                }[attendee.purpose] || attendee.purpose;
-                
-                const row = [
-                    `"${attendee.name}"`,
-                    `"${attendee.email}"`,
-                    `"${attendee.phone}"`,
-                    `"${attendee.account || ''}"`,
-                    `"${attendee.meetingTitle || attendee.meeting || ''}"`,
-                    `"${attendee.meetingDate || ''}"`,
-                    `"${attendee.departmentName || attendee.department || ''}"`,
-                    `"${purposeText}"`,
-                    `"${attendee.registrationDate}"`,
-                    `"${attendee.notes || ''}"`
-                ].join(',');
-                
-                csvContent += row + "\n";
-            });
-            
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `all_attendees_export_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported ${savedAttendees.length} attendees to CSV`, 'success');
-        }
-
-        // Export all meetings data
-        function exportAllMeetingsData() {
-            // Get attendees from localStorage
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            if (savedAttendees.length === 0) {
-                showAlert('No attendees to export', 'error');
-                return;
-            }
-            
-            // Group by meeting
-            const groupedByMeeting = {};
-            savedAttendees.forEach(attendee => {
-                const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
-                if (!groupedByMeeting[meetingKey]) {
-                    groupedByMeeting[meetingKey] = [];
-                }
-                groupedByMeeting[meetingKey].push(attendee);
-            });
-            
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Bank Meeting System - All Meetings Export\n";
-            csvContent += `Export Date: ${new Date().toLocaleDateString()}\n`;
-            csvContent += `Total Meetings: ${Object.keys(groupedByMeeting).length}\n`;
-            csvContent += `Total Attendees: ${savedAttendees.length}\n\n`;
-            
-            // Add each meeting section
-            Object.entries(groupedByMeeting).forEach(([meetingName, attendees]) => {
-                csvContent += `=== MEETING: ${meetingName} ===\n`;
-                csvContent += `Attendees: ${attendees.length}\n`;
-                
-                // Find meeting details
-                const meeting = appState.meetings.find(m => m.title === meetingName);
-                if (meeting) {
-                    csvContent += `Date: ${meeting.date}\n`;
-                    csvContent += `Time: ${meeting.time}\n`;
-                    csvContent += `Department: ${meeting.department}\n`;
-                    csvContent += `Location: ${meeting.location}\n\n`;
-                }
-                
-                csvContent += "Name,Email,Phone,Account Number,Department,Purpose,Registration Date,Notes\n";
-                
-                attendees.forEach(attendee => {
-                    const purposeText = {
-                        'loan_consultation': 'Loan Consultation',
-                        'account_opening': 'Account Opening',
-                        'investment': 'Investment',
-                        'business': 'Business',
-                        'mortgage': 'Mortgage Inquiry',
-                        'credit_card': 'Credit Card Application',
-                        'other': 'Other'
-                    }[attendee.purpose] || attendee.purpose;
-                    
-                    const row = [
-                        `"${attendee.name}"`,
-                        `"${attendee.email}"`,
-                        `"${attendee.phone}"`,
-                        `"${attendee.account || ''}"`,
-                        `"${attendee.departmentName || attendee.department || ''}"`,
-                        `"${purposeText}"`,
-                        `"${attendee.registrationDate}"`,
-                        `"${attendee.notes || ''}"`
-                    ].join(',');
-                    
-                    csvContent += row + "\n";
-                });
-                
-                csvContent += "\n\n";
-            });
-            
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `all_meetings_export_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported all meetings data (${Object.keys(groupedByMeeting).length} meetings, ${savedAttendees.length} total attendees)`, 'success');
-        }
-
-        // Show add attendee modal
-        function showAddAttendeeModal() {
-            const meetingSelect = document.getElementById('manual-attendee-meeting');
-            if (meetingSelect) {
-                meetingSelect.innerHTML = '<option value="">Select Meeting</option>';
-                appState.meetings.forEach(meeting => {
-                    if (meeting.status === 'active') {
-                        const option = document.createElement('option');
-                        option.value = meeting.title;
-                        option.textContent = `${meeting.title} (${meeting.date} ${meeting.time})`;
-                        meetingSelect.appendChild(option);
-                    }
-                });
-            }
-            
-            document.getElementById('add-attendee-modal').classList.remove('hidden');
-        }
+            document.getElementById('export-options-modal').classList.add('hidden');
+        });
     </script>
 </body>
 </html>
