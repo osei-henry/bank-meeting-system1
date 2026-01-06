@@ -831,6 +831,44 @@
             color: #ccc;
         }
 
+        /* Real-time Notification */
+        .real-time-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--success);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 350px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
@@ -885,6 +923,12 @@
             
             .meeting-summary-card .btn {
                 align-self: flex-end;
+            }
+            
+            .real-time-notification {
+                left: 20px;
+                right: 20px;
+                max-width: calc(100% - 40px);
             }
         }
 
@@ -1776,6 +1820,105 @@
             registeredAttendees: []
         };
 
+        // Global real-time event dispatcher
+        const realTimeEvents = {
+            listeners: {},
+            
+            on(event, callback) {
+                if (!this.listeners[event]) this.listeners[event] = [];
+                this.listeners[event].push(callback);
+            },
+            
+            emit(event, data) {
+                if (this.listeners[event]) {
+                    this.listeners[event].forEach(callback => callback(data));
+                }
+            },
+            
+            // For cross-tab communication (simulating real-time)
+            notifyAllTabs(event, data) {
+                // Store event in localStorage for cross-tab communication
+                const eventId = 'realtime_' + Date.now();
+                localStorage.setItem('realtime_event_' + eventId, JSON.stringify({
+                    event: event,
+                    data: data,
+                    timestamp: Date.now()
+                }));
+                
+                // Clean up old events
+                this.cleanupOldEvents();
+                
+                // Trigger local listeners
+                this.emit(event, data);
+                
+                // Show real-time notification if admin is logged in
+                if (appState.currentUser && event === 'attendee_registered') {
+                    this.showRealTimeNotification(data);
+                }
+            },
+            
+            cleanupOldEvents() {
+                const now = Date.now();
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('realtime_event_')) {
+                        try {
+                            const eventData = JSON.parse(localStorage.getItem(key));
+                            if (now - eventData.timestamp > 60000) { // 1 minute old
+                                localStorage.removeItem(key);
+                            }
+                        } catch (e) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                }
+            },
+            
+            checkForEvents() {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('realtime_event_')) {
+                        try {
+                            const eventData = JSON.parse(localStorage.getItem(key));
+                            if (eventData.event === 'attendee_registered' && appState.currentUser) {
+                                this.emit(eventData.event, eventData.data);
+                                this.showRealTimeNotification(eventData.data);
+                            }
+                            // Remove after processing
+                            localStorage.removeItem(key);
+                        } catch (e) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                }
+            },
+            
+            showRealTimeNotification(data) {
+                const notification = document.createElement('div');
+                notification.className = 'real-time-notification';
+                notification.innerHTML = `
+                    <i class="fas fa-user-check" style="font-size: 24px;"></i>
+                    <div>
+                        <strong>New Registration!</strong>
+                        <p>${data.name} registered for "${data.meetingTitle}"</p>
+                        <small>${new Date().toLocaleTimeString()}</small>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s ease-out';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }, 5000);
+            }
+        };
+
         // Initialize demo data with proper passwords
         function initializeDemoData() {
             // Demo departments
@@ -1896,6 +2039,29 @@
             dashboardPage.style.display = 'none';
             registrationPortal.style.display = 'none';
             
+            // Check for real-time events periodically
+            setInterval(() => {
+                if (appState.currentUser) {
+                    realTimeEvents.checkForEvents();
+                }
+            }, 2000); // Check every 2 seconds
+            
+            // Listen for storage events (cross-tab communication)
+            window.addEventListener('storage', function(e) {
+                if (e.key && e.key.startsWith('realtime_event_') && e.newValue && appState.currentUser) {
+                    try {
+                        const eventData = JSON.parse(e.newValue);
+                        if (eventData.event === 'attendee_registered') {
+                            realTimeEvents.emit(eventData.event, eventData.data);
+                            realTimeEvents.showRealTimeNotification(eventData.data);
+                            updateAllData(); // Refresh dashboard
+                        }
+                    } catch (error) {
+                        console.error('Error processing storage event:', error);
+                    }
+                }
+            });
+            
             // Setup login form
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
@@ -1937,6 +2103,9 @@
                             
                             // Show welcome alert
                             showAlert(`Login successful! Welcome ${admin.name}.`, 'success');
+                            
+                            // Check for pending real-time events
+                            realTimeEvents.checkForEvents();
                         } else {
                             showLoginAlert('Invalid password. Please try again.');
                         }
@@ -2000,15 +2169,52 @@
 
         // Show QR registration form (opens when QR code is scanned)
         function showQRRegistrationForm(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) {
+            // Load current meetings data to ensure we have latest
+            const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+            if (savedMeetings) {
+                const currentMeetings = JSON.parse(savedMeetings);
+                const meeting = currentMeetings.find(m => m.id === meetingId);
+                
+                if (!meeting) {
+                    // Hide all other pages
+                    loginPage.style.display = 'none';
+                    loginPage.classList.remove('active');
+                    dashboardPage.style.display = 'none';
+                    dashboardPage.classList.remove('active');
+                    
+                    // Show error message on registration portal
+                    registrationPortal.style.display = 'block';
+                    registrationPortal.classList.add('active');
+                    
+                    const qrAlertContainer = document.getElementById('qr-alert-container');
+                    if (qrAlertContainer) {
+                        qrAlertContainer.innerHTML = `
+                            <div class="alert alert-error" style="display: block;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Meeting not found! Please check the QR code or contact the organizer.
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+                
                 // Hide all other pages
                 loginPage.style.display = 'none';
                 loginPage.classList.remove('active');
                 dashboardPage.style.display = 'none';
                 dashboardPage.classList.remove('active');
                 
-                // Show error message on registration portal
+                // Show registration portal
+                registrationPortal.style.display = 'block';
+                registrationPortal.classList.add('active');
+                
+                // Update form with meeting details
+                updateQRRegistrationForm(meeting);
+                
+                // Setup QR registration form event listeners
+                setupQRRegistrationForm(meetingId);
+            } else {
+                // No meetings data found
                 registrationPortal.style.display = 'block';
                 registrationPortal.classList.add('active');
                 
@@ -2017,31 +2223,11 @@
                     qrAlertContainer.innerHTML = `
                         <div class="alert alert-error" style="display: block;">
                             <i class="fas fa-exclamation-circle"></i>
-                            Meeting not found! Please check the QR code.
+                            Meeting system data not available. Please contact the administrator.
                         </div>
                     `;
                 }
-                return;
             }
-            
-            // Hide all other pages
-            loginPage.style.display = 'none';
-            loginPage.classList.remove('active');
-            dashboardPage.style.display = 'none';
-            dashboardPage.classList.remove('active');
-            
-            // Show registration portal
-            registrationPortal.style.display = 'block';
-            registrationPortal.classList.add('active');
-            
-            // Update form with meeting details
-            updateQRRegistrationForm(meeting);
-            
-            // Load previously registered attendees from localStorage
-            loadRegisteredAttendees();
-            
-            // Setup QR registration form event listeners
-            setupQRRegistrationForm(meetingId);
         }
 
         // Update QR registration form with meeting details
@@ -2058,11 +2244,15 @@
             // Set the meeting subtitle
             document.getElementById('meeting-subtitle').textContent = `Register for: ${meeting.title}`;
             
+            // Load departments
+            const savedDepartments = localStorage.getItem('bankMeetingDepartments');
+            const departments = savedDepartments ? JSON.parse(savedDepartments) : [];
+            
             // Populate department dropdown
             const departmentSelect = document.getElementById('department');
             if (departmentSelect) {
                 departmentSelect.innerHTML = '<option value="">Select Department</option>';
-                appState.departments.forEach(dept => {
+                departments.forEach(dept => {
                     const option = document.createElement('option');
                     option.value = dept.id;
                     option.textContent = dept.name;
@@ -2070,7 +2260,7 @@
                 });
                 
                 // Pre-select the meeting's department
-                const meetingDept = appState.departments.find(d => d.name === meeting.department);
+                const meetingDept = departments.find(d => d.name === meeting.department);
                 if (meetingDept) {
                     departmentSelect.value = meetingDept.id;
                 }
@@ -2098,14 +2288,23 @@
 
         // Register attendee via QR code
         function registerAttendeeViaQR(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
+            // Load current meetings data
+            const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+            if (!savedMeetings) {
+                showQRAlert('Meeting data not available!', 'error');
+                return;
+            }
+            
+            const meetings = JSON.parse(savedMeetings);
+            const meeting = meetings.find(m => m.id === meetingId);
+            
             if (!meeting) {
                 showQRAlert('Meeting not found!', 'error');
                 return;
             }
             
             // Check if meeting is at capacity
-            if (meeting.maxAttendees && meeting.attendees.length >= meeting.maxAttendees) {
+            if (meeting.maxAttendees && meeting.attendees && meeting.attendees.length >= meeting.maxAttendees) {
                 showQRAlert('This meeting is already at full capacity!', 'error');
                 return;
             }
@@ -2134,20 +2333,33 @@
                 return;
             }
             
-            // Add to registered attendees in appState
-            appState.attendees.push(attendeeData);
+            // Load current attendees
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            
+            // Add new attendee
+            savedAttendees.push(attendeeData);
+            
+            // Update meeting attendees
+            meeting.attendees = meeting.attendees || [];
             meeting.attendees.push(attendeeData);
             
-            // Also add to localStorage for persistence
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.push(attendeeData);
+            // Save updated data to localStorage
             localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
+            localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
             
             // Show success message
             showQRSuccessMessage(attendeeData);
             
             // Show alert
             showQRAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
+            
+            // Trigger real-time event for admin dashboard
+            realTimeEvents.notifyAllTabs('attendee_registered', {
+                name: attendeeData.name,
+                meetingTitle: attendeeData.meetingTitle,
+                email: attendeeData.email,
+                timestamp: new Date().toLocaleString()
+            });
             
             console.log('New attendee registered via QR:', attendeeData);
         }
@@ -2216,15 +2428,6 @@
             }
         }
 
-        // Load registered attendees from localStorage
-        function loadRegisteredAttendees() {
-            const savedAttendees = localStorage.getItem('bankMeetingAttendees');
-            if (savedAttendees) {
-                appState.registeredAttendees = JSON.parse(savedAttendees);
-                console.log('Loaded attendees from localStorage:', appState.registeredAttendees.length);
-            }
-        }
-
         // Initialize Dashboard
         function initializeDashboard() {
             // Get all DOM elements for dashboard
@@ -2235,12 +2438,6 @@
             const createMeetingBtn = document.getElementById('create-meeting-btn');
             const currentAdminEmail = document.getElementById('current-admin-email');
             
-            // Statistics elements
-            const statMeetings = document.getElementById('stat-meetings');
-            const statAttendees = document.getElementById('stat-attendees');
-            const statDepartments = document.getElementById('stat-departments');
-            const statAdmins = document.getElementById('stat-admins');
-            
             // Set current admin email
             if (currentAdminEmail) {
                 currentAdminEmail.textContent = appState.currentUser.email;
@@ -2248,6 +2445,12 @@
             
             // Update all data
             updateAllData();
+            
+            // Listen for real-time attendee registrations
+            realTimeEvents.on('attendee_registered', function(data) {
+                // Refresh data when new attendee registers
+                updateAllData();
+            });
             
             // Navigation Functionality
             if (navItems) {
@@ -2369,8 +2572,12 @@
                 createMeetingForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    // Get meetings from localStorage to ensure we have latest
+                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+                    const currentMeetings = savedMeetings ? JSON.parse(savedMeetings) : [];
+                    
                     const newMeeting = {
-                        id: appState.meetings.length > 0 ? Math.max(...appState.meetings.map(m => m.id)) + 1 : 1,
+                        id: currentMeetings.length > 0 ? Math.max(...currentMeetings.map(m => m.id)) + 1 : 1,
                         title: document.getElementById('meeting-title').value,
                         department: document.getElementById('meeting-department').value,
                         date: document.getElementById('meeting-date').value,
@@ -2385,8 +2592,16 @@
                         attendees: []
                     };
                     
-                    appState.meetings.push(newMeeting);
-                    saveDataToLocalStorage();
+                    // Add to meetings array
+                    currentMeetings.push(newMeeting);
+                    
+                    // Save to localStorage
+                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(currentMeetings));
+                    
+                    // Update appState
+                    appState.meetings = currentMeetings;
+                    
+                    // Update UI
                     updateAllData();
                     showAlert('Meeting created successfully!', 'success');
                     this.reset();
@@ -2432,9 +2647,13 @@
                 manualAttendeeForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    // Get meetings from localStorage
+                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+                    const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
+                    
                     const meetingSelect = document.getElementById('manual-attendee-meeting');
                     const meetingTitle = meetingSelect.value;
-                    const selectedMeeting = appState.meetings.find(m => m.title === meetingTitle);
+                    const selectedMeeting = meetings.find(m => m.title === meetingTitle);
                     
                     if (!selectedMeeting) {
                         showAlert('Please select a valid meeting', 'error');
@@ -2457,11 +2676,33 @@
                         registrationDate: new Date().toLocaleString()
                     };
                     
-                    appState.attendees.push(newAttendee);
+                    // Get current attendees
+                    const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                    savedAttendees.push(newAttendee);
+                    
+                    // Update meeting attendees
+                    selectedMeeting.attendees = selectedMeeting.attendees || [];
                     selectedMeeting.attendees.push(newAttendee);
-                    saveDataToLocalStorage();
+                    
+                    // Save to localStorage
+                    localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
+                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
+                    
+                    // Update appState
+                    appState.attendees = savedAttendees;
+                    appState.meetings = meetings;
+                    
+                    // Update UI
                     updateAllData();
                     showAlert('Attendee added successfully!', 'success');
+                    
+                    // Trigger real-time event
+                    realTimeEvents.notifyAllTabs('attendee_registered', {
+                        name: newAttendee.name,
+                        meetingTitle: newAttendee.meetingTitle,
+                        email: newAttendee.email,
+                        timestamp: new Date().toLocaleString()
+                    });
                     
                     // Close modal and reset form
                     document.getElementById('add-attendee-modal').classList.add('hidden');
@@ -2475,8 +2716,12 @@
                 addDeptForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    // Get current departments
+                    const savedDepartments = localStorage.getItem('bankMeetingDepartments');
+                    const currentDepartments = savedDepartments ? JSON.parse(savedDepartments) : [];
+                    
                     const newDept = {
-                        id: appState.departments.length > 0 ? Math.max(...appState.departments.map(d => d.id)) + 1 : 1,
+                        id: currentDepartments.length > 0 ? Math.max(...currentDepartments.map(d => d.id)) + 1 : 1,
                         name: document.getElementById('department-name').value,
                         head: document.getElementById('department-head').value,
                         email: document.getElementById('department-email').value,
@@ -2485,8 +2730,10 @@
                         createdAt: new Date().toISOString().split('T')[0]
                     };
                     
-                    appState.departments.push(newDept);
-                    saveDataToLocalStorage();
+                    currentDepartments.push(newDept);
+                    localStorage.setItem('bankMeetingDepartments', JSON.stringify(currentDepartments));
+                    
+                    appState.departments = currentDepartments;
                     updateAllData();
                     showAlert('Department added successfully!', 'success');
                     this.reset();
@@ -2503,8 +2750,12 @@
                 addAdminForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    // Get current admins
+                    const savedAdmins = localStorage.getItem('bankMeetingAdmins');
+                    const currentAdmins = savedAdmins ? JSON.parse(savedAdmins) : [];
+                    
                     const newAdmin = {
-                        id: appState.admins.length > 0 ? Math.max(...appState.admins.map(a => a.id)) + 1 : 1,
+                        id: currentAdmins.length > 0 ? Math.max(...currentAdmins.map(a => a.id)) + 1 : 1,
                         name: document.getElementById('admin-name').value,
                         email: document.getElementById('admin-email').value,
                         department: document.getElementById('admin-department').value,
@@ -2517,14 +2768,16 @@
                     };
                     
                     // Check if admin already exists
-                    const existingAdmin = appState.admins.find(a => a.email.toLowerCase() === newAdmin.email.toLowerCase());
+                    const existingAdmin = currentAdmins.find(a => a.email.toLowerCase() === newAdmin.email.toLowerCase());
                     if (existingAdmin) {
                         showAlert('An admin with this email already exists!', 'error');
                         return;
                     }
                     
-                    appState.admins.push(newAdmin);
-                    saveDataToLocalStorage();
+                    currentAdmins.push(newAdmin);
+                    localStorage.setItem('bankMeetingAdmins', JSON.stringify(currentAdmins));
+                    
+                    appState.admins = currentAdmins;
                     updateAllData();
                     showAlert('Admin added successfully!', 'success');
                     this.reset();
@@ -2541,8 +2794,12 @@
                 editMeetingForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    // Get meetings from localStorage
+                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+                    const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
+                    
                     const meetingId = parseInt(document.getElementById('edit-meeting-id').value);
-                    const meeting = appState.meetings.find(m => m.id === meetingId);
+                    const meeting = meetings.find(m => m.id === meetingId);
                     
                     if (meeting) {
                         meeting.title = document.getElementById('edit-meeting-title').value;
@@ -2556,7 +2813,8 @@
                             parseInt(document.getElementById('edit-meeting-max-attendees').value) : null;
                         meeting.status = document.getElementById('edit-meeting-status').value;
                         
-                        saveDataToLocalStorage();
+                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
+                        appState.meetings = meetings;
                         updateAllData();
                         showAlert('Meeting updated successfully!', 'success');
                         document.getElementById('edit-meeting-modal').classList.add('hidden');
@@ -2570,8 +2828,12 @@
                 editDepartmentForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    // Get departments from localStorage
+                    const savedDepartments = localStorage.getItem('bankMeetingDepartments');
+                    const departments = savedDepartments ? JSON.parse(savedDepartments) : [];
+                    
                     const deptId = parseInt(document.getElementById('edit-department-id').value);
-                    const dept = appState.departments.find(d => d.id === deptId);
+                    const dept = departments.find(d => d.id === deptId);
                     
                     if (dept) {
                         dept.name = document.getElementById('edit-department-name').value;
@@ -2580,21 +2842,37 @@
                         dept.phone = document.getElementById('edit-department-phone').value;
                         dept.description = document.getElementById('edit-department-description').value;
                         
+                        // Get meetings from localStorage
+                        const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+                        const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
+                        
                         // Update department in meetings
-                        appState.meetings.forEach(meeting => {
+                        meetings.forEach(meeting => {
                             if (meeting.department === dept.name) {
                                 meeting.department = dept.name;
                             }
                         });
                         
                         // Update department in admins
-                        appState.admins.forEach(admin => {
+                        const savedAdmins = localStorage.getItem('bankMeetingAdmins');
+                        const admins = savedAdmins ? JSON.parse(savedAdmins) : [];
+                        
+                        admins.forEach(admin => {
                             if (admin.department === dept.name) {
                                 admin.department = dept.name;
                             }
                         });
                         
-                        saveDataToLocalStorage();
+                        // Save all updated data
+                        localStorage.setItem('bankMeetingDepartments', JSON.stringify(departments));
+                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
+                        localStorage.setItem('bankMeetingAdmins', JSON.stringify(admins));
+                        
+                        // Update appState
+                        appState.departments = departments;
+                        appState.meetings = meetings;
+                        appState.admins = admins;
+                        
                         updateAllData();
                         showAlert('Department updated successfully!', 'success');
                         document.getElementById('edit-department-modal').classList.add('hidden');
@@ -2761,6 +3039,9 @@
 
         // Update all data
         function updateAllData() {
+            // Load latest data from localStorage
+            loadDataFromLocalStorage();
+            
             updateStats();
             updateDashboard();
             updateMeetingsPage();
@@ -2812,7 +3093,7 @@
                     <td>${meeting.title}</td>
                     <td>${meeting.date} ${meeting.time}</td>
                     <td>${meeting.department}</td>
-                    <td>${meeting.attendees.length}</td>
+                    <td>${meeting.attendees ? meeting.attendees.length : 0}</td>
                     <td><span class="status ${statusClass}">${meeting.status}</span></td>
                     <td>
                         <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
@@ -2878,12 +3159,12 @@
                         <td>${meeting.date} ${meeting.time}</td>
                         <td>${meeting.department}</td>
                         <td>${meeting.location}</td>
-                        <td>${meeting.attendees.length}${meeting.maxAttendees ? '/' + meeting.maxAttendees : ''}</td>
+                        <td>${meeting.attendees ? meeting.attendees.length : 0}${meeting.maxAttendees ? '/' + meeting.maxAttendees : ''}</td>
                         <td>
                             <button class="btn btn-sm btn-primary generate-qr-btn" data-id="${meeting.id}">
                                 <i class="fas fa-qrcode"></i> Generate QR
                             </button>
-                            ${meeting.attendees.length > 0 ? `
+                            ${meeting.attendees && meeting.attendees.length > 0 ? `
                                 <button class="btn btn-sm btn-success export-meeting-btn" data-meeting="${meeting.title}" style="margin-top: 5px;">
                                     <i class="fas fa-file-excel"></i> Export
                                 </button>
@@ -2919,7 +3200,7 @@
                         <td>${meeting.date} ${meeting.time}</td>
                         <td>${meeting.department}</td>
                         <td>${meeting.location}</td>
-                        <td>${meeting.attendees.length}</td>
+                        <td>${meeting.attendees ? meeting.attendees.length : 0}</td>
                         <td><span class="status ${statusClass}">${meeting.status}</span></td>
                     `;
                     pastTable.appendChild(row);
@@ -2970,20 +3251,10 @@
             
             attendeesTable.innerHTML = '';
             
-            // Combine attendees from appState and localStorage
-            const allAttendees = [...appState.attendees];
-            
-            // Load from localStorage
+            // Get attendees from localStorage (most up-to-date)
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.forEach(savedAttendee => {
-                // Check if attendee already exists in appState
-                const exists = allAttendees.some(a => a.id === savedAttendee.id);
-                if (!exists) {
-                    allAttendees.push(savedAttendee);
-                }
-            });
             
-            allAttendees.forEach(attendee => {
+            savedAttendees.forEach(attendee => {
                 const row = document.createElement('tr');
                 const purposeText = {
                     'loan_consultation': 'Loan Consultation',
@@ -3040,19 +3311,12 @@
             const meetingsSummaryDiv = document.getElementById('meetings-summary');
             if (!meetingsSummaryDiv) return;
             
-            // Combine all attendees
-            const allAttendees = [...appState.attendees];
+            // Get attendees from localStorage
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.forEach(savedAttendee => {
-                const exists = allAttendees.some(a => a.id === savedAttendee.id);
-                if (!exists) {
-                    allAttendees.push(savedAttendee);
-                }
-            });
             
             // Group by meeting
             const groupedByMeeting = {};
-            allAttendees.forEach(attendee => {
+            savedAttendees.forEach(attendee => {
                 const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
                 if (!groupedByMeeting[meetingKey]) {
                     groupedByMeeting[meetingKey] = {
@@ -3477,7 +3741,7 @@
                     <div>
                         <p><strong>Department:</strong><br>${meeting.department}</p>
                         <p><strong>Maximum Attendees:</strong><br>${meeting.maxAttendees || 'Unlimited'}</p>
-                        <p><strong>Current Attendees:</strong><br>${meeting.attendees.length}</p>
+                        <p><strong>Current Attendees:</strong><br>${meeting.attendees ? meeting.attendees.length : 0}</p>
                     </div>
                 </div>
                 
@@ -3488,9 +3752,9 @@
                 
                 <div class="attendees-section" style="margin-bottom: 25px;">
                     <h4 style="color: var(--mustard); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                        <i class="fas fa-users"></i> Attendees (${meeting.attendees.length})
+                        <i class="fas fa-users"></i> Attendees (${meeting.attendees ? meeting.attendees.length : 0})
                     </h4>
-                    ${meeting.attendees.length > 0 ? 
+                    ${meeting.attendees && meeting.attendees.length > 0 ? 
                         `<div style="max-height: 200px; overflow-y: auto;">
                             <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
@@ -3519,7 +3783,7 @@
                     <button class="btn btn-primary" onclick="generateQRCode(${meeting.id})">
                         <i class="fas fa-qrcode"></i> Generate QR Code
                     </button>
-                    ${meeting.attendees.length > 0 ? `
+                    ${meeting.attendees && meeting.attendees.length > 0 ? `
                         <button class="btn btn-success" onclick="exportMeetingAttendees('${meeting.title}'); document.getElementById('meeting-details-modal').classList.add('hidden');">
                             <i class="fas fa-file-excel"></i> Export Attendees
                         </button>
@@ -3545,7 +3809,10 @@
                 const meeting = appState.meetings.find(m => m.id === meetingId);
                 if (meeting) {
                     meeting.status = 'cancelled';
-                    saveDataToLocalStorage();
+                    
+                    // Save to localStorage
+                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
+                    
                     updateAllData();
                     showAlert('Meeting cancelled successfully!', 'success');
                 }
@@ -3604,16 +3871,8 @@
 
         // View attendee details
         function viewAttendeeDetails(attendeeId) {
-            const allAttendees = [...appState.attendees];
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.forEach(savedAttendee => {
-                const exists = allAttendees.some(a => a.id === savedAttendee.id);
-                if (!exists) {
-                    allAttendees.push(savedAttendee);
-                }
-            });
-            
-            const attendee = allAttendees.find(a => a.id === attendeeId);
+            const attendee = savedAttendees.find(a => a.id === attendeeId);
             if (!attendee) return;
             
             const purposeText = {
@@ -3678,20 +3937,24 @@
         // Delete attendee
         function deleteAttendee(attendeeId) {
             if (confirm('Are you sure you want to delete this attendee?')) {
-                // Remove from global attendees
-                appState.attendees = appState.attendees.filter(a => a.id !== attendeeId);
-                
-                // Remove from meeting attendees
-                appState.meetings.forEach(meeting => {
-                    meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
-                });
-                
-                // Remove from localStorage
+                // Remove from localStorage attendees
                 const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                const updatedSavedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
-                localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedSavedAttendees));
+                const updatedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
+                localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedAttendees));
                 
-                saveDataToLocalStorage();
+                // Remove from meetings attendees
+                const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+                savedMeetings.forEach(meeting => {
+                    if (meeting.attendees) {
+                        meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
+                    }
+                });
+                localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
+                
+                // Update appState
+                appState.attendees = updatedAttendees;
+                appState.meetings = savedMeetings;
+                
                 updateAllData();
                 showAlert('Attendee deleted successfully!', 'success');
             }
@@ -3717,7 +3980,9 @@
                     }
                 });
                 
+                // Save all data
                 saveDataToLocalStorage();
+                
                 updateAllData();
                 showAlert('Department deleted successfully!', 'success');
             }
@@ -3740,18 +4005,11 @@
 
         // Export specific meeting attendees
         function exportMeetingAttendees(meetingName) {
-            // Combine all attendees
-            const allAttendees = [...appState.attendees];
+            // Get attendees from localStorage
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.forEach(savedAttendee => {
-                const exists = allAttendees.some(a => a.id === savedAttendee.id);
-                if (!exists) {
-                    allAttendees.push(savedAttendee);
-                }
-            });
             
             // Filter by meeting
-            const meetingAttendees = allAttendees.filter(attendee => 
+            const meetingAttendees = savedAttendees.filter(attendee => 
                 (attendee.meetingTitle === meetingName) || (attendee.meeting === meetingName)
             );
             
@@ -3808,17 +4066,10 @@
 
         // Export all attendees to Excel
         function exportAttendeesToExcel() {
-            // Combine all attendees
-            const allAttendees = [...appState.attendees];
+            // Get attendees from localStorage
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.forEach(savedAttendee => {
-                const exists = allAttendees.some(a => a.id === savedAttendee.id);
-                if (!exists) {
-                    allAttendees.push(savedAttendee);
-                }
-            });
             
-            if (allAttendees.length === 0) {
+            if (savedAttendees.length === 0) {
                 showAlert('No attendees to export', 'error');
                 return;
             }
@@ -3827,7 +4078,7 @@
             let csvContent = "data:text/csv;charset=utf-8,";
             csvContent += "Name,Email,Phone,Account Number,Meeting,Meeting Date,Department,Purpose,Registration Date,Notes\n";
             
-            allAttendees.forEach(attendee => {
+            savedAttendees.forEach(attendee => {
                 const purposeText = {
                     'loan_consultation': 'Loan Consultation',
                     'account_opening': 'Account Opening',
@@ -3865,29 +4116,22 @@
             link.click();
             document.body.removeChild(link);
             
-            showAlert(`Exported ${allAttendees.length} attendees to CSV`, 'success');
+            showAlert(`Exported ${savedAttendees.length} attendees to CSV`, 'success');
         }
 
         // Export all meetings data
         function exportAllMeetingsData() {
-            // Combine all attendees
-            const allAttendees = [...appState.attendees];
+            // Get attendees from localStorage
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            savedAttendees.forEach(savedAttendee => {
-                const exists = allAttendees.some(a => a.id === savedAttendee.id);
-                if (!exists) {
-                    allAttendees.push(savedAttendee);
-                }
-            });
             
-            if (allAttendees.length === 0) {
+            if (savedAttendees.length === 0) {
                 showAlert('No attendees to export', 'error');
                 return;
             }
             
             // Group by meeting
             const groupedByMeeting = {};
-            allAttendees.forEach(attendee => {
+            savedAttendees.forEach(attendee => {
                 const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
                 if (!groupedByMeeting[meetingKey]) {
                     groupedByMeeting[meetingKey] = [];
@@ -3900,7 +4144,7 @@
             csvContent += "Bank Meeting System - All Meetings Export\n";
             csvContent += `Export Date: ${new Date().toLocaleDateString()}\n`;
             csvContent += `Total Meetings: ${Object.keys(groupedByMeeting).length}\n`;
-            csvContent += `Total Attendees: ${allAttendees.length}\n\n`;
+            csvContent += `Total Attendees: ${savedAttendees.length}\n\n`;
             
             // Add each meeting section
             Object.entries(groupedByMeeting).forEach(([meetingName, attendees]) => {
@@ -3957,7 +4201,7 @@
             link.click();
             document.body.removeChild(link);
             
-            showAlert(`Exported all meetings data (${Object.keys(groupedByMeeting).length} meetings, ${allAttendees.length} total attendees)`, 'success');
+            showAlert(`Exported all meetings data (${Object.keys(groupedByMeeting).length} meetings, ${savedAttendees.length} total attendees)`, 'success');
         }
 
         // Show add attendee modal
