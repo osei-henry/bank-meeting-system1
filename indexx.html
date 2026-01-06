@@ -1,0 +1,3501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Meeting System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* CSS Embedded Directly in HTML */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --mustard: #FFDB58;
+            --black: #000000;
+            --white: #FFFFFF;
+            --gray: #1a1a1a;
+            --light-gray: #333333;
+            --dark-gray: #0a0a0a;
+            --border-color: #444444;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --info: #2196F3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Page Transitions */
+        .page {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%);
+        }
+
+        .bank-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .bank-logo i {
+            font-size: 4rem;
+            color: var(--mustard);
+            margin-bottom: 20px;
+        }
+
+        .bank-logo h1 {
+            font-size: 2.5rem;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .login-card {
+            background-color: var(--gray);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .login-card h2 {
+            color: var(--white);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--white);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--white);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--mustard);
+            box-shadow: 0 0 0 2px rgba(255, 219, 88, 0.2);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--mustard);
+            color: var(--black);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 219, 88, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--mustard);
+            border: 1px solid var(--mustard);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 219, 88, 0.1);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .demo-notes {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(255, 219, 88, 0.1);
+            border-radius: 6px;
+            border-left: 4px solid var(--mustard);
+        }
+
+        .demo-notes p {
+            font-size: 0.9rem;
+            color: var(--mustard);
+        }
+
+        /* Dashboard Layout */
+        #dashboard-page {
+            display: none; /* Hidden by default */
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--dark-gray);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .bank-logo-small {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bank-logo-small i {
+            font-size: 1.8rem;
+            color: var(--mustard);
+        }
+
+        .bank-logo-small h2 {
+            font-size: 1.2rem;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background-color: var(--gray);
+            border-radius: 6px;
+        }
+
+        .admin-info i {
+            color: var(--mustard);
+            font-size: 1.2rem;
+        }
+
+        .admin-info span {
+            font-size: 0.9rem;
+            color: var(--white);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #999;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: var(--gray);
+            color: var(--white);
+        }
+
+        .nav-item.active {
+            background-color: var(--gray);
+            color: var(--mustard);
+            border-left-color: var(--mustard);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item span {
+            font-weight: 500;
+        }
+
+        #logout-btn {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            color: #ff6b6b;
+        }
+
+        #logout-btn:hover {
+            color: #ff5252;
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--dark-gray);
+        }
+
+        .main-header h1 {
+            font-size: 1.8rem;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .page-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--gray);
+            border-radius: 10px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--mustard);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 219, 88, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon i {
+            font-size: 1.8rem;
+            color: var(--mustard);
+        }
+
+        .stat-info h3 {
+            font-size: 2.2rem;
+            color: var(--white);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        /* Content Card */
+        .content-card {
+            background-color: var(--gray);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .content-card h3 {
+            color: var(--white);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-card h3 i {
+            color: var(--mustard);
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background-color: var(--light-gray);
+        }
+
+        .data-table th {
+            padding: 15px;
+            text-align: left;
+            color: var(--white);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: #ccc;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status.active {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .status.completed {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+        }
+
+        .status.pending {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
+        .status.cancelled {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--gray);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-lg {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: var(--white);
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: var(--mustard);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        /* Form Grid */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        /* QR Container */
+        .qr-container {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #qrcode {
+            width: 200px;
+            height: 200px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .qr-info {
+            flex-grow: 1;
+            min-width: 300px;
+        }
+
+        .qr-info h3 {
+            color: var(--white);
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .qr-info p {
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background-color: var(--gray);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 300px;
+            position: relative;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #999;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--mustard);
+            border-bottom-color: var(--mustard);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid var(--success);
+            color: #4caf50;
+        }
+
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.2);
+            border-left: 4px solid var(--danger);
+            color: #F44336;
+        }
+
+        /* Badge */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
+        /* QR Registration Portal Styles (Added from first code) */
+        .registration-portal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%);
+        }
+
+        .registration-card {
+            background-color: var(--gray);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .registration-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .registration-header h2 {
+            color: var(--mustard);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .registration-header p {
+            color: #999;
+            font-size: 1rem;
+        }
+
+        /* Meeting Info Section */
+        .meeting-info {
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--mustard);
+        }
+
+        .meeting-info h3 {
+            color: var(--mustard);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .meeting-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ccc;
+        }
+
+        .detail-item i {
+            color: var(--mustard);
+            width: 20px;
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='https://upload.wikimedia.org/wikipedia/commons/1/17/UMB_Head_Office.png' width='16' height='16' fill='%23FFDB58' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* Success Message */
+        .success-message {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .success-message i {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 20px;
+        }
+
+        .success-message h3 {
+            color: var(--mustard);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .success-message p {
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+    
+        .demo-notice {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(255, 219, 88, 0.1);
+            border-radius: 6px;
+            border-left: 4px solid var(--mustard);
+            text-align: center;
+        }
+
+        .demo-notice p {
+            color: var(--mustard);
+            font-size: 0.9rem;
+        }
+
+        /* Meeting Summary Cards */
+        .meeting-summary-card {
+            background: var(--light-gray);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--mustard);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .meeting-summary-card:hover {
+            transform: translateX(5px);
+            border-left-color: var(--success);
+        }
+
+        .meeting-summary-card h4 {
+            color: var(--mustard);
+            margin-bottom: 5px;
+        }
+
+        .meeting-summary-card p {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .nav-item span,
+            .bank-logo-small h2,
+            .admin-info span {
+                display: none;
+            }
+            
+            .bank-logo-small {
+                justify-content: center;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .qr-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .qr-actions {
+                justify-content: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .registration-card {
+                padding: 30px 20px;
+            }
+            
+            .meeting-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .meeting-summary-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .meeting-summary-card .btn {
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+            
+            .main-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .header-actions {
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .modal-content {
+                padding: 10px;
+            }
+            
+            .registration-card {
+                padding: 20px 15px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page (Initially Active) -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="bank-logo">
+                <i class="fas fa-university"></i>
+                <h1>Bank Meeting System</h1>
+            </div>
+            <div class="login-card">
+                <h2>Admin Login</h2>
+                <div id="login-alert" class="alert alert-error"></div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page (Initially Hidden) -->
+    <div id="dashboard-page" class="page">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="bank-logo-small">
+                    <i class="fas fa-university"></i>
+                    <h2>Bank Admin</h2>
+                </div>
+                <div class="admin-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="current-admin-email">ghansah.henry@myumbbank.com</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="meetings">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Meetings</span>
+                </li>
+                <li class="nav-item" data-page="attendees">
+                    <i class="fas fa-users"></i>
+                    <span>Attendees</span>
+                </li>
+                <li class="nav-item" data-page="departments">
+                    <i class="fas fa-building"></i>
+                    <span>Departments</span>
+                </li>
+                <li class="nav-item" data-page="admins">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admins</span>
+                </li>
+                <li class="nav-item" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="create-meeting-btn">
+                        <i class="fas fa-plus"></i> New Meeting
+                    </button>
+                </div>
+            </header>
+
+            <!-- Alert Container -->
+            <div id="alert-container" style="padding: 0 30px;"></div>
+
+            <!-- Dashboard Content -->
+            <div class="page-content" id="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-meetings">0</h3>
+                            <p>Active Meetings</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-attendees">0</h3>
+                            <p>Total Attendees</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-departments">0</h3>
+                            <p>Departments</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-admins">0</h3>
+                            <p>Admins</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="content-card">
+                        <h3><i class="fas fa-chart-line"></i> Meeting Attendance</h3>
+                        <div class="chart-container">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="content-card">
+                        <h3><i class="fas fa-chart-pie"></i> Department Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="departmentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3><i class="fas fa-history"></i> Recent Meetings</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Meeting Title</th>
+                                    <th>Date & Time</th>
+                                    <th>Department</th>
+                                    <th>Attendees</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-meetings-table">
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meetings Content -->
+            <div class="page-content hidden" id="meetings-content">
+                <div class="content-card">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="active-meetings">Active Meetings</button>
+                        <button class="tab-btn" data-tab="past-meetings">Past Meetings</button>
+                        <button class="tab-btn" data-tab="create-meeting">Create New Meeting</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="active-meetings">
+                        <h3><i class="fas fa-calendar-check"></i> Active Meetings</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date & Time</th>
+                                    <th>Department</th>
+                                    <th>Location</th>
+                                    <th>Attendees</th>
+                                    <th>QR Code</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="active-meetings-table">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="tab-content" id="past-meetings">
+                        <h3><i class="fas fa-history"></i> Past Meetings</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date & Time</th>
+                                    <th>Department</th>
+                                    <th>Location</th>
+                                    <th>Attendees</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="past-meetings-table">
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="tab-content" id="create-meeting">
+                        <h3><i class="fas fa-plus-circle"></i> Create New Meeting</h3>
+                        <form id="create-meeting-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="meeting-title">Meeting Title *</label>
+                                    <input type="text" id="meeting-title" class="form-control" placeholder="Loan Consultation" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="meeting-department">Department *</label>
+                                    <select id="meeting-department" class="form-control" required>
+                                        <option value="">Select Department</option>
+                                        
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="meeting-date">Date *</label>
+                                    <input type="date" id="meeting-date" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="meeting-time">Time *</label>
+                                    <input type="time" id="meeting-time" class="form-control" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="meeting-location">Location *</label>
+                                    <input type="text" id="meeting-location" class="form-control" placeholder="Conference Room A" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="meeting-duration">Duration (hours) *</label>
+                                    <input type="number" id="meeting-duration" class="form-control" min="0.5" max="8" step="0.5" value="1" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="meeting-description">Description</label>
+                                <textarea id="meeting-description" class="form-control" rows="3" placeholder="Meeting agenda and objectives"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="meeting-max-attendees">Maximum Attendees</label>
+                                <input type="number" id="meeting-max-attendees" class="form-control" min="1" max="1000" placeholder="Leave empty for unlimited">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-calendar-plus"></i> Create Meeting
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendees Content -->
+            <div class="page-content hidden" id="attendees-content">
+                <div class="content-card">
+                    <h3><i class="fas fa-users"></i> All Attendees</h3>
+                    <div class="header-actions" style="margin-bottom: 20px;">
+                        <button class="btn btn-success" id="export-attendees-btn">
+                            <i class="fas fa-file-excel"></i> Export All to Excel
+                        </button>
+                        <button class="btn btn-warning" id="export-all-meetings-btn">
+                            <i class="fas fa-file-excel"></i> Export All Meetings
+                        </button>
+                        <button class="btn btn-primary" id="add-attendee-btn">
+                            <i class="fas fa-user-plus"></i> Add Attendee
+                        </button>
+                    </div>
+                    
+                    <!-- Meeting Summary Section -->
+                    <div class="content-card meetings-summary-card" style="margin-bottom: 20px;">
+                        <h3><i class="fas fa-chart-bar"></i> Attendees by Meeting</h3>
+                        <div id="meetings-summary">
+                            
+                        </div>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Account No.</th>
+                                <th>Meeting</th>
+                                <th>Meeting Date</th>
+                                <th>Department</th>
+                                <th>Registration Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendees-table">
+                          
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Departments Content -->
+            <div class="page-content hidden" id="departments-content">
+                <div class="content-card">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="view-departments">View Departments</button>
+                        <button class="tab-btn" data-tab="add-department">Add Department</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="view-departments">
+                        <h3><i class="fas fa-building"></i> All Departments</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Department Name</th>
+                                    <th>Head</th>
+                                    <th>Email</th>
+                                    <th>Meetings</th>
+                                    <th>Attendees</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="departments-table">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="tab-content" id="add-department">
+                        <h3><i class="fas fa-plus-circle"></i> Add New Department</h3>
+                        <form id="add-department-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="department-name">Department Name/Branch *</label>
+                                    <input type="text" id="department-name" class="form-control" placeholder="Loan Department" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="department-head">Department Head *</label>
+                                    <input type="text" id="department-head" class="form-control" placeholder="John Doe" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="department-email">Email *</label>
+                                    <input type="email" id="department-email" class="form-control" placeholder="loans@bank.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="department-phone">Phone</label>
+                                    <input type="tel" id="department-phone" class="form-control" placeholder="+1234567890">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="department-description">Description</label>
+                                <textarea id="department-description" class="form-control" rows="3" placeholder="Department purpose and functions"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-building"></i> Add Department
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admins Content -->
+            <div class="page-content hidden" id="admins-content">
+                <div class="content-card">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="view-admins">View Admins</button>
+                        <button class="tab-btn" data-tab="add-admin">Add Admin</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="view-admins">
+                        <h3><i class="fas fa-user-shield"></i> All Administrators</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-table">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="tab-content" id="add-admin">
+                        <h3><i class="fas fa-user-plus"></i> Add New Admin</h3>
+                        <form id="add-admin-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="admin-name">Full Name *</label>
+                                    <input type="text" id="admin-name" class="form-control" placeholder="John Doe" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-email">Email *</label>
+                                    <input type="email" id="admin-email" class="form-control" placeholder="john@bank.com" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="admin-password">Password *</label>
+                                    <input type="password" id="admin-password" class="form-control" placeholder="••••••••" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-department">Department *</label>
+                                    <select id="admin-department" class="form-control" required>
+                                        <option value="">Select Department</option>
+                                        <!-- Will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="admin-role">Role *</label>
+                                    <select id="admin-role" class="form-control" required>
+                                        <option value="admin">Admin</option>
+                                        <option value="super_admin">Super Admin</option>
+                                        <option value="department_head">Department Head</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-phone">Phone</label>
+                                    <input type="tel" id="admin-phone" class="form-control" placeholder="+1234567890">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Add Admin
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- QR Registration Portal  -->
+    <div id="registration-portal" class="page" style="display: none;">
+        <div class="registration-portal">
+            <div class="bank-logo">
+                <i class="fas fa-university"></i>
+                <h1>Bank Meeting Registration</h1>
+            </div>
+            
+            <div class="registration-card">
+                <!-- Alert Messages -->
+                <div id="qr-alert-container"></div>
+                
+                <!-- Registration Form -->
+                <div id="registration-form-container">
+                    <div class="registration-header">
+                        <h2 id="meeting-title">Meeting Registration</h2>
+                        <p id="meeting-subtitle">Scan the QR code to register for this meeting</p>
+                    </div>
+                    
+                    <!-- Meeting Information -->
+                    <div class="meeting-info">
+                        <h3 id="current-meeting-title">Loan Consultation Meeting</h3>
+                        <div class="meeting-details">
+                            <div class="detail-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span id="meeting-date">January 15, 2024</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span id="meeting-time">10:00 AM - 11:00 AM</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="meeting-location">Conference Room A</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-building"></i>
+                                <span id="meeting-department">Loan Department</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Registration Form -->
+                    <form id="attendee-registration-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="full-name">Full Name *</label>
+                                <input type="text" id="full-name" class="form-control" placeholder="Enter your full name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone-number">Phone Number *</label>
+                                <input type="tel" id="phone-number" class="form-control" placeholder="+1 (234) 567-8900" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email-address">Email Address *</label>
+                                <input type="email" id="email-address" class="form-control" placeholder="your.email@example.com" required>
+                            
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="department">Department *</label>
+                                <select id="department" class="form-control" required>
+                                    <option value="">Select Department</option>
+                                    
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="purpose">Purpose of Meeting *</label>
+                                <select id="purpose" class="form-control" required>
+                                    <option value="">Select Purpose</option>
+                                    <option value="loan_consultation">Loan Consultation</option>
+                                    <option value="account_opening">Account Opening</option>
+                                    <option value="investment">Investment Advice</option>
+                                    <option value="business">Business Banking</option>
+                                    <option value="mortgage">Mortgage Inquiry</option>
+                                    <option value="credit_card">Credit Card Application</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="additional-notes">Additional Notes</label>
+                            <textarea id="additional-notes" class="form-control" rows="3" placeholder="Any special requirements or questions"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle"></i> Submit Registration
+                        </button>
+                    </form>
+                </div>
+                
+               
+                <div class="success-message" id="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Registration Successful!</h3>
+                    <p>Thank you for registering for the meeting. Your details have been saved successfully.</p>
+                    <p>You will receive a confirmation email shortly.</p>
+                </div>
+                
+                <!-- Demo Notice -->
+                <div class="demo-notice">
+                    <p><i class="fas fa-info-circle"></i> This is a demo registration form. In a real system, this would connect to your database.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Meeting QR Code</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="qr-container">
+                    <div id="qrcode"></div>
+                    <div class="qr-info">
+                        <h3 id="qr-meeting-title">Meeting Title</h3>
+                        <p><strong>Date:</strong> <span id="qr-meeting-date">Loading...</span></p>
+                        <p><strong>Time:</strong> <span id="qr-meeting-time">Loading...</span></p>
+                        <p><strong>Location:</strong> <span id="qr-meeting-location">Loading...</span></p>
+                        <p><strong>Registration Link:</strong> <br><small id="qr-meeting-link">Loading...</small></p>
+                        <p class="demo-notes"><i class="fas fa-info-circle"></i> Scan this QR code to register for the meeting</p>
+                        <div class="qr-actions">
+                            <button class="btn btn-primary" id="download-qr-btn">
+                                <i class="fas fa-download"></i> Download QR
+                            </button>
+                            <button class="btn btn-secondary" id="copy-link-btn">
+                                <i class="fas fa-copy"></i> Copy Link
+                            </button>
+                            <button class="btn btn-success" id="send-email-btn">
+                                <i class="fas fa-envelope"></i> Send Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meeting Details Modal -->
+    <div id="meeting-details-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Meeting Details</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="meeting-details-content">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Attendee Modal -->
+    <div id="add-attendee-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Attendee</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="manual-attendee-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="manual-attendee-name">Full Name *</label>
+                            <input type="text" id="manual-attendee-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-attendee-email">Email Address *</label>
+                            <input type="email" id="manual-attendee-email" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="manual-attendee-phone">Phone Number *</label>
+                            <input type="tel" id="manual-attendee-phone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-attendee-account">Bank Account Number</label>
+                            <input type="text" id="manual-attendee-account" class="form-control" placeholder="Optional">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="manual-attendee-meeting">Meeting *</label>
+                            <select id="manual-attendee-meeting" class="form-control" required>
+                                <option value="">Select Meeting</option>
+                                
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-attendee-purpose">Purpose of Meeting *</label>
+                            <select id="manual-attendee-purpose" class="form-control" required>
+                                <option value="">Select Purpose</option>
+                                <option value="loan_consultation">Loan Consultation</option>
+                                <option value="account_opening">Account Opening</option>
+                                <option value="investment">Investment Advice</option>
+                                <option value="business">Business Banking</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-attendee-notes">Additional Notes</label>
+                        <textarea id="manual-attendee-notes" class="form-control" rows="2" placeholder="Any special requirements or notes"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Attendee
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const appState = {
+            currentUser: null,
+            meetings: [],
+            attendees: [],
+            departments: [],
+            admins: [],
+            charts: {},
+            registeredAttendees: []
+        };
+
+        // Initialize demo data
+        function initializeDemoData() {
+            // Demo departments
+            appState.departments = [
+                { id: 1, name: 'Loan Department', head: 'John Manager', email: 'loans@bank.com', phone: '+1234567890', description: 'Handles all loan applications and consultations', createdAt: '2024-01-01' },
+                { id: 2, name: 'Investment Banking', head: 'Sarah Investor', email: 'investments@bank.com', phone: '+1234567891', description: 'Investment advice and portfolio management', createdAt: '2024-01-01' },
+                { id: 3, name: 'Customer Service', head: 'Mike Support', email: 'support@bank.com', phone: '+1234567892', description: 'Customer support and general inquiries', createdAt: '2024-01-01' }
+            ];
+
+            // Demo admins
+            appState.admins = [
+                { id: 1, name: 'Henry Ghansah', email: 'ghansah.henry@myumbbank.com', department: 'Loan Department', role: 'super_admin', phone: '+1234567893', lastLogin: '2024-01-15 10:30:00', status: 'active' },
+                { id: 2, name: 'John Manager', email: 'john@bank.com', department: 'Loan Department', role: 'department_head', phone: '+1234567894', lastLogin: '2024-01-14 14:20:00', status: 'active' }
+            ];
+
+            // Demo meetings
+            appState.meetings = [
+                { id: 1, title: 'Loan Consultation', department: 'Loan Department', date: '2024-01-15', time: '10:00', location: 'Conference Room A', duration: 1, description: 'Personal loan consultation session', maxAttendees: 10, status: 'active', createdAt: '2024-01-10', attendees: [] },
+                { id: 2, title: 'Investment Seminar', department: 'Investment Banking', date: '2024-01-14', time: '14:00', location: 'Auditorium', duration: 2, description: 'Quarterly investment seminar', maxAttendees: 50, status: 'completed', createdAt: '2024-01-05', attendees: [] },
+                { id: 3, title: 'Account Opening', department: 'Customer Service', date: '2024-01-16', time: '09:00', location: 'Service Desk 1', duration: 0.5, description: 'New account opening session', maxAttendees: 5, status: 'active', createdAt: '2024-01-12', attendees: [] }
+            ];
+
+            // Demo attendees
+            appState.attendees = [
+                { id: 1, name: 'Alice Johnson', email: 'alice@email.com', phone: '+1234567001', account: 'ACC001234', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Interested in home loan', registrationDate: '2024-01-12 09:15:00' },
+                { id: 2, name: 'Bob Smith', email: 'bob@email.com', phone: '+1234567002', account: 'ACC001235', meetingId: 2, meetingTitle: 'Investment Seminar', meetingDate: '2024-01-14', meetingTime: '14:00', department: 'Investment Banking', purpose: 'investment', notes: 'Retirement planning', registrationDate: '2024-01-11 14:30:00' },
+                { id: 3, name: 'Charlie Brown', email: 'charlie@email.com', phone: '+1234567003', account: 'ACC001236', meetingId: 3, meetingTitle: 'Account Opening', meetingDate: '2024-01-16', meetingTime: '09:00', department: 'Customer Service', purpose: 'account_opening', notes: 'Opening business account', registrationDate: '2024-01-13 11:00:00' },
+                { id: 4, name: 'Diana Prince', email: 'diana@email.com', phone: '+1234567004', account: 'ACC001237', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Car loan inquiry', registrationDate: '2024-01-14 15:45:00' }
+            ];
+
+            // Link attendees to meetings
+            appState.meetings[0].attendees = [appState.attendees[0], appState.attendees[3]];
+            appState.meetings[1].attendees = [appState.attendees[1]];
+            appState.meetings[2].attendees = [appState.attendees[2]];
+        }
+
+        // DOM Elements
+        const loginPage = document.getElementById('login-page');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const registrationPortal = document.getElementById('registration-portal');
+        const loginForm = document.getElementById('login-form');
+        const loginAlert = document.getElementById('login-alert');
+        const alertContainer = document.getElementById('alert-container');
+
+        // Demo login credentials
+        const DEMO_EMAIL = 'ghansah.henry@myumbbank.com';
+        const DEMO_PASSWORD = 'Windows@@055020';
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Bank Meeting System initializing...');
+            
+            // Only show login page initially
+            loginPage.style.display = 'block';
+            loginPage.classList.add('active');
+            dashboardPage.style.display = 'none';
+            registrationPortal.style.display = 'none';
+            
+            // Setup login form
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    // Demo validation
+                    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+                        // Set current user
+                        appState.currentUser = {
+                            email: DEMO_EMAIL,
+                            name: 'Henry Ghansah'
+                        };
+                        
+                        // Initialize demo data
+                        initializeDemoData();
+                        
+                        // Hide login page, show dashboard
+                        loginPage.style.display = 'none';
+                        loginPage.classList.remove('active');
+                        dashboardPage.style.display = 'flex';
+                        dashboardPage.classList.add('active');
+                        
+                        // Reset form
+                        loginForm.reset();
+                        
+                        // Initialize dashboard
+                        initializeDashboard();
+                        
+                        // Show welcome alert
+                        showAlert('Login successful! Welcome to Bank Meeting System.', 'success');
+                    } else {
+                        showLoginAlert('Invalid credentials. Use: ghansah.henry@myumbbank.com / Windows@@055020');
+                    }
+                });
+            }
+            
+            // Check if there's a QR code parameter in URL (simulating QR scan)
+            checkForQRRegistration();
+            
+            console.log('Bank Meeting System loaded successfully!');
+        });
+
+        function showLoginAlert(message) {
+            if (loginAlert) {
+                loginAlert.textContent = message;
+                loginAlert.style.display = 'block';
+                loginAlert.className = 'alert alert-error';
+                
+                setTimeout(() => {
+                    loginAlert.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Show alert function
+        function showAlert(message, type = 'success') {
+            if (alertContainer) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                `;
+                alertContainer.innerHTML = '';
+                alertContainer.appendChild(alertDiv);
+                alertDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Check for QR registration parameter in URL
+        function checkForQRRegistration() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const meetingId = urlParams.get('meeting');
+            
+            if (meetingId) {
+                // If we have a meeting ID in URL, show registration form
+                showQRRegistrationForm(parseInt(meetingId));
+                
+                // Remove the parameter from URL
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+
+        // Show QR registration form (opens when QR code is scanned)
+        function showQRRegistrationForm(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                // Hide all other pages
+                loginPage.style.display = 'none';
+                loginPage.classList.remove('active');
+                dashboardPage.style.display = 'none';
+                dashboardPage.classList.remove('active');
+                
+                // Show error message on registration portal
+                registrationPortal.style.display = 'block';
+                registrationPortal.classList.add('active');
+                
+                const qrAlertContainer = document.getElementById('qr-alert-container');
+                if (qrAlertContainer) {
+                    qrAlertContainer.innerHTML = `
+                        <div class="alert alert-error" style="display: block;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Meeting not found! Please check the QR code.
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            // Hide all other pages
+            loginPage.style.display = 'none';
+            loginPage.classList.remove('active');
+            dashboardPage.style.display = 'none';
+            dashboardPage.classList.remove('active');
+            
+            // Show registration portal
+            registrationPortal.style.display = 'block';
+            registrationPortal.classList.add('active');
+            
+            // Update form with meeting details
+            updateQRRegistrationForm(meeting);
+            
+            // Load previously registered attendees from localStorage
+            loadRegisteredAttendees();
+            
+            // Setup QR registration form event listeners
+            setupQRRegistrationForm(meetingId);
+        }
+
+        // Update QR registration form with meeting details
+        function updateQRRegistrationForm(meeting) {
+            if (!meeting) return;
+            
+            document.getElementById('meeting-title').textContent = 'Meeting Registration';
+            document.getElementById('current-meeting-title').textContent = meeting.title;
+            document.getElementById('meeting-date').textContent = meeting.date;
+            document.getElementById('meeting-time').textContent = meeting.time + ' (Duration: ' + meeting.duration + ' hour' + (meeting.duration > 1 ? 's' : '') + ')';
+            document.getElementById('meeting-location').textContent = meeting.location;
+            document.getElementById('meeting-department').textContent = meeting.department;
+            
+            // Set the meeting subtitle
+            document.getElementById('meeting-subtitle').textContent = `Register for: ${meeting.title}`;
+            
+            // Populate department dropdown
+            const departmentSelect = document.getElementById('department');
+            if (departmentSelect) {
+                departmentSelect.innerHTML = '<option value="">Select Department</option>';
+                appState.departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = dept.name;
+                    departmentSelect.appendChild(option);
+                });
+                
+                // Pre-select the meeting's department
+                const meetingDept = appState.departments.find(d => d.name === meeting.department);
+                if (meetingDept) {
+                    departmentSelect.value = meetingDept.id;
+                }
+            }
+        }
+
+        // Setup QR registration form event listeners
+        function setupQRRegistrationForm(meetingId) {
+            const registrationForm = document.getElementById('attendee-registration-form');
+            const successMessage = document.getElementById('success-message');
+            const registrationFormContainer = document.getElementById('registration-form-container');
+            const qrAlertContainer = document.getElementById('qr-alert-container');
+            
+            if (registrationForm) {
+                // Remove any existing event listeners
+                registrationForm.replaceWith(registrationForm.cloneNode(true));
+                const newForm = document.getElementById('attendee-registration-form');
+                
+                newForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    registerAttendeeViaQR(meetingId);
+                });
+            }
+        }
+
+        // Register attendee via QR code
+        function registerAttendeeViaQR(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                showQRAlert('Meeting not found!', 'error');
+                return;
+            }
+            
+            // Check if meeting is at capacity
+            if (meeting.maxAttendees && meeting.attendees.length >= meeting.maxAttendees) {
+                showQRAlert('This meeting is already at full capacity!', 'error');
+                return;
+            }
+            
+            // Get form values
+            const attendeeData = {
+                id: Date.now(),
+                meetingId: meetingId,
+                meetingTitle: meeting.title,
+                meetingDate: meeting.date,
+                meetingTime: meeting.time,
+                name: document.getElementById('full-name').value.trim(),
+                phone: document.getElementById('phone-number').value.trim(),
+                email: document.getElementById('email-address').value.trim(),
+                account: document.getElementById('bank-account').value.trim(),
+                departmentId: document.getElementById('department').value,
+                departmentName: document.getElementById('department').options[document.getElementById('department').selectedIndex].text,
+                purpose: document.getElementById('purpose').value,
+                notes: document.getElementById('additional-notes').value.trim(),
+                registrationDate: new Date().toLocaleString(),
+                status: 'registered'
+            };
+            
+            // Validate form
+            if (!validateQRForm(attendeeData)) {
+                return;
+            }
+            
+            // Add to registered attendees in appState
+            appState.attendees.push(attendeeData);
+            meeting.attendees.push(attendeeData);
+            
+            // Also add to localStorage for persistence
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.push(attendeeData);
+            localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
+            
+            // Show success message
+            showQRSuccessMessage(attendeeData);
+            
+            // Show alert
+            showQRAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
+            
+            console.log('New attendee registered via QR:', attendeeData);
+        }
+
+        // Validate QR form data
+        function validateQRForm(data) {
+            // Check required fields
+            if (!data.name || !data.phone || !data.email || !data.departmentId || !data.purpose) {
+                showQRAlert('Please fill in all required fields marked with *', 'error');
+                return false;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+                showQRAlert('Please enter a valid email address', 'error');
+                return false;
+            }
+            
+            // Validate phone number (basic validation)
+            const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
+            if (!phoneRegex.test(data.phone.replace(/\D/g, ''))) {
+                showQRAlert('Please enter a valid phone number', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Show QR success message
+        function showQRSuccessMessage(attendeeData) {
+            const successMessage = document.getElementById('success-message');
+            const registrationFormContainer = document.getElementById('registration-form-container');
+            
+            if (successMessage && registrationFormContainer) {
+                // Hide registration form
+                registrationFormContainer.style.display = 'none';
+                
+                // Update success message with attendee name
+                const successTitle = successMessage.querySelector('h3');
+                successTitle.textContent = `Thank you, ${attendeeData.name}!`;
+                
+                // Show success message
+                successMessage.style.display = 'block';
+            }
+        }
+
+        // Show QR alert
+        function showQRAlert(message, type = 'success') {
+            const qrAlertContainer = document.getElementById('qr-alert-container');
+            if (qrAlertContainer) {
+                qrAlertContainer.innerHTML = '';
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                `;
+                qrAlertContainer.appendChild(alertDiv);
+                alertDiv.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Load registered attendees from localStorage
+        function loadRegisteredAttendees() {
+            const savedAttendees = localStorage.getItem('bankMeetingAttendees');
+            if (savedAttendees) {
+                appState.registeredAttendees = JSON.parse(savedAttendees);
+                console.log('Loaded attendees from localStorage:', appState.registeredAttendees.length);
+            }
+        }
+
+        // Initialize Dashboard
+        function initializeDashboard() {
+            // Get all DOM elements for dashboard
+            const navItems = document.querySelectorAll('.nav-item');
+            const pageContents = document.querySelectorAll('.page-content');
+            const logoutBtn = document.getElementById('logout-btn');
+            const pageTitle = document.getElementById('page-title');
+            const createMeetingBtn = document.getElementById('create-meeting-btn');
+            const currentAdminEmail = document.getElementById('current-admin-email');
+            
+            // Statistics elements
+            const statMeetings = document.getElementById('stat-meetings');
+            const statAttendees = document.getElementById('stat-attendees');
+            const statDepartments = document.getElementById('stat-departments');
+            const statAdmins = document.getElementById('stat-admins');
+            
+            // Set current admin email
+            if (currentAdminEmail) {
+                currentAdminEmail.textContent = appState.currentUser.email;
+            }
+            
+            // Update all data
+            updateAllData();
+            
+            // Navigation Functionality
+            if (navItems) {
+                navItems.forEach(item => {
+                    if (!item.id) { // Skip logout button
+                        item.addEventListener('click', function() {
+                            // Update active nav item
+                            navItems.forEach(nav => nav.classList.remove('active'));
+                            this.classList.add('active');
+                            
+                            // Get page to show
+                            const page = this.getAttribute('data-page');
+                            
+                            // Update page title
+                            const pageTitles = {
+                                'dashboard': 'Dashboard',
+                                'meetings': 'Meetings',
+                                'attendees': 'Attendees',
+                                'departments': 'Departments',
+                                'admins': 'Admins'
+                            };
+                            if (pageTitle) {
+                                pageTitle.textContent = pageTitles[page];
+                            }
+                            
+                            // Show corresponding content
+                            pageContents.forEach(content => {
+                                content.classList.add('hidden');
+                                if (content.id === `${page}-content`) {
+                                    content.classList.remove('hidden');
+                                }
+                            });
+                            
+                            // Update data for the specific page
+                            if (page === 'dashboard') {
+                                updateDashboard();
+                            } else if (page === 'meetings') {
+                                updateMeetingsPage();
+                            } else if (page === 'attendees') {
+                                updateAttendeesPage();
+                            } else if (page === 'departments') {
+                                updateDepartmentsPage();
+                            } else if (page === 'admins') {
+                                updateAdminsPage();
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Logout Functionality
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to logout?')) {
+                        // Clear current user
+                        appState.currentUser = null;
+                        
+                        // Clear app state
+                        appState.meetings = [];
+                        appState.attendees = [];
+                        appState.departments = [];
+                        appState.admins = [];
+                        
+                        // Destroy charts
+                        Object.values(appState.charts).forEach(chart => {
+                            if (chart) chart.destroy();
+                        });
+                        appState.charts = {};
+                        
+                        // Show login page, hide dashboard
+                        dashboardPage.style.display = 'none';
+                        dashboardPage.classList.remove('active');
+                        loginPage.style.display = 'block';
+                        loginPage.classList.add('active');
+                        
+                        showAlert('You have been logged out successfully.', 'success');
+                    }
+                });
+            }
+            
+            // Create Meeting Button
+            if (createMeetingBtn) {
+                createMeetingBtn.addEventListener('click', function() {
+                    const createTabBtn = document.querySelector('.tab-btn[data-tab="create-meeting"]');
+                    const meetingsNav = document.querySelector('.nav-item[data-page="meetings"]');
+                    
+                    if (createTabBtn) createTabBtn.click();
+                    if (meetingsNav) meetingsNav.click();
+                });
+            }
+            
+            // Setup all other event listeners
+            setupEventListeners();
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            // Tab Navigation
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    const parent = this.closest('.content-card');
+                    
+                    // Update active tab button
+                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding tab content
+                    parent.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    const targetTab = parent.querySelector(`#${tabId}`);
+                    if (targetTab) targetTab.classList.add('active');
+                });
+            });
+
+            // Create meeting form
+            const createMeetingForm = document.getElementById('create-meeting-form');
+            if (createMeetingForm) {
+                createMeetingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const newMeeting = {
+                        id: appState.meetings.length + 1,
+                        title: document.getElementById('meeting-title').value,
+                        department: document.getElementById('meeting-department').value,
+                        date: document.getElementById('meeting-date').value,
+                        time: document.getElementById('meeting-time').value,
+                        location: document.getElementById('meeting-location').value,
+                        duration: parseFloat(document.getElementById('meeting-duration').value),
+                        description: document.getElementById('meeting-description').value,
+                        maxAttendees: document.getElementById('meeting-max-attendees').value ? 
+                            parseInt(document.getElementById('meeting-max-attendees').value) : null,
+                        status: 'active',
+                        createdAt: new Date().toISOString().split('T')[0],
+                        attendees: []
+                    };
+                    
+                    appState.meetings.push(newMeeting);
+                    updateAllData();
+                    showAlert('Meeting created successfully!', 'success');
+                    this.reset();
+                    
+                    // Set default date to tomorrow
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    document.getElementById('meeting-date').valueAsDate = tomorrow;
+                    
+                    // Switch to active meetings tab
+                    const activeTabBtn = document.querySelector('.tab-btn[data-tab="active-meetings"]');
+                    if (activeTabBtn) activeTabBtn.click();
+                });
+            }
+
+            // Export to Excel
+            const exportBtn = document.getElementById('export-attendees-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    exportAttendeesToExcel();
+                });
+            }
+
+            // Export All Meetings
+            const exportAllMeetingsBtn = document.getElementById('export-all-meetings-btn');
+            if (exportAllMeetingsBtn) {
+                exportAllMeetingsBtn.addEventListener('click', function() {
+                    exportAllMeetingsData();
+                });
+            }
+
+            // Add Attendee Button
+            const addAttendeeBtn = document.getElementById('add-attendee-btn');
+            if (addAttendeeBtn) {
+                addAttendeeBtn.addEventListener('click', function() {
+                    showAddAttendeeModal();
+                });
+            }
+
+            // Manual Attendee Form
+            const manualAttendeeForm = document.getElementById('manual-attendee-form');
+            if (manualAttendeeForm) {
+                manualAttendeeForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const meetingSelect = document.getElementById('manual-attendee-meeting');
+                    const selectedMeeting = appState.meetings.find(m => m.title === meetingSelect.value);
+                    
+                    if (!selectedMeeting) {
+                        showAlert('Please select a valid meeting', 'error');
+                        return;
+                    }
+                    
+                    const newAttendee = {
+                        id: Date.now(),
+                        meetingId: selectedMeeting.id,
+                        meetingTitle: selectedMeeting.title,
+                        meetingDate: selectedMeeting.date,
+                        meetingTime: selectedMeeting.time,
+                        name: document.getElementById('manual-attendee-name').value,
+                        email: document.getElementById('manual-attendee-email').value,
+                        phone: document.getElementById('manual-attendee-phone').value,
+                        account: document.getElementById('manual-attendee-account').value,
+                        department: selectedMeeting.department,
+                        purpose: document.getElementById('manual-attendee-purpose').value,
+                        notes: document.getElementById('manual-attendee-notes').value,
+                        registrationDate: new Date().toLocaleString()
+                    };
+                    
+                    appState.attendees.push(newAttendee);
+                    selectedMeeting.attendees.push(newAttendee);
+                    updateAllData();
+                    showAlert('Attendee added successfully!', 'success');
+                    
+                    // Close modal and reset form
+                    document.getElementById('add-attendee-modal').classList.add('hidden');
+                    this.reset();
+                });
+            }
+
+            // Add department form
+            const addDeptForm = document.getElementById('add-department-form');
+            if (addDeptForm) {
+                addDeptForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const newDept = {
+                        id: appState.departments.length + 1,
+                        name: document.getElementById('department-name').value,
+                        head: document.getElementById('department-head').value,
+                        email: document.getElementById('department-email').value,
+                        phone: document.getElementById('department-phone').value,
+                        description: document.getElementById('department-description').value,
+                        createdAt: new Date().toISOString().split('T')[0]
+                    };
+                    
+                    appState.departments.push(newDept);
+                    updateAllData();
+                    showAlert('Department added successfully!', 'success');
+                    this.reset();
+                    
+                    // Switch to view departments tab
+                    const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-departments"]');
+                    if (viewTabBtn) viewTabBtn.click();
+                });
+            }
+
+            // Add admin form
+            const addAdminForm = document.getElementById('add-admin-form');
+            if (addAdminForm) {
+                addAdminForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const newAdmin = {
+                        id: appState.admins.length + 1,
+                        name: document.getElementById('admin-name').value,
+                        email: document.getElementById('admin-email').value,
+                        department: document.getElementById('admin-department').value,
+                        role: document.getElementById('admin-role').value,
+                        phone: document.getElementById('admin-phone').value,
+                        lastLogin: 'Never',
+                        status: 'active'
+                    };
+                    
+                    appState.admins.push(newAdmin);
+                    updateAllData();
+                    showAlert('Admin added successfully!', 'success');
+                    this.reset();
+                    
+                    // Switch to view admins tab
+                    const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
+                    if (viewTabBtn) viewTabBtn.click();
+                });
+            }
+
+            // QR Modal functionality
+            const closeModalBtns = document.querySelectorAll('.close-modal');
+            
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.modal').classList.add('hidden');
+                });
+            });
+
+            // Close modal when clicking outside
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.add('hidden');
+                    }
+                });
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.classList.add('hidden');
+                    });
+                }
+            });
+
+            // Download QR Code
+            const downloadQrBtn = document.getElementById('download-qr-btn');
+            if (downloadQrBtn) {
+                downloadQrBtn.addEventListener('click', function() {
+                    const qrcodeDiv = document.getElementById('qrcode');
+                    const canvas = qrcodeDiv.querySelector('canvas');
+                    
+                    if (canvas) {
+                        const link = document.createElement('a');
+                        link.download = 'meeting-qr-code.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        showAlert('QR Code downloaded successfully!', 'success');
+                    } else {
+                        showAlert('No QR code found to download', 'error');
+                    }
+                });
+            }
+
+            // Copy link to clipboard
+            const copyLinkBtn = document.getElementById('copy-link-btn');
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', function() {
+                    const link = document.getElementById('qr-meeting-link');
+                    if (link) {
+                        const textToCopy = link.textContent || link.innerText;
+                        
+                        // Use the modern clipboard API
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(textToCopy).then(() => {
+                                showAlert('Registration link copied to clipboard!', 'success');
+                            }).catch(err => {
+                                console.error('Failed to copy: ', err);
+                                // Fallback for older browsers
+                                copyTextFallback(textToCopy);
+                            });
+                        } else {
+                            // Fallback for older browsers
+                            copyTextFallback(textToCopy);
+                        }
+                    }
+                    
+                    function copyTextFallback(text) {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = text;
+                        textArea.style.position = 'fixed';
+                        textArea.style.opacity = '0';
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        
+                        try {
+                            document.execCommand('copy');
+                            showAlert('Registration link copied to clipboard!', 'success');
+                        } catch (err) {
+                            console.error('Fallback copy failed: ', err);
+                            showAlert('Failed to copy link', 'error');
+                        }
+                        
+                        document.body.removeChild(textArea);
+                    }
+                });
+            }
+
+            // Send email (demo function)
+            const sendEmailBtn = document.getElementById('send-email-btn');
+            if (sendEmailBtn) {
+                sendEmailBtn.addEventListener('click', function() {
+                    const meetingTitle = document.getElementById('qr-meeting-title').textContent;
+                    const meetingDate = document.getElementById('qr-meeting-date').textContent;
+                    const meetingTime = document.getElementById('qr-meeting-time').textContent;
+                    const registrationLink = document.getElementById('qr-meeting-link').textContent;
+                    
+                    const emailBody = `Meeting Details:\n\nMeeting: ${meetingTitle}\nDate: ${meetingDate}\nTime: ${meetingTime}\nRegistration Link: ${registrationLink}`;
+                    
+                    alert(`Demo: Email would be sent with meeting details:\n\n${emailBody}\n\nIn a real app, this would trigger an email service.`);
+                });
+            }
+        }
+
+        // Update all data
+        function updateAllData() {
+            updateStats();
+            updateDashboard();
+            updateMeetingsPage();
+            updateAttendeesPage();
+            updateDepartmentsPage();
+            updateAdminsPage();
+            initializeCharts();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const statMeetings = document.getElementById('stat-meetings');
+            const statAttendees = document.getElementById('stat-attendees');
+            const statDepartments = document.getElementById('stat-departments');
+            const statAdmins = document.getElementById('stat-admins');
+            
+            if (!statMeetings || !statAttendees || !statDepartments || !statAdmins) return;
+            
+            const activeMeetings = appState.meetings.filter(m => m.status === 'active').length;
+            const totalAttendees = appState.attendees.length;
+            const totalDepartments = appState.departments.length;
+            const totalAdmins = appState.admins.length;
+            
+            statMeetings.textContent = activeMeetings;
+            statAttendees.textContent = totalAttendees;
+            statDepartments.textContent = totalDepartments;
+            statAdmins.textContent = totalAdmins;
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            // Update recent meetings table
+            const recentMeetingsTable = document.getElementById('recent-meetings-table');
+            if (!recentMeetingsTable) return;
+            
+            recentMeetingsTable.innerHTML = '';
+            
+            // Sort meetings by date (newest first) and take top 5
+            const recentMeetings = [...appState.meetings]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            
+            recentMeetings.forEach(meeting => {
+                const row = document.createElement('tr');
+                const statusClass = meeting.status === 'active' ? 'active' : 
+                                  meeting.status === 'completed' ? 'completed' : 'pending';
+                
+                row.innerHTML = `
+                    <td>${meeting.title}</td>
+                    <td>${meeting.date} ${meeting.time}</td>
+                    <td>${meeting.department}</td>
+                    <td>${meeting.attendees.length}</td>
+                    <td><span class="status ${statusClass}">${meeting.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-primary generate-qr-btn" data-id="${meeting.id}">
+                            <i class="fas fa-qrcode"></i> QR
+                        </button>
+                    </td>
+                `;
+                recentMeetingsTable.appendChild(row);
+            });
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-meeting-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    showMeetingDetails(meetingId);
+                });
+            });
+            
+            // Add event listeners to QR buttons
+            document.querySelectorAll('.generate-qr-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    generateQRCode(meetingId);
+                });
+            });
+        }
+
+        // Update meetings page
+        function updateMeetingsPage() {
+            // Update department select in create meeting form
+            const departmentSelect = document.getElementById('meeting-department');
+            if (departmentSelect) {
+                departmentSelect.innerHTML = '<option value="">Select Department</option>';
+                appState.departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.name;
+                    option.textContent = dept.name;
+                    departmentSelect.appendChild(option);
+                });
+            }
+            
+            // Set default date to tomorrow
+            const meetingDateInput = document.getElementById('meeting-date');
+            if (meetingDateInput) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                meetingDateInput.valueAsDate = tomorrow;
+            }
+            
+            // Update active meetings table
+            const activeTable = document.getElementById('active-meetings-table');
+            if (activeTable) {
+                activeTable.innerHTML = '';
+                
+                const activeMeetings = appState.meetings.filter(m => m.status === 'active');
+                activeMeetings.forEach(meeting => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${meeting.title}</td>
+                        <td>${meeting.date} ${meeting.time}</td>
+                        <td>${meeting.department}</td>
+                        <td>${meeting.location}</td>
+                        <td>${meeting.attendees.length}${meeting.maxAttendees ? '/' + meeting.maxAttendees : ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary generate-qr-btn" data-id="${meeting.id}">
+                                <i class="fas fa-qrcode"></i> Generate QR
+                            </button>
+                            ${meeting.attendees.length > 0 ? `
+                                <button class="btn btn-sm btn-success export-meeting-btn" data-meeting="${meeting.title}" style="margin-top: 5px;">
+                                    <i class="fas fa-file-excel"></i> Export
+                                </button>
+                            ` : ''}
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning edit-meeting-btn" data-id="${meeting.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger cancel-meeting-btn" data-id="${meeting.id}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    `;
+                    activeTable.appendChild(row);
+                });
+            }
+            
+            // Update past meetings table
+            const pastTable = document.getElementById('past-meetings-table');
+            if (pastTable) {
+                pastTable.innerHTML = '';
+                
+                const pastMeetings = appState.meetings.filter(m => m.status !== 'active');
+                pastMeetings.forEach(meeting => {
+                    const row = document.createElement('tr');
+                    const statusClass = meeting.status === 'completed' ? 'completed' : 'cancelled';
+                    row.innerHTML = `
+                        <td>${meeting.title}</td>
+                        <td>${meeting.date} ${meeting.time}</td>
+                        <td>${meeting.department}</td>
+                        <td>${meeting.location}</td>
+                        <td>${meeting.attendees.length}</td>
+                        <td><span class="status ${statusClass}">${meeting.status}</span></td>
+                    `;
+                    pastTable.appendChild(row);
+                });
+            }
+            
+            // Add event listeners for dynamic buttons
+            document.querySelectorAll('.generate-qr-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    generateQRCode(meetingId);
+                });
+            });
+            
+            document.querySelectorAll('.cancel-meeting-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    cancelMeeting(meetingId);
+                });
+            });
+            
+            document.querySelectorAll('.view-meeting-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    showMeetingDetails(meetingId);
+                });
+            });
+            
+            document.querySelectorAll('.edit-meeting-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    editMeeting(meetingId);
+                });
+            });
+            
+            document.querySelectorAll('.export-meeting-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingName = this.getAttribute('data-meeting');
+                    exportMeetingAttendees(meetingName);
+                });
+            });
+        }
+
+        // Update attendees page
+        function updateAttendeesPage() {
+            const attendeesTable = document.getElementById('attendees-table');
+            if (!attendeesTable) return;
+            
+            attendeesTable.innerHTML = '';
+            
+            // Combine attendees from appState and localStorage
+            const allAttendees = [...appState.attendees];
+            
+            // Load from localStorage
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.forEach(savedAttendee => {
+                // Check if attendee already exists in appState
+                const exists = allAttendees.some(a => a.id === savedAttendee.id);
+                if (!exists) {
+                    allAttendees.push(savedAttendee);
+                }
+            });
+            
+            allAttendees.forEach(attendee => {
+                const row = document.createElement('tr');
+                const purposeText = {
+                    'loan_consultation': 'Loan Consultation',
+                    'account_opening': 'Account Opening',
+                    'investment': 'Investment',
+                    'business': 'Business',
+                    'mortgage': 'Mortgage Inquiry',
+                    'credit_card': 'Credit Card Application',
+                    'other': 'Other'
+                }[attendee.purpose] || attendee.purpose;
+                
+                row.innerHTML = `
+                    <td>${attendee.name}</td>
+                    <td>${attendee.email}</td>
+                    <td>${attendee.phone}</td>
+                    <td>${attendee.account || 'N/A'}</td>
+                    <td>${attendee.meetingTitle || attendee.meeting || 'N/A'}</td>
+                    <td>${attendee.meetingDate || 'N/A'}</td>
+                    <td>${attendee.departmentName || attendee.department || 'N/A'}</td>
+                    <td>${attendee.registrationDate}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-secondary view-attendee-btn" data-id="${attendee.id}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-attendee-btn" data-id="${attendee.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                attendeesTable.appendChild(row);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.view-attendee-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const attendeeId = parseInt(this.getAttribute('data-id'));
+                    viewAttendeeDetails(attendeeId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-attendee-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const attendeeId = parseInt(this.getAttribute('data-id'));
+                    deleteAttendee(attendeeId);
+                });
+            });
+            
+            // Update meeting summary section
+            updateMeetingSummary();
+        }
+
+        // Update meeting summary section
+        function updateMeetingSummary() {
+            const meetingsSummaryDiv = document.getElementById('meetings-summary');
+            if (!meetingsSummaryDiv) return;
+            
+            // Combine all attendees
+            const allAttendees = [...appState.attendees];
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.forEach(savedAttendee => {
+                const exists = allAttendees.some(a => a.id === savedAttendee.id);
+                if (!exists) {
+                    allAttendees.push(savedAttendee);
+                }
+            });
+            
+            // Group by meeting
+            const groupedByMeeting = {};
+            allAttendees.forEach(attendee => {
+                const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
+                if (!groupedByMeeting[meetingKey]) {
+                    groupedByMeeting[meetingKey] = {
+                        attendees: [],
+                        date: attendee.meetingDate || 'Unknown Date',
+                        department: attendee.departmentName || attendee.department || 'Unknown'
+                    };
+                }
+                groupedByMeeting[meetingKey].attendees.push(attendee);
+            });
+            
+            // Create summary cards
+            meetingsSummaryDiv.innerHTML = '';
+            
+            if (Object.keys(groupedByMeeting).length === 0) {
+                meetingsSummaryDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No meeting attendees yet.</p>';
+                return;
+            }
+            
+            Object.entries(groupedByMeeting).forEach(([meetingName, data]) => {
+                const card = document.createElement('div');
+                card.className = 'meeting-summary-card';
+                
+                // Find meeting ID for export
+                const meeting = appState.meetings.find(m => m.title === meetingName);
+                const meetingId = meeting ? meeting.id : null;
+                
+                card.innerHTML = `
+                    <div>
+                        <h4 style="color: var(--mustard); margin-bottom: 5px;">${meetingName}</h4>
+                        <p style="color: #ccc; font-size: 0.9rem;">
+                            <i class="fas fa-calendar"></i> ${data.date} | 
+                            <i class="fas fa-users"></i> ${data.attendees.length} attendees | 
+                            <i class="fas fa-building"></i> ${data.department}
+                        </p>
+                    </div>
+                    <button class="btn btn-sm btn-primary export-meeting-btn" data-meeting="${meetingName}">
+                        <i class="fas fa-file-excel"></i> Export
+                    </button>
+                `;
+                
+                meetingsSummaryDiv.appendChild(card);
+            });
+            
+            // Add event listeners to export buttons
+            document.querySelectorAll('.export-meeting-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const meetingName = this.getAttribute('data-meeting');
+                    exportMeetingAttendees(meetingName);
+                });
+            });
+        }
+
+        // Update departments page
+        function updateDepartmentsPage() {
+            const departmentsTable = document.getElementById('departments-table');
+            if (!departmentsTable) return;
+            
+            departmentsTable.innerHTML = '';
+            
+            appState.departments.forEach(dept => {
+                const meetingCount = appState.meetings.filter(m => m.department === dept.name).length;
+                const attendeeCount = appState.attendees.filter(a => a.department === dept.name).length;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${dept.name}</td>
+                    <td>${dept.head}</td>
+                    <td>${dept.email}</td>
+                    <td>${meetingCount}</td>
+                    <td>${attendeeCount}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-secondary edit-dept-btn" data-id="${dept.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-dept-btn" data-id="${dept.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                departmentsTable.appendChild(row);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.delete-dept-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const deptId = parseInt(this.getAttribute('data-id'));
+                    deleteDepartment(deptId);
+                });
+            });
+            
+            // Update department select in admin form
+            updateDepartmentSelects();
+        }
+
+        // Update admins page
+        function updateAdminsPage() {
+            const adminsTable = document.getElementById('admins-table');
+            if (!adminsTable) return;
+            
+            adminsTable.innerHTML = '';
+            
+            appState.admins.forEach(admin => {
+                const row = document.createElement('tr');
+                const statusBadge = admin.status === 'active' ? 
+                    '<span class="badge badge-success">Active</span>' : 
+                    '<span class="badge badge-warning">Inactive</span>';
+                
+                row.innerHTML = `
+                    <td>${admin.name}</td>
+                    <td>${admin.email}</td>
+                    <td>${admin.department}</td>
+                    <td>${admin.role.replace('_', ' ').toUpperCase()}</td>
+                    <td>${admin.lastLogin}</td>
+                    <td>${statusBadge}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-secondary edit-admin-btn" data-id="${admin.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                adminsTable.appendChild(row);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.delete-admin-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const adminId = parseInt(this.getAttribute('data-id'));
+                    deleteAdmin(adminId);
+                });
+            });
+            
+            // Update department select in admin form
+            updateDepartmentSelects();
+        }
+
+        // Update department selects
+        function updateDepartmentSelects() {
+            const selects = [
+                document.getElementById('meeting-department'),
+                document.getElementById('admin-department')
+            ];
+            
+            selects.forEach(select => {
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Select Department</option>';
+                    appState.departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.name;
+                        option.textContent = dept.name;
+                        select.appendChild(option);
+                    });
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Destroy existing charts
+            Object.values(appState.charts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            
+            // Meeting attendance chart
+            const attendanceCtx = document.getElementById('attendanceChart');
+            if (attendanceCtx) {
+                const attendanceCtx2d = attendanceCtx.getContext('2d');
+                
+                // Get last 7 days
+                const last7Days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    last7Days.push(date.toISOString().split('T')[0]);
+                }
+                
+                // Count attendees per day
+                const attendanceData = last7Days.map(date => {
+                    return appState.attendees.filter(a => {
+                        const attendeeDate = new Date(a.registrationDate).toISOString().split('T')[0];
+                        return attendeeDate === date;
+                    }).length;
+                });
+                
+                appState.charts.attendance = new Chart(attendanceCtx2d, {
+                    type: 'line',
+                    data: {
+                        labels: last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })),
+                        datasets: [{
+                            label: 'Daily Registrations',
+                            data: attendanceData,
+                            borderColor: '#FFDB58',
+                            backgroundColor: 'rgba(255, 219, 88, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#FFDB58',
+                            pointBorderColor: '#000000',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { 
+                                    color: '#FFFFFF',
+                                    font: { size: 14 }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Meeting Registration Trend (Last 7 Days)',
+                                color: '#FFFFFF',
+                                font: { size: 16, weight: 'bold' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { 
+                                    color: '#CCCCCC',
+                                    font: { size: 12 }
+                                },
+                                grid: { 
+                                    color: '#444444',
+                                    drawBorder: false
+                                }
+                            },
+                            y: {
+                                ticks: { 
+                                    color: '#CCCCCC',
+                                    font: { size: 12 }
+                                },
+                                grid: { 
+                                    color: '#444444',
+                                    drawBorder: false
+                                },
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Registrations',
+                                    color: '#CCCCCC',
+                                    font: { size: 14 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Department distribution chart
+            const departmentCtx = document.getElementById('departmentChart');
+            if (departmentCtx) {
+                const departmentCtx2d = departmentCtx.getContext('2d');
+                
+                // Get department data
+                const departmentLabels = appState.departments.map(d => d.name);
+                const departmentData = appState.departments.map(dept => {
+                    return appState.meetings.filter(m => m.department === dept.name).length;
+                });
+                
+                // Use department data, if no data, show placeholder
+                const hasData = departmentData.some(count => count > 0);
+                
+                if (!hasData) {
+                    departmentLabels.push('No Meetings');
+                    departmentData.push(1);
+                }
+                
+                const departmentColors = ['#FFDB58', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#E91E63', '#00BCD4'];
+                
+                appState.charts.department = new Chart(departmentCtx2d, {
+                    type: 'doughnut',
+                    data: {
+                        labels: departmentLabels,
+                        datasets: [{
+                            data: departmentData,
+                            backgroundColor: departmentColors.slice(0, departmentLabels.length),
+                            borderColor: '#1a1a1a',
+                            borderWidth: 2,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { 
+                                    color: '#FFFFFF',
+                                    font: { size: 12 },
+                                    padding: 20
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Meetings Distribution by Department',
+                                color: '#FFFFFF',
+                                font: { size: 16, weight: 'bold' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} meetings (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '60%',
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        }
+                    }
+                });
+            }
+        }
+
+        // Generate QR Code
+        function generateQRCode(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                showAlert('Meeting not found!', 'error');
+                return;
+            }
+            
+            // Generate unique registration link
+            // In a real app, this would be your actual domain
+            const registrationLink = `${window.location.origin}${window.location.pathname}?meeting=${meetingId}`;
+            
+            // Clear previous QR code
+            const qrcodeDiv = document.getElementById('qrcode');
+            if (qrcodeDiv) {
+                qrcodeDiv.innerHTML = '';
+                
+                // Generate new QR code using QRCode.js
+                try {
+                    new QRCode(qrcodeDiv, {
+                        text: registrationLink,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#FFFFFF",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } catch (error) {
+                    console.error('QR Code generation error:', error);
+                    // Fallback if QRCode library fails
+                    qrcodeDiv.innerHTML = `
+                        <div style="width: 200px; height: 200px; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 40px; color: #ff9800; margin-bottom: 10px;"></i>
+                                <p style="color: #000; font-size: 12px;">QR Code Error<br>Link: ${registrationLink}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Update modal content
+            const qrTitle = document.getElementById('qr-meeting-title');
+            const qrDate = document.getElementById('qr-meeting-date');
+            const qrTime = document.getElementById('qr-meeting-time');
+            const qrLocation = document.getElementById('qr-meeting-location');
+            const qrLink = document.getElementById('qr-meeting-link');
+            
+            if (qrTitle) qrTitle.textContent = meeting.title;
+            if (qrDate) qrDate.textContent = meeting.date;
+            if (qrTime) qrTime.textContent = meeting.time;
+            if (qrLocation) qrLocation.textContent = meeting.location;
+            if (qrLink) qrLink.textContent = registrationLink;
+            
+            // Show modal
+            const qrModal = document.getElementById('qr-modal');
+            if (qrModal) qrModal.classList.remove('hidden');
+            
+            showAlert(`QR Code generated for "${meeting.title}"`, 'success');
+        }
+
+        // Show meeting details
+        function showMeetingDetails(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) return;
+            
+            const detailsDiv = document.getElementById('meeting-details-content');
+            if (!detailsDiv) return;
+            
+            const statusClass = meeting.status === 'active' ? 'active' : 
+                              meeting.status === 'completed' ? 'completed' : 'cancelled';
+            
+            detailsDiv.innerHTML = `
+                <div class="meeting-header" style="margin-bottom: 20px;">
+                    <h3 style="color: var(--mustard); margin-bottom: 10px;">${meeting.title}</h3>
+                    <p><strong>Status:</strong> <span class="status ${statusClass}">${meeting.status}</span></p>
+                </div>
+                
+                <div class="meeting-info" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <p><strong>Date & Time:</strong><br>${meeting.date} at ${meeting.time}</p>
+                        <p><strong>Duration:</strong><br>${meeting.duration} hour${meeting.duration > 1 ? 's' : ''}</p>
+                        <p><strong>Location:</strong><br>${meeting.location}</p>
+                    </div>
+                    <div>
+                        <p><strong>Department:</strong><br>${meeting.department}</p>
+                        <p><strong>Maximum Attendees:</strong><br>${meeting.maxAttendees || 'Unlimited'}</p>
+                        <p><strong>Current Attendees:</strong><br>${meeting.attendees.length}</p>
+                    </div>
+                </div>
+                
+                <div class="meeting-description" style="margin-bottom: 20px;">
+                    <p><strong>Description:</strong></p>
+                    <p>${meeting.description || 'No description provided.'}</p>
+                </div>
+                
+                <div class="attendees-section" style="margin-bottom: 25px;">
+                    <h4 style="color: var(--mustard); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                        <i class="fas fa-users"></i> Attendees (${meeting.attendees.length})
+                    </h4>
+                    ${meeting.attendees.length > 0 ? 
+                        `<div style="max-height: 200px; overflow-y: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Name</th>
+                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Email</th>
+                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Phone</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${meeting.attendees.map(a => `
+                                        <tr>
+                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.name}</td>
+                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.email}</td>
+                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.phone}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>` : 
+                        '<p style="text-align: center; color: #999; padding: 20px;">No attendees yet.</p>'
+                    }
+                </div>
+                
+                <div class="meeting-actions" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="generateQRCode(${meeting.id})">
+                        <i class="fas fa-qrcode"></i> Generate QR Code
+                    </button>
+                    ${meeting.attendees.length > 0 ? `
+                        <button class="btn btn-success" onclick="exportMeetingAttendees('${meeting.title}'); document.getElementById('meeting-details-modal').classList.add('hidden');">
+                            <i class="fas fa-file-excel"></i> Export Attendees
+                        </button>
+                    ` : ''}
+                    ${meeting.status === 'active' ? 
+                        `<button class="btn btn-danger" onclick="cancelMeeting(${meeting.id}); document.getElementById('meeting-details-modal').classList.add('hidden');">
+                            <i class="fas fa-times"></i> Cancel Meeting
+                        </button>` : ''
+                    }
+                    <button class="btn btn-secondary" onclick="document.getElementById('meeting-details-modal').classList.add('hidden');">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            `;
+            
+            const detailsModal = document.getElementById('meeting-details-modal');
+            if (detailsModal) detailsModal.classList.remove('hidden');
+        }
+
+        // Cancel meeting
+        function cancelMeeting(meetingId) {
+            if (confirm('Are you sure you want to cancel this meeting?')) {
+                const meeting = appState.meetings.find(m => m.id === meetingId);
+                if (meeting) {
+                    meeting.status = 'cancelled';
+                    updateAllData();
+                    showAlert('Meeting cancelled successfully!', 'success');
+                }
+            }
+        }
+
+        // Edit meeting
+        function editMeeting(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) return;
+            
+            alert(`Demo: Would open edit form for meeting: ${meeting.title}\n\nIn a real app, this would open a form to edit meeting details.`);
+        }
+
+        // View attendee details
+        function viewAttendeeDetails(attendeeId) {
+            const allAttendees = [...appState.attendees];
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.forEach(savedAttendee => {
+                const exists = allAttendees.some(a => a.id === savedAttendee.id);
+                if (!exists) {
+                    allAttendees.push(savedAttendee);
+                }
+            });
+            
+            const attendee = allAttendees.find(a => a.id === attendeeId);
+            if (!attendee) return;
+            
+            const purposeText = {
+                'loan_consultation': 'Loan Consultation',
+                'account_opening': 'Account Opening',
+                'investment': 'Investment',
+                'business': 'Business',
+                'mortgage': 'Mortgage Inquiry',
+                'credit_card': 'Credit Card Application',
+                'other': 'Other'
+            }[attendee.purpose] || attendee.purpose;
+            
+            alert(`Attendee Details:\n\nName: ${attendee.name}\nEmail: ${attendee.email}\nPhone: ${attendee.phone}\nAccount: ${attendee.account || 'N/A'}\nMeeting: ${attendee.meetingTitle || attendee.meeting || 'N/A'}\nMeeting Date: ${attendee.meetingDate || 'N/A'}\nDepartment: ${attendee.departmentName || attendee.department || 'N/A'}\nPurpose: ${purposeText}\nRegistration Date: ${attendee.registrationDate}\nNotes: ${attendee.notes || 'None'}`);
+        }
+
+        // Delete attendee
+        function deleteAttendee(attendeeId) {
+            if (confirm('Are you sure you want to delete this attendee?')) {
+                // Remove from global attendees
+                appState.attendees = appState.attendees.filter(a => a.id !== attendeeId);
+                
+                // Remove from meeting attendees
+                appState.meetings.forEach(meeting => {
+                    meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
+                });
+                
+                // Remove from localStorage
+                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                const updatedSavedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
+                localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedSavedAttendees));
+                
+                updateAllData();
+                showAlert('Attendee deleted successfully!', 'success');
+            }
+        }
+
+        // Delete department
+        function deleteDepartment(deptId) {
+            if (confirm('Are you sure you want to delete this department? This will affect all related meetings and admins.')) {
+                appState.departments = appState.departments.filter(d => d.id !== deptId);
+                
+                // Remove department from meetings
+                appState.meetings.forEach(meeting => {
+                    if (meeting.department === appState.departments.find(d => d.id === deptId)?.name) {
+                        meeting.department = 'General';
+                    }
+                });
+                
+                // Remove department from admins
+                appState.admins.forEach(admin => {
+                    if (admin.department === appState.departments.find(d => d.id === deptId)?.name) {
+                        admin.department = 'General';
+                    }
+                });
+                
+                updateAllData();
+                showAlert('Department deleted successfully!', 'success');
+            }
+        }
+
+        // Delete admin
+        function deleteAdmin(adminId) {
+            if (adminId === 1) {
+                showAlert('Cannot delete the super admin account!', 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this admin?')) {
+                appState.admins = appState.admins.filter(a => a.id !== adminId);
+                updateAllData();
+                showAlert('Admin deleted successfully!', 'success');
+            }
+        }
+
+        // Export specific meeting attendees
+        function exportMeetingAttendees(meetingName) {
+            // Combine all attendees
+            const allAttendees = [...appState.attendees];
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.forEach(savedAttendee => {
+                const exists = allAttendees.some(a => a.id === savedAttendee.id);
+                if (!exists) {
+                    allAttendees.push(savedAttendee);
+                }
+            });
+            
+            // Filter by meeting
+            const meetingAttendees = allAttendees.filter(attendee => 
+                (attendee.meetingTitle === meetingName) || (attendee.meeting === meetingName)
+            );
+            
+            if (meetingAttendees.length === 0) {
+                showAlert('No attendees found for this meeting', 'error');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += `Meeting: ${meetingName}\n`;
+            csvContent += `Total Attendees: ${meetingAttendees.length}\n\n`;
+            csvContent += "Name,Email,Phone,Account Number,Department,Purpose,Registration Date,Notes\n";
+            
+            meetingAttendees.forEach(attendee => {
+                const purposeText = {
+                    'loan_consultation': 'Loan Consultation',
+                    'account_opening': 'Account Opening',
+                    'investment': 'Investment',
+                    'business': 'Business',
+                    'mortgage': 'Mortgage Inquiry',
+                    'credit_card': 'Credit Card Application',
+                    'other': 'Other'
+                }[attendee.purpose] || attendee.purpose;
+                
+                const row = [
+                    `"${attendee.name}"`,
+                    `"${attendee.email}"`,
+                    `"${attendee.phone}"`,
+                    `"${attendee.account || ''}"`,
+                    `"${attendee.departmentName || attendee.department || ''}"`,
+                    `"${purposeText}"`,
+                    `"${attendee.registrationDate}"`,
+                    `"${attendee.notes || ''}"`
+                ].join(',');
+                
+                csvContent += row + "\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `attendees_${meetingName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`Exported ${meetingAttendees.length} attendees for "${meetingName}"`, 'success');
+        }
+
+        // Export all attendees to Excel
+        function exportAttendeesToExcel() {
+            // Combine all attendees
+            const allAttendees = [...appState.attendees];
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.forEach(savedAttendee => {
+                const exists = allAttendees.some(a => a.id === savedAttendee.id);
+                if (!exists) {
+                    allAttendees.push(savedAttendee);
+                }
+            });
+            
+            if (allAttendees.length === 0) {
+                showAlert('No attendees to export', 'error');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Name,Email,Phone,Account Number,Meeting,Meeting Date,Department,Purpose,Registration Date,Notes\n";
+            
+            allAttendees.forEach(attendee => {
+                const purposeText = {
+                    'loan_consultation': 'Loan Consultation',
+                    'account_opening': 'Account Opening',
+                    'investment': 'Investment',
+                    'business': 'Business',
+                    'mortgage': 'Mortgage Inquiry',
+                    'credit_card': 'Credit Card Application',
+                    'other': 'Other'
+                }[attendee.purpose] || attendee.purpose;
+                
+                const row = [
+                    `"${attendee.name}"`,
+                    `"${attendee.email}"`,
+                    `"${attendee.phone}"`,
+                    `"${attendee.account || ''}"`,
+                    `"${attendee.meetingTitle || attendee.meeting || ''}"`,
+                    `"${attendee.meetingDate || ''}"`,
+                    `"${attendee.departmentName || attendee.department || ''}"`,
+                    `"${purposeText}"`,
+                    `"${attendee.registrationDate}"`,
+                    `"${attendee.notes || ''}"`
+                ].join(',');
+                
+                csvContent += row + "\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `all_attendees_export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`Exported ${allAttendees.length} attendees to CSV`, 'success');
+        }
+
+        // Export all meetings data
+        function exportAllMeetingsData() {
+            // Combine all attendees
+            const allAttendees = [...appState.attendees];
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            savedAttendees.forEach(savedAttendee => {
+                const exists = allAttendees.some(a => a.id === savedAttendee.id);
+                if (!exists) {
+                    allAttendees.push(savedAttendee);
+                }
+            });
+            
+            if (allAttendees.length === 0) {
+                showAlert('No attendees to export', 'error');
+                return;
+            }
+            
+            // Group by meeting
+            const groupedByMeeting = {};
+            allAttendees.forEach(attendee => {
+                const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
+                if (!groupedByMeeting[meetingKey]) {
+                    groupedByMeeting[meetingKey] = [];
+                }
+                groupedByMeeting[meetingKey].push(attendee);
+            });
+            
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Bank Meeting System - All Meetings Export\n";
+            csvContent += `Export Date: ${new Date().toLocaleDateString()}\n`;
+            csvContent += `Total Meetings: ${Object.keys(groupedByMeeting).length}\n`;
+            csvContent += `Total Attendees: ${allAttendees.length}\n\n`;
+            
+            // Add each meeting section
+            Object.entries(groupedByMeeting).forEach(([meetingName, attendees]) => {
+                csvContent += `=== MEETING: ${meetingName} ===\n`;
+                csvContent += `Attendees: ${attendees.length}\n`;
+                
+                // Find meeting details
+                const meeting = appState.meetings.find(m => m.title === meetingName);
+                if (meeting) {
+                    csvContent += `Date: ${meeting.date}\n`;
+                    csvContent += `Time: ${meeting.time}\n`;
+                    csvContent += `Department: ${meeting.department}\n`;
+                    csvContent += `Location: ${meeting.location}\n\n`;
+                }
+                
+                csvContent += "Name,Email,Phone,Account Number,Department,Purpose,Registration Date,Notes\n";
+                
+                attendees.forEach(attendee => {
+                    const purposeText = {
+                        'loan_consultation': 'Loan Consultation',
+                        'account_opening': 'Account Opening',
+                        'investment': 'Investment',
+                        'business': 'Business',
+                        'mortgage': 'Mortgage Inquiry',
+                        'credit_card': 'Credit Card Application',
+                        'other': 'Other'
+                    }[attendee.purpose] || attendee.purpose;
+                    
+                    const row = [
+                        `"${attendee.name}"`,
+                        `"${attendee.email}"`,
+                        `"${attendee.phone}"`,
+                        `"${attendee.account || ''}"`,
+                        `"${attendee.departmentName || attendee.department || ''}"`,
+                        `"${purposeText}"`,
+                        `"${attendee.registrationDate}"`,
+                        `"${attendee.notes || ''}"`
+                    ].join(',');
+                    
+                    csvContent += row + "\n";
+                });
+                
+                csvContent += "\n\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `all_meetings_export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`Exported all meetings data (${Object.keys(groupedByMeeting).length} meetings, ${allAttendees.length} total attendees)`, 'success');
+        }
+
+        // Show add attendee modal
+        function showAddAttendeeModal() {
+            const meetingSelect = document.getElementById('manual-attendee-meeting');
+            if (meetingSelect) {
+                meetingSelect.innerHTML = '<option value="">Select Meeting</option>';
+                appState.meetings.forEach(meeting => {
+                    if (meeting.status === 'active') {
+                        const option = document.createElement('option');
+                        option.value = meeting.title;
+                        option.textContent = `${meeting.title} (${meeting.date} ${meeting.time})`;
+                        meetingSelect.appendChild(option);
+                    }
+                });
+            }
+            
+            document.getElementById('add-attendee-modal').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Meeting Registration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --mustard: #FFDB58;
+            --black: #000000;
+            --white: #FFFFFF;
+            --gray: #1a1a1a;
+            --light-gray: #333333;
+            --dark-gray: #0a0a0a;
+            --border-color: #444444;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --info: #2196F3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Registration Portal Container */
+        .registration-portal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%);
+        }
+
+        .bank-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .bank-logo i {
+            font-size: 4rem;
+            color: var(--mustard);
+            margin-bottom: 15px;
+        }
+
+        .bank-logo h1 {
+            font-size: 2rem;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .registration-card {
+            background-color: var(--gray);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .registration-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .registration-header h2 {
+            color: var(--mustard);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .registration-header p {
+            color: #999;
+            font-size: 1rem;
+        }
+
+        /* Meeting Info Section */
+        .meeting-info {
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--mustard);
+        }
+
+        .meeting-info h3 {
+            color: var(--mustard);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .meeting-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ccc;
+        }
+
+        .detail-item i {
+            color: var(--mustard);
+            width: 20px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--white);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--white);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--mustard);
+            box-shadow: 0 0 0 2px rgba(255, 219, 88, 0.2);
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23FFDB58' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid var(--success);
+            color: #4caf50;
+        }
+
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.2);
+            border-left: 4px solid var(--danger);
+            color: #F44336;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--mustard);
+            color: var(--black);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 219, 88, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--mustard);
+            border: 1px solid var(--mustard);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 219, 88, 0.1);
+        }
+
+        /* Success Message */
+        .success-message {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .success-message i {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 20px;
+        }
+
+        .success-message h3 {
+            color: var(--mustard);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .success-message p {
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        /* Demo Notice */
+        .demo-notice {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(255, 219, 88, 0.1);
+            border-radius: 6px;
+            border-left: 4px solid var(--mustard);
+            text-align: center;
+        }
+
+        .demo-notice p {
+            color: var(--mustard);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .meeting-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .registration-card {
+                padding: 30px 20px;
+            }
+            
+            .bank-logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .registration-card {
+                padding: 20px 15px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- QR Registration Portal -->
+    <div class="registration-portal" id="registration-portal">
+        <div class="bank-logo">
+            <i class="fas fa-university"></i>
+            <h1>Bank Meeting Registration</h1>
+        </div>
+        
+        <div class="registration-card">
+            <!-- Alert Messages -->
+            <div id="alert-container"></div>
+            
+            <!-- Registration Form -->
+            <div id="registration-form-container">
+                <div class="registration-header">
+                    <h2 id="meeting-title">Meeting Registration</h2>
+                    <p id="meeting-subtitle">Scan the QR code to register for this meeting</p>
+                </div>
+                
+                <!-- Meeting Information -->
+                <div class="meeting-info">
+                    <h3 id="current-meeting-title">Loan Consultation Meeting</h3>
+                    <div class="meeting-details">
+                        <div class="detail-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="meeting-date">January 15, 2024</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span id="meeting-time">10:00 AM - 11:00 AM</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="meeting-location">Conference Room A</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-building"></i>
+                            <span id="meeting-department">Loan Department</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Registration Form -->
+                <form id="attendee-registration-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="full-name">Full Name *</label>
+                            <input type="text" id="full-name" class="form-control" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone-number">Phone Number *</label>
+                            <input type="tel" id="phone-number" class="form-control" placeholder="+1 (234) 567-8900" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email-address">Email Address *</label>
+                            <input type="email" id="email-address" class="form-control" placeholder="your.email@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bank-account">Bank Account Number (Optional)</label>
+                            <input type="text" id="bank-account" class="form-control" placeholder="XXXX-XXXX-XXXX">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Department *</label>
+                            <select id="department" class="form-control" required>
+                                <option value="">Select Department</option>
+                                <!-- Departments will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="purpose">Purpose of Meeting *</label>
+                            <select id="purpose" class="form-control" required>
+                                <option value="">Select Purpose</option>
+                                <option value="loan_consultation">Loan Consultation</option>
+                                <option value="account_opening">Account Opening</option>
+                                <option value="investment">Investment Advice</option>
+                                <option value="business">Business Banking</option>
+                                <option value="mortgage">Mortgage Inquiry</option>
+                                <option value="credit_card">Credit Card Application</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="additional-notes">Additional Notes</label>
+                        <textarea id="additional-notes" class="form-control" rows="3" placeholder="Any special requirements or questions"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Submit Registration
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Success Message (Hidden by default) -->
+            <div class="success-message" id="success-message">
+                <i class="fas fa-check-circle"></i>
+                <h3>Registration Complete!</h3>
+                <p>Thank you for registering for the meeting. Your details have been saved successfully.</p>
+                <p>You will receive a confirmation email shortly.</p>
+                <p style="margin-top: 20px; font-size: 0.9rem; color: var(--mustard);">
+                    <i class="fas fa-info-circle"></i> Your registration is complete. You may close this page.
+                </p>
+            </div>
+            
+            <!-- Demo Notice -->
+            <div class="demo-notice">
+                <p><i class="fas fa-info-circle"></i> This is a demo registration form. In a real system, this would connect to your database.</p>
+            </div>
+        </div>
+        
+        <!-- Hidden Data Storage (For Demo) -->
+        <div id="data-storage" style="display: none;">
+            <!-- This will store registered attendees for the dashboard -->
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const appState = {
+            currentMeeting: null,
+            departments: [],
+            registeredAttendees: [],
+            meetingData: {}
+        };
+
+        // DOM Elements
+        const registrationForm = document.getElementById('attendee-registration-form');
+        const successMessage = document.getElementById('success-message');
+        const registrationFormContainer = document.getElementById('registration-form-container');
+        const alertContainer = document.getElementById('alert-container');
+        const departmentSelect = document.getElementById('department');
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('QR Registration Portal initialized');
+            
+            // Load departments
+            loadDepartments();
+            
+            // Check URL parameters for meeting data
+            loadMeetingFromURL();
+            
+            // Load any previously registered attendees
+            loadRegisteredAttendees();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Check if already registered for this meeting
+            checkIfAlreadyRegistered();
+        });
+
+        // Check if user already registered for this meeting
+        function checkIfAlreadyRegistered() {
+            if (!appState.currentMeeting) return;
+            
+            const registrationKey = `registered_${appState.currentMeeting.id}`;
+            if (localStorage.getItem(registrationKey)) {
+                // User already registered, show message and disable form
+                showAlreadyRegisteredMessage();
+                return true;
+            }
+            return false;
+        }
+
+        // Show already registered message
+        function showAlreadyRegisteredMessage() {
+            // Hide registration form
+            registrationFormContainer.style.display = 'none';
+            
+            // Update success message for already registered
+            successMessage.querySelector('h3').textContent = 'Already Registered';
+            successMessage.querySelector('p').innerHTML = 
+                'You have already registered for this meeting.<br>A confirmation email has been sent to your registered email address.';
+            
+            // Show the message
+            successMessage.style.display = 'block';
+            
+            // Add additional info
+            const infoNote = document.createElement('p');
+            infoNote.style.marginTop = '20px';
+            infoNote.style.color = '#999';
+            infoNote.style.fontSize = '0.9rem';
+            infoNote.innerHTML = '<i class="fas fa-info-circle"></i> If you need to make changes, please contact the meeting organizer.';
+            successMessage.appendChild(infoNote);
+        }
+
+        // Load departments from your existing system
+        function loadDepartments() {
+            // In your actual system, this would come from your database
+            // For demo, we'll use sample departments
+            appState.departments = [
+                { id: 1, name: 'Loan Department' },
+                { id: 2, name: 'Investment Banking' },
+                { id: 3, name: 'Customer Service' },
+                { id: 4, name: 'Corporate Banking' },
+                { id: 5, name: 'Retail Banking' },
+                { id: 6, name: 'Wealth Management' },
+                { id: 7, name: 'Credit Department' },
+                { id: 8, name: 'Operations' }
+            ];
+            
+            // Populate department dropdown
+            appState.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = dept.name;
+                departmentSelect.appendChild(option);
+            });
+        }
+
+        // Load meeting data from URL parameters
+        function loadMeetingFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const meetingId = urlParams.get('meeting') || '1';
+            
+            // In your actual system, this would fetch from your database
+            // For demo, we'll use sample meeting data
+            const meetings = {
+                '1': {
+                    id: 1,
+                    title: 'Loan Consultation Meeting',
+                    date: 'January 15, 2024',
+                    time: '10:00 AM - 11:00 AM',
+                    location: 'Conference Room A',
+                    department: 'Loan Department',
+                    description: 'Personal and business loan consultation session'
+                },
+                '2': {
+                    id: 2,
+                    title: 'Investment Seminar',
+                    date: 'January 16, 2024',
+                    time: '2:00 PM - 4:00 PM',
+                    location: 'Main Auditorium',
+                    department: 'Investment Banking',
+                    description: 'Quarterly investment opportunities seminar'
+                },
+                '3': {
+                    id: 3,
+                    title: 'Account Opening Session',
+                    date: 'January 17, 2024',
+                    time: '9:00 AM - 12:00 PM',
+                    location: 'Service Desk 1',
+                    department: 'Customer Service',
+                    description: 'New account opening and consultation'
+                }
+            };
+            
+            appState.currentMeeting = meetings[meetingId] || meetings['1'];
+            
+            // Update UI with meeting details
+            updateMeetingDetails();
+        }
+
+        // Update UI with meeting details
+        function updateMeetingDetails() {
+            if (!appState.currentMeeting) return;
+            
+            document.getElementById('meeting-title').textContent = appState.currentMeeting.title;
+            document.getElementById('current-meeting-title').textContent = appState.currentMeeting.title;
+            document.getElementById('meeting-date').textContent = appState.currentMeeting.date;
+            document.getElementById('meeting-time').textContent = appState.currentMeeting.time;
+            document.getElementById('meeting-location').textContent = appState.currentMeeting.location;
+            document.getElementById('meeting-department').textContent = appState.currentMeeting.department;
+            
+            // Set the meeting subtitle
+            document.getElementById('meeting-subtitle').textContent = 
+                `Register for: ${appState.currentMeeting.title}`;
+        }
+
+        // Load previously registered attendees from localStorage
+        function loadRegisteredAttendees() {
+            const savedAttendees = localStorage.getItem('bankMeetingAttendees');
+            if (savedAttendees) {
+                appState.registeredAttendees = JSON.parse(savedAttendees);
+                console.log('Loaded attendees:', appState.registeredAttendees.length);
+            }
+        }
+
+        // Save attendees to localStorage
+        function saveAttendees() {
+            localStorage.setItem('bankMeetingAttendees', JSON.stringify(appState.registeredAttendees));
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Registration form submission
+            if (registrationForm) {
+                registrationForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Check if already registered
+                    if (checkIfAlreadyRegistered()) {
+                        return;
+                    }
+                    
+                    registerAttendee();
+                });
+            }
+        }
+
+        // Register a new attendee
+        function registerAttendee() {
+            // Check if already registered for this meeting
+            const registrationKey = `registered_${appState.currentMeeting.id}`;
+            if (localStorage.getItem(registrationKey)) {
+                showAlert('You have already registered for this meeting.', 'error');
+                showAlreadyRegisteredMessage();
+                return;
+            }
+            
+            // Get form values
+            const attendeeData = {
+                id: Date.now(), // Generate unique ID
+                meetingId: appState.currentMeeting.id,
+                meetingTitle: appState.currentMeeting.title,
+                name: document.getElementById('full-name').value.trim(),
+                phone: document.getElementById('phone-number').value.trim(),
+                email: document.getElementById('email-address').value.trim(),
+                account: document.getElementById('bank-account').value.trim(),
+                departmentId: document.getElementById('department').value,
+                departmentName: departmentSelect.options[departmentSelect.selectedIndex].text,
+                purpose: document.getElementById('purpose').value,
+                notes: document.getElementById('additional-notes').value.trim(),
+                registrationDate: new Date().toLocaleString(),
+                status: 'registered'
+            };
+            
+            // Validate form
+            if (!validateForm(attendeeData)) {
+                return;
+            }
+            
+            // Add to registered attendees
+            appState.registeredAttendees.push(attendeeData);
+            
+            // Save to localStorage
+            saveAttendees();
+            
+            // Mark as registered for this meeting
+            localStorage.setItem(registrationKey, 'true');
+            
+            // Save to hidden data storage for dashboard
+            saveToDashboardStorage(attendeeData);
+            
+            // Show success message
+            showSuccessMessage(attendeeData);
+            
+            // Reset form (though it will be hidden)
+            registrationForm.reset();
+            
+            // Show alert
+            showAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
+            
+            // Log for debugging
+            console.log('New attendee registered:', attendeeData);
+            console.log('Total attendees:', appState.registeredAttendees.length);
+        }
+
+        // Validate form data
+        function validateForm(data) {
+            // Check required fields
+            if (!data.name || !data.phone || !data.email || !data.departmentId || !data.purpose) {
+                showAlert('Please fill in all required fields marked with *', 'error');
+                return false;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+                showAlert('Please enter a valid email address', 'error');
+                return false;
+            }
+            
+            // Validate phone number (basic validation)
+            const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
+            if (!phoneRegex.test(data.phone.replace(/\D/g, ''))) {
+                showAlert('Please enter a valid phone number', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Show success message (single registration only)
+        function showSuccessMessage(attendeeData) {
+            // Hide registration form
+            registrationFormContainer.style.display = 'none';
+            
+            // Disable all form elements to prevent multiple submissions
+            const formElements = registrationForm.elements;
+            for (let i = 0; i < formElements.length; i++) {
+                formElements[i].disabled = true;
+            }
+            
+            // Update success message
+            const successTitle = successMessage.querySelector('h3');
+            successTitle.textContent = `Registration Complete!`;
+            
+            // Update success message text
+            const successParagraphs = successMessage.querySelectorAll('p');
+            successParagraphs[0].textContent = `Thank you for registering, ${attendeeData.name}!`;
+            successParagraphs[1].textContent = `Your registration details have been saved successfully.`;
+            
+            // Show success message
+            successMessage.style.display = 'block';
+            
+            // Optional: Add auto-close message after 5 seconds
+            setTimeout(() => {
+                const closeMessage = document.createElement('p');
+                closeMessage.style.marginTop = '15px';
+                closeMessage.style.color = '#999';
+                closeMessage.style.fontSize = '0.9rem';
+                closeMessage.innerHTML = '<i class="fas fa-clock"></i> This page can now be closed.';
+                successMessage.appendChild(closeMessage);
+            }, 5000);
+        }
+
+        // Save attendee data to dashboard storage
+        function saveToDashboardStorage(attendeeData) {
+            // Create a hidden storage element or update existing one
+            let storageDiv = document.getElementById('dashboard-storage');
+            if (!storageDiv) {
+                storageDiv = document.createElement('div');
+                storageDiv.id = 'dashboard-storage';
+                storageDiv.style.display = 'none';
+                document.body.appendChild(storageDiv);
+            }
+            
+            // Add the attendee data as JSON
+            const attendeeJSON = JSON.stringify(attendeeData);
+            const dataElement = document.createElement('div');
+            dataElement.className = 'attendee-data';
+            dataElement.setAttribute('data-attendee', attendeeJSON);
+            storageDiv.appendChild(dataElement);
+            
+            // Also store in localStorage for cross-page access
+            const dashboardData = JSON.parse(localStorage.getItem('dashboardAttendees') || '[]');
+            dashboardData.push(attendeeData);
+            localStorage.setItem('dashboardAttendees', JSON.stringify(dashboardData));
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'success') {
+            if (alertContainer) {
+                alertContainer.innerHTML = '';
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                `;
+                alertContainer.appendChild(alertDiv);
+                alertDiv.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Function to get all registered attendees (for your dashboard)
+        function getAllAttendees() {
+            return appState.registeredAttendees;
+        }
+
+        // Function to get attendees by meeting ID
+        function getAttendeesByMeeting(meetingId) {
+            return appState.registeredAttendees.filter(attendee => attendee.meetingId == meetingId);
+        }
+
+        // Function to export attendees data (for your dashboard)
+        function exportAttendeesToCSV() {
+            if (appState.registeredAttendees.length === 0) {
+                showAlert('No attendees to export', 'error');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Name,Email,Phone,Account,Department,Purpose,Registration Date,Meeting,Notes\n";
+            
+            appState.registeredAttendees.forEach(attendee => {
+                const row = [
+                    `"${attendee.name}"`,
+                    `"${attendee.email}"`,
+                    `"${attendee.phone}"`,
+                    `"${attendee.account || ''}"`,
+                    `"${attendee.departmentName}"`,
+                    `"${attendee.purpose}"`,
+                    `"${attendee.registrationDate}"`,
+                    `"${attendee.meetingTitle}"`,
+                    `"${attendee.notes || ''}"`
+                ].join(',');
+                
+                csvContent += row + "\n";
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `meeting_attendees_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert('Attendees exported to CSV successfully!', 'success');
+        }
+
+        // Make functions available globally for your dashboard
+        window.QRRegistration = {
+            getAllAttendees,
+            getAttendeesByMeeting,
+            exportAttendeesToCSV,
+            showAlert,
+            registerAttendee: function(formData) {
+                // Alternative registration method
+                const attendeeData = {
+                    id: Date.now(),
+                    meetingId: appState.currentMeeting?.id || 1,
+                    meetingTitle: appState.currentMeeting?.title || 'Meeting',
+                    ...formData,
+                    registrationDate: new Date().toLocaleString(),
+                    status: 'registered'
+                };
+                
+                appState.registeredAttendees.push(attendeeData);
+                saveAttendees();
+                saveToDashboardStorage(attendeeData);
+                
+                return attendeeData;
+            }
+        };
+    </script>
+</body>
+</html>
