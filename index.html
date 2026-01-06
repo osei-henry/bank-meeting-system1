@@ -847,6 +847,38 @@
             gap: 10px;
             animation: slideInRight 0.3s ease-out;
             max-width: 350px;
+            cursor: pointer;
+        }
+
+        .real-time-notification:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .real-time-notification i {
+            font-size: 24px;
+        }
+
+        .real-time-notification-content {
+            flex-grow: 1;
+        }
+
+        .real-time-notification-content strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .real-time-notification-content p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .real-time-notification-time {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
         }
 
         @keyframes slideInRight {
@@ -863,9 +895,45 @@
         @keyframes fadeOut {
             from {
                 opacity: 1;
+                transform: translateX(0);
             }
             to {
                 opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Live Registration Counter */
+        .live-registration-counter {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background-color: var(--info);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .live-registration-counter i {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
             }
         }
 
@@ -925,7 +993,8 @@
                 align-self: flex-end;
             }
             
-            .real-time-notification {
+            .real-time-notification,
+            .live-registration-counter {
                 left: 20px;
                 right: 20px;
                 max-width: calc(100% - 40px);
@@ -1820,51 +1889,207 @@
             registeredAttendees: []
         };
 
-        // Global real-time event dispatcher
-        const realTimeEvents = {
-            listeners: {},
+        // Real-time Event System
+        const realTimeSystem = {
+            lastCheck: 0,
+            checkInterval: 2000, // Check every 2 seconds
+            notificationQueue: [],
             
-            on(event, callback) {
-                if (!this.listeners[event]) this.listeners[event] = [];
-                this.listeners[event].push(callback);
+            init() {
+                console.log('Real-time system initialized');
+                this.startPolling();
+                
+                // Listen for storage events (cross-tab communication)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'bankMeetingAttendees' || e.key === 'bankMeetingMeetings') {
+                        this.handleDataChange();
+                    }
+                    if (e.key && e.key.startsWith('rt_notification_')) {
+                        this.processNotification(e.newValue);
+                    }
+                });
             },
             
-            emit(event, data) {
-                if (this.listeners[event]) {
-                    this.listeners[event].forEach(callback => callback(data));
+            startPolling() {
+                setInterval(() => {
+                    this.checkForUpdates();
+                }, this.checkInterval);
+            },
+            
+            checkForUpdates() {
+                if (!appState.currentUser) return;
+                
+                // Check for new attendees
+                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                const lastAttendeeCount = appState.attendees.length;
+                
+                if (savedAttendees.length > lastAttendeeCount) {
+                    // New attendees detected
+                    const newAttendees = savedAttendees.slice(lastAttendeeCount);
+                    
+                    // Update appState
+                    appState.attendees = savedAttendees;
+                    
+                    // Update meetings attendees
+                    this.updateMeetingAttendees(newAttendees);
+                    
+                    // Show notifications
+                    newAttendees.forEach(attendee => {
+                        this.showNotification(attendee);
+                    });
+                    
+                    // Update UI
+                    if (typeof updateAllData === 'function') {
+                        updateAllData();
+                    }
+                    
+                    // Show live registration counter
+                    this.showLiveRegistrationCounter(newAttendees.length);
+                }
+                
+                // Check for notification queue
+                this.processNotificationQueue();
+            },
+            
+            updateMeetingAttendees(newAttendees) {
+                const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+                
+                newAttendees.forEach(attendee => {
+                    const meeting = savedMeetings.find(m => m.id === attendee.meetingId);
+                    if (meeting) {
+                        meeting.attendees = meeting.attendees || [];
+                        meeting.attendees.push(attendee);
+                    }
+                });
+                
+                localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
+                appState.meetings = savedMeetings;
+            },
+            
+            handleDataChange() {
+                // Reload data from localStorage
+                loadDataFromLocalStorage();
+                
+                // Update UI
+                if (typeof updateAllData === 'function') {
+                    updateAllData();
                 }
             },
             
-            // For cross-tab communication (simulating real-time)
-            notifyAllTabs(event, data) {
-                // Store event in localStorage for cross-tab communication
-                const eventId = 'realtime_' + Date.now();
-                localStorage.setItem('realtime_event_' + eventId, JSON.stringify({
-                    event: event,
-                    data: data,
-                    timestamp: Date.now()
-                }));
+            showNotification(attendee) {
+                const notification = {
+                    id: Date.now(),
+                    type: 'new_registration',
+                    attendee: attendee,
+                    timestamp: new Date().toLocaleTimeString(),
+                    read: false
+                };
                 
-                // Clean up old events
-                this.cleanupOldEvents();
+                // Add to queue
+                this.notificationQueue.push(notification);
                 
-                // Trigger local listeners
-                this.emit(event, data);
+                // Save to localStorage for cross-tab
+                localStorage.setItem(`rt_notification_${notification.id}`, JSON.stringify(notification));
                 
-                // Show real-time notification if admin is logged in
-                if (appState.currentUser && event === 'attendee_registered') {
-                    this.showRealTimeNotification(data);
+                // Remove old notifications
+                this.cleanupOldNotifications();
+                
+                // Display notification
+                this.displayNotification(notification);
+            },
+            
+            displayNotification(notification) {
+                if (!appState.currentUser) return;
+                
+                const notificationDiv = document.createElement('div');
+                notificationDiv.className = 'real-time-notification';
+                notificationDiv.setAttribute('data-notification-id', notification.id);
+                notificationDiv.innerHTML = `
+                    <i class="fas fa-user-check"></i>
+                    <div class="real-time-notification-content">
+                        <strong>New Registration!</strong>
+                        <p>${notification.attendee.name} registered for "${notification.attendee.meetingTitle}"</p>
+                        <div class="real-time-notification-time">${notification.timestamp}</div>
+                    </div>
+                    <i class="fas fa-times" style="cursor: pointer;"></i>
+                `;
+                
+                document.body.appendChild(notificationDiv);
+                
+                // Add click event to close
+                notificationDiv.querySelector('.fa-times').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.removeNotification(notificationDiv, notification.id);
+                });
+                
+                // Add click event to view attendee
+                notificationDiv.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('fa-times')) {
+                        viewAttendeeDetails(notification.attendee.id);
+                        this.removeNotification(notificationDiv, notification.id);
+                    }
+                });
+                
+                // Auto-remove after 8 seconds
+                setTimeout(() => {
+                    if (notificationDiv.parentNode) {
+                        this.removeNotification(notificationDiv, notification.id);
+                    }
+                }, 8000);
+                
+                // Play notification sound (optional)
+                this.playNotificationSound();
+            },
+            
+            removeNotification(notificationDiv, notificationId) {
+                notificationDiv.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (notificationDiv.parentNode) {
+                        notificationDiv.parentNode.removeChild(notificationDiv);
+                    }
+                    // Remove from localStorage
+                    localStorage.removeItem(`rt_notification_${notificationId}`);
+                }, 300);
+            },
+            
+            processNotification(data) {
+                try {
+                    const notification = JSON.parse(data);
+                    if (notification.type === 'new_registration' && appState.currentUser) {
+                        this.displayNotification(notification);
+                    }
+                } catch (e) {
+                    console.error('Error processing notification:', e);
                 }
             },
             
-            cleanupOldEvents() {
+            processNotificationQueue() {
+                // Process any pending notifications in localStorage
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('rt_notification_')) {
+                        try {
+                            const notification = JSON.parse(localStorage.getItem(key));
+                            if (!notification.read && appState.currentUser) {
+                                this.displayNotification(notification);
+                                notification.read = true;
+                                localStorage.setItem(key, JSON.stringify(notification));
+                            }
+                        } catch (e) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                }
+            },
+            
+            cleanupOldNotifications() {
                 const now = Date.now();
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (key && key.startsWith('realtime_event_')) {
+                    if (key && key.startsWith('rt_notification_')) {
                         try {
-                            const eventData = JSON.parse(localStorage.getItem(key));
-                            if (now - eventData.timestamp > 60000) { // 1 minute old
+                            const notification = JSON.parse(localStorage.getItem(key));
+                            if (now - notification.id > 300000) { // 5 minutes old
                                 localStorage.removeItem(key);
                             }
                         } catch (e) {
@@ -1874,48 +2099,59 @@
                 }
             },
             
-            checkForEvents() {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('realtime_event_')) {
-                        try {
-                            const eventData = JSON.parse(localStorage.getItem(key));
-                            if (eventData.event === 'attendee_registered' && appState.currentUser) {
-                                this.emit(eventData.event, eventData.data);
-                                this.showRealTimeNotification(eventData.data);
-                            }
-                            // Remove after processing
-                            localStorage.removeItem(key);
-                        } catch (e) {
-                            localStorage.removeItem(key);
+            showLiveRegistrationCounter(count) {
+                // Remove existing counter
+                const existingCounter = document.querySelector('.live-registration-counter');
+                if (existingCounter) {
+                    existingCounter.remove();
+                }
+                
+                if (count > 0) {
+                    const counterDiv = document.createElement('div');
+                    counterDiv.className = 'live-registration-counter';
+                    counterDiv.innerHTML = `
+                        <i class="fas fa-bell"></i>
+                        <span>${count} new registration${count > 1 ? 's' : ''}</span>
+                    `;
+                    
+                    document.body.appendChild(counterDiv);
+                    
+                    // Auto-remove after 5 seconds
+                    setTimeout(() => {
+                        if (counterDiv.parentNode) {
+                            counterDiv.style.animation = 'fadeOut 0.3s ease-out';
+                            setTimeout(() => {
+                                if (counterDiv.parentNode) {
+                                    counterDiv.parentNode.removeChild(counterDiv);
+                                }
+                            }, 300);
                         }
-                    }
+                    }, 5000);
                 }
             },
             
-            showRealTimeNotification(data) {
-                const notification = document.createElement('div');
-                notification.className = 'real-time-notification';
-                notification.innerHTML = `
-                    <i class="fas fa-user-check" style="font-size: 24px;"></i>
-                    <div>
-                        <strong>New Registration!</strong>
-                        <p>${data.name} registered for "${data.meetingTitle}"</p>
-                        <small>${new Date().toLocaleTimeString()}</small>
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                
-                // Auto-remove after 5 seconds
-                setTimeout(() => {
-                    notification.style.animation = 'fadeOut 0.3s ease-out';
-                    setTimeout(() => {
-                        if (notification.parentNode) {
-                            notification.parentNode.removeChild(notification);
-                        }
-                    }, 300);
-                }, 5000);
+            playNotificationSound() {
+                // Create a simple notification sound
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    // Fallback to simple beep if Web Audio API not supported
+                    console.log('🔔 New registration!');
+                }
             }
         };
 
@@ -1998,6 +2234,10 @@
             localStorage.setItem('bankMeetingDepartments', JSON.stringify(appState.departments));
             localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
             localStorage.setItem('bankMeetingAttendees', JSON.stringify(appState.attendees));
+            
+            // Trigger storage event for cross-tab communication
+            const event = new Event('storage');
+            window.dispatchEvent(event);
         }
 
         // Load data from localStorage
@@ -2033,34 +2273,14 @@
             // Load data from localStorage
             loadDataFromLocalStorage();
             
+            // Initialize real-time system
+            realTimeSystem.init();
+            
             // Only show login page initially
             loginPage.style.display = 'block';
             loginPage.classList.add('active');
             dashboardPage.style.display = 'none';
             registrationPortal.style.display = 'none';
-            
-            // Check for real-time events periodically
-            setInterval(() => {
-                if (appState.currentUser) {
-                    realTimeEvents.checkForEvents();
-                }
-            }, 2000); // Check every 2 seconds
-            
-            // Listen for storage events (cross-tab communication)
-            window.addEventListener('storage', function(e) {
-                if (e.key && e.key.startsWith('realtime_event_') && e.newValue && appState.currentUser) {
-                    try {
-                        const eventData = JSON.parse(e.newValue);
-                        if (eventData.event === 'attendee_registered') {
-                            realTimeEvents.emit(eventData.event, eventData.data);
-                            realTimeEvents.showRealTimeNotification(eventData.data);
-                            updateAllData(); // Refresh dashboard
-                        }
-                    } catch (error) {
-                        console.error('Error processing storage event:', error);
-                    }
-                }
-            });
             
             // Setup login form
             if (loginForm) {
@@ -2104,8 +2324,8 @@
                             // Show welcome alert
                             showAlert(`Login successful! Welcome ${admin.name}.`, 'success');
                             
-                            // Check for pending real-time events
-                            realTimeEvents.checkForEvents();
+                            // Check for pending notifications
+                            realTimeSystem.processNotificationQueue();
                         } else {
                             showLoginAlert('Invalid password. Please try again.');
                         }
@@ -2353,15 +2573,11 @@
             // Show alert
             showQRAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
             
-            // Trigger real-time event for admin dashboard
-            realTimeEvents.notifyAllTabs('attendee_registered', {
-                name: attendeeData.name,
-                meetingTitle: attendeeData.meetingTitle,
-                email: attendeeData.email,
-                timestamp: new Date().toLocaleString()
-            });
-            
             console.log('New attendee registered via QR:', attendeeData);
+            
+            // Trigger real-time updates
+            const event = new Event('storage');
+            window.dispatchEvent(event);
         }
 
         // Validate QR form data
@@ -2445,12 +2661,6 @@
             
             // Update all data
             updateAllData();
-            
-            // Listen for real-time attendee registrations
-            realTimeEvents.on('attendee_registered', function(data) {
-                // Refresh data when new attendee registers
-                updateAllData();
-            });
             
             // Navigation Functionality
             if (navItems) {
@@ -2697,12 +2907,8 @@
                     showAlert('Attendee added successfully!', 'success');
                     
                     // Trigger real-time event
-                    realTimeEvents.notifyAllTabs('attendee_registered', {
-                        name: newAttendee.name,
-                        meetingTitle: newAttendee.meetingTitle,
-                        email: newAttendee.email,
-                        timestamp: new Date().toLocaleString()
-                    });
+                    const event = new Event('storage');
+                    window.dispatchEvent(event);
                     
                     // Close modal and reset form
                     document.getElementById('add-attendee-modal').classList.add('hidden');
