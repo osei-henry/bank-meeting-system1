@@ -181,19 +181,6 @@
             font-size: 14px;
         }
 
-        .demo-notes {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: rgba(255, 219, 88, 0.1);
-            border-radius: 6px;
-            border-left: 4px solid var(--mustard);
-        }
-
-        .demo-notes p {
-            font-size: 0.9rem;
-            color: var(--mustard);
-        }
-
         /* Dashboard Layout */
         #dashboard-page {
             display: none; /* Hidden by default */
@@ -662,7 +649,7 @@
             color: #FF9800;
         }
 
-        /* QR Registration Portal Styles (Added from first code) */
+        /* QR Registration Portal Styles */
         .registration-portal {
             display: flex;
             flex-direction: column;
@@ -734,16 +721,6 @@
             width: 20px;
         }
 
-        select.form-control {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='https://upload.wikimedia.org/wikipedia/commons/1/17/UMB_Head_Office.png' width='16' height='16' fill='%23FFDB58' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            background-size: 16px;
-            padding-right: 40px;
-        }
-
         /* Success Message */
         .success-message {
             text-align: center;
@@ -768,7 +745,6 @@
             margin-bottom: 20px;
         }
 
-    
         .demo-notice {
             margin-top: 20px;
             padding: 15px;
@@ -801,14 +777,58 @@
             border-left-color: var(--success);
         }
 
-        .meeting-summary-card h4 {
-            color: var(--mustard);
-            margin-bottom: 5px;
+        /* View Attendee Modal */
+        .attendee-details-modal .modal-content {
+            max-width: 500px;
         }
 
-        .meeting-summary-card p {
+        .attendee-info {
+            display: grid;
+            gap: 15px;
+        }
+
+        .attendee-info-item {
+            padding: 10px;
+            background: var(--light-gray);
+            border-radius: 6px;
+            border-left: 4px solid var(--mustard);
+        }
+
+        .attendee-info-item label {
+            display: block;
+            color: var(--mustard);
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .attendee-info-item p {
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        /* Restricted Access Styles */
+        .restricted-access {
+            text-align: center;
+            padding: 40px;
+            background: var(--light-gray);
+            border-radius: 10px;
+            border: 2px solid var(--danger);
+        }
+
+        .restricted-access i {
+            font-size: 3rem;
+            color: var(--danger);
+            margin-bottom: 20px;
+        }
+
+        .restricted-access h3 {
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .restricted-access p {
             color: #ccc;
-            font-size: 0.9rem;
         }
 
         /* Responsive Design */
@@ -916,17 +936,16 @@
                 <form id="login-form">
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="email" required>
+                        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" class="form-control" placeholder="password" required>
+                        <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-sign-in-alt"></i> Login
                     </button>
                 </form>
-                
             </div>
         </div>
     </div>
@@ -1059,7 +1078,7 @@
                                 </tr>
                             </thead>
                             <tbody id="recent-meetings-table">
-                                
+                                <!-- Will be populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -1090,6 +1109,7 @@
                                 </tr>
                             </thead>
                             <tbody id="active-meetings-table">
+                                <!-- Will be populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -1108,7 +1128,7 @@
                                 </tr>
                             </thead>
                             <tbody id="past-meetings-table">
-                                
+                                <!-- Will be populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -1125,7 +1145,7 @@
                                     <label for="meeting-department">Department *</label>
                                     <select id="meeting-department" class="form-control" required>
                                         <option value="">Select Department</option>
-                                        
+                                        <!-- Will be populated by JavaScript -->
                                     </select>
                                 </div>
                             </div>
@@ -1190,7 +1210,7 @@
                     <div class="content-card meetings-summary-card" style="margin-bottom: 20px;">
                         <h3><i class="fas fa-chart-bar"></i> Attendees by Meeting</h3>
                         <div id="meetings-summary">
-                            
+                            <!-- Will be populated by JavaScript -->
                         </div>
                     </div>
                     
@@ -1209,7 +1229,7 @@
                             </tr>
                         </thead>
                         <tbody id="attendees-table">
-                          
+                            <!-- Will be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -1243,39 +1263,49 @@
                     </div>
                     
                     <div class="tab-content" id="add-department">
-                        <h3><i class="fas fa-plus-circle"></i> Add New Department</h3>
-                        <form id="add-department-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="department-name">Department Name/Branch *</label>
-                                    <input type="text" id="department-name" class="form-control" placeholder="Loan Department" required>
+                        <!-- Restricted content for non-super admins -->
+                        <div id="restricted-department-access" class="restricted-access hidden">
+                            <i class="fas fa-lock"></i>
+                            <h3>Restricted Access</h3>
+                            <p>Only Super Admin can add new departments.</p>
+                        </div>
+                        
+                        <!-- Department form (only visible to super admin) -->
+                        <div id="department-form-container">
+                            <h3><i class="fas fa-plus-circle"></i> Add New Department</h3>
+                            <form id="add-department-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="department-name">Department Name/Branch *</label>
+                                        <input type="text" id="department-name" class="form-control" placeholder="Loan Department" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="department-head">Department Head *</label>
+                                        <input type="text" id="department-head" class="form-control" placeholder="John Doe" required>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="department-head">Department Head *</label>
-                                    <input type="text" id="department-head" class="form-control" placeholder="John Doe" required>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="department-email">Email *</label>
+                                        <input type="email" id="department-email" class="form-control" placeholder="loans@bank.com" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="department-phone">Phone</label>
+                                        <input type="tel" id="department-phone" class="form-control" placeholder="+1234567890">
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="form-row">
+                                
                                 <div class="form-group">
-                                    <label for="department-email">Email *</label>
-                                    <input type="email" id="department-email" class="form-control" placeholder="loans@bank.com" required>
+                                    <label for="department-description">Description</label>
+                                    <textarea id="department-description" class="form-control" rows="3" placeholder="Department purpose and functions"></textarea>
                                 </div>
-                                <div class="form-group">
-                                    <label for="department-phone">Phone</label>
-                                    <input type="tel" id="department-phone" class="form-control" placeholder="+1234567890">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="department-description">Description</label>
-                                <textarea id="department-description" class="form-control" rows="3" placeholder="Department purpose and functions"></textarea>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-building"></i> Add Department
-                            </button>
-                        </form>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-building"></i> Add Department
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1309,59 +1339,69 @@
                     </div>
                     
                     <div class="tab-content" id="add-admin">
-                        <h3><i class="fas fa-user-plus"></i> Add New Admin</h3>
-                        <form id="add-admin-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="admin-name">Full Name *</label>
-                                    <input type="text" id="admin-name" class="form-control" placeholder="John Doe" required>
+                        <!-- Restricted content for non-super admins -->
+                        <div id="restricted-admin-access" class="restricted-access hidden">
+                            <i class="fas fa-lock"></i>
+                            <h3>Restricted Access</h3>
+                            <p>Only Super Admin can add new administrators.</p>
+                        </div>
+                        
+                        <!-- Admin form (only visible to super admin) -->
+                        <div id="admin-form-container">
+                            <h3><i class="fas fa-user-plus"></i> Add New Admin</h3>
+                            <form id="add-admin-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="admin-name">Full Name *</label>
+                                        <input type="text" id="admin-name" class="form-control" placeholder="John Doe" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admin-email">Email *</label>
+                                        <input type="email" id="admin-email" class="form-control" placeholder="john@bank.com" required>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="admin-email">Email *</label>
-                                    <input type="email" id="admin-email" class="form-control" placeholder="john@bank.com" required>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="admin-password">Password *</label>
+                                        <input type="password" id="admin-password" class="form-control" placeholder="••••••••" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admin-department">Department *</label>
+                                        <select id="admin-department" class="form-control" required>
+                                            <option value="">Select Department</option>
+                                            <!-- Will be populated by JavaScript -->
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="admin-password">Password *</label>
-                                    <input type="password" id="admin-password" class="form-control" placeholder="••••••••" required>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="admin-role">Role *</label>
+                                        <select id="admin-role" class="form-control" required>
+                                            <option value="admin">Admin</option>
+                                            <option value="super_admin">Super Admin</option>
+                                            <option value="department_head">Department Head</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admin-phone">Phone</label>
+                                        <input type="tel" id="admin-phone" class="form-control" placeholder="+1234567890">
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="admin-department">Department *</label>
-                                    <select id="admin-department" class="form-control" required>
-                                        <option value="">Select Department</option>
-                                        <!-- Will be populated by JavaScript -->
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="admin-role">Role *</label>
-                                    <select id="admin-role" class="form-control" required>
-                                        <option value="admin">Admin</option>
-                                        <option value="super_admin">Super Admin</option>
-                                        <option value="department_head">Department Head</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-phone">Phone</label>
-                                    <input type="tel" id="admin-phone" class="form-control" placeholder="+1234567890">
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-user-plus"></i> Add Admin
-                            </button>
-                        </form>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i> Add Admin
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- QR Registration Portal  -->
+    <!-- QR Registration Portal -->
     <div id="registration-portal" class="page" style="display: none;">
         <div class="registration-portal">
             <div class="bank-logo">
@@ -1420,14 +1460,19 @@
                             <div class="form-group">
                                 <label for="email-address">Email Address *</label>
                                 <input type="email" id="email-address" class="form-control" placeholder="your.email@example.com" required>
-                            
+                            </div>
+                            <div class="form-group">
+                                <label for="bank-account">Bank Account Number (Optional)</label>
+                                <input type="text" id="bank-account" class="form-control" placeholder="Account number if applicable">
+                            </div>
+                        </div>
                         
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="department">Department *</label>
                                 <select id="department" class="form-control" required>
                                     <option value="">Select Department</option>
-                                    
+                                    <!-- Will be populated by JavaScript -->
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1456,7 +1501,7 @@
                     </form>
                 </div>
                 
-               
+                <!-- Success Message -->
                 <div class="success-message" id="success-message">
                     <i class="fas fa-check-circle"></i>
                     <h3>Registration Successful!</h3>
@@ -1515,8 +1560,81 @@
             </div>
             <div class="modal-body">
                 <div id="meeting-details-content">
-                    
+                    <!-- Meeting details will be populated here -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Meeting Modal -->
+    <div id="edit-meeting-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Meeting</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-meeting-form">
+                    <input type="hidden" id="edit-meeting-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-meeting-title">Meeting Title *</label>
+                            <input type="text" id="edit-meeting-title" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-meeting-department">Department *</label>
+                            <select id="edit-meeting-department" class="form-control" required>
+                                <option value="">Select Department</option>
+                                <!-- Will be populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-meeting-date">Date *</label>
+                            <input type="date" id="edit-meeting-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-meeting-time">Time *</label>
+                            <input type="time" id="edit-meeting-time" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-meeting-location">Location *</label>
+                            <input type="text" id="edit-meeting-location" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-meeting-duration">Duration (hours) *</label>
+                            <input type="number" id="edit-meeting-duration" class="form-control" min="0.5" max="8" step="0.5" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-meeting-description">Description</label>
+                        <textarea id="edit-meeting-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-meeting-max-attendees">Maximum Attendees</label>
+                        <input type="number" id="edit-meeting-max-attendees" class="form-control" min="1" max="1000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-meeting-status">Status *</label>
+                        <select id="edit-meeting-status" class="form-control" required>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -1557,7 +1675,7 @@
                             <label for="manual-attendee-meeting">Meeting *</label>
                             <select id="manual-attendee-meeting" class="form-control" required>
                                 <option value="">Select Meeting</option>
-                                
+                                <!-- Will be populated by JavaScript -->
                             </select>
                         </div>
                         <div class="form-group">
@@ -1586,6 +1704,66 @@
         </div>
     </div>
 
+    <!-- View Attendee Details Modal -->
+    <div id="view-attendee-modal" class="modal hidden attendee-details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Attendee Details</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="attendee-info" id="attendee-details-content">
+                    <!-- Attendee details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Department Modal -->
+    <div id="edit-department-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Department</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-department-form">
+                    <input type="hidden" id="edit-department-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-department-name">Department Name *</label>
+                            <input type="text" id="edit-department-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-department-head">Department Head *</label>
+                            <input type="text" id="edit-department-head" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-department-email">Email *</label>
+                            <input type="email" id="edit-department-email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-department-phone">Phone</label>
+                            <input type="tel" id="edit-department-phone" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-department-description">Description</label>
+                        <textarea id="edit-department-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Application State
         const appState = {
@@ -1598,7 +1776,7 @@
             registeredAttendees: []
         };
 
-        // Initialize demo data
+        // Initialize demo data with proper passwords
         function initializeDemoData() {
             // Demo departments
             appState.departments = [
@@ -1607,10 +1785,44 @@
                 { id: 3, name: 'Customer Service', head: 'Mike Support', email: 'support@bank.com', phone: '+1234567892', description: 'Customer support and general inquiries', createdAt: '2024-01-01' }
             ];
 
-            // Demo admins
+            // Demo admins WITH PROPER PASSWORDS
             appState.admins = [
-                { id: 1, name: 'Henry Ghansah', email: 'ghansah.henry@myumbbank.com', department: 'Loan Department', role: 'super_admin', phone: '+1234567893', lastLogin: '2024-01-15 10:30:00', status: 'active' },
-                { id: 2, name: 'John Manager', email: 'john@bank.com', department: 'Loan Department', role: 'department_head', phone: '+1234567894', lastLogin: '2024-01-14 14:20:00', status: 'active' }
+                { 
+                    id: 1, 
+                    name: 'Henry Ghansah', 
+                    email: 'ghansah.henry@myumbbank.com', 
+                    department: 'Loan Department', 
+                    role: 'super_admin', 
+                    phone: '+1234567893', 
+                    password: 'Windows@@055020', // Storing password
+                    lastLogin: '2024-01-15 10:30:00', 
+                    status: 'active',
+                    createdAt: '2024-01-01'
+                },
+                { 
+                    id: 2, 
+                    name: 'John Manager', 
+                    email: 'john@bank.com', 
+                    department: 'Loan Department', 
+                    role: 'admin', 
+                    phone: '+1234567894', 
+                    password: 'admin123', // Default password for new admins
+                    lastLogin: '2024-01-14 14:20:00', 
+                    status: 'active',
+                    createdAt: '2024-01-01'
+                },
+                { 
+                    id: 3, 
+                    name: 'Sarah Investor', 
+                    email: 'sarah@bank.com', 
+                    department: 'Investment Banking', 
+                    role: 'department_head', 
+                    phone: '+1234567895', 
+                    password: 'admin123', // Default password for new admins
+                    lastLogin: '2024-01-13 09:15:00', 
+                    status: 'active',
+                    createdAt: '2024-01-01'
+                }
             ];
 
             // Demo meetings
@@ -1632,6 +1844,35 @@
             appState.meetings[0].attendees = [appState.attendees[0], appState.attendees[3]];
             appState.meetings[1].attendees = [appState.attendees[1]];
             appState.meetings[2].attendees = [appState.attendees[2]];
+
+            // Save to localStorage for persistence
+            saveDataToLocalStorage();
+        }
+
+        // Save all data to localStorage
+        function saveDataToLocalStorage() {
+            localStorage.setItem('bankMeetingAdmins', JSON.stringify(appState.admins));
+            localStorage.setItem('bankMeetingDepartments', JSON.stringify(appState.departments));
+            localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
+            localStorage.setItem('bankMeetingAttendees', JSON.stringify(appState.attendees));
+        }
+
+        // Load data from localStorage
+        function loadDataFromLocalStorage() {
+            const savedAdmins = localStorage.getItem('bankMeetingAdmins');
+            const savedDepartments = localStorage.getItem('bankMeetingDepartments');
+            const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+            const savedAttendees = localStorage.getItem('bankMeetingAttendees');
+
+            if (savedAdmins) appState.admins = JSON.parse(savedAdmins);
+            if (savedDepartments) appState.departments = JSON.parse(savedDepartments);
+            if (savedMeetings) appState.meetings = JSON.parse(savedMeetings);
+            if (savedAttendees) appState.attendees = JSON.parse(savedAttendees);
+
+            // If no data exists, initialize demo data
+            if (appState.admins.length === 0) {
+                initializeDemoData();
+            }
         }
 
         // DOM Elements
@@ -1642,13 +1883,12 @@
         const loginAlert = document.getElementById('login-alert');
         const alertContainer = document.getElementById('alert-container');
 
-        // Demo login credentials
-        const DEMO_EMAIL = 'ghansah.henry@myumbbank.com';
-        const DEMO_PASSWORD = 'Windows@@055020';
-
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Bank Meeting System initializing...');
+            
+            // Load data from localStorage
+            loadDataFromLocalStorage();
             
             // Only show login page initially
             loginPage.style.display = 'block';
@@ -1664,33 +1904,44 @@
                     const email = document.getElementById('email').value;
                     const password = document.getElementById('password').value;
                     
-                    // Demo validation
-                    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-                        // Set current user
-                        appState.currentUser = {
-                            email: DEMO_EMAIL,
-                            name: 'Henry Ghansah'
-                        };
-                        
-                        // Initialize demo data
-                        initializeDemoData();
-                        
-                        // Hide login page, show dashboard
-                        loginPage.style.display = 'none';
-                        loginPage.classList.remove('active');
-                        dashboardPage.style.display = 'flex';
-                        dashboardPage.classList.add('active');
-                        
-                        // Reset form
-                        loginForm.reset();
-                        
-                        // Initialize dashboard
-                        initializeDashboard();
-                        
-                        // Show welcome alert
-                        showAlert('Login successful! Welcome to Bank Meeting System.', 'success');
+                    // Find admin by email
+                    const admin = appState.admins.find(a => a.email.toLowerCase() === email.toLowerCase());
+                    
+                    if (admin) {
+                        // Check password
+                        if (admin.password === password) {
+                            // Update last login
+                            admin.lastLogin = new Date().toLocaleString();
+                            saveDataToLocalStorage();
+                            
+                            // Set current user
+                            appState.currentUser = {
+                                id: admin.id,
+                                email: admin.email,
+                                name: admin.name,
+                                role: admin.role,
+                                department: admin.department
+                            };
+                            
+                            // Hide login page, show dashboard
+                            loginPage.style.display = 'none';
+                            loginPage.classList.remove('active');
+                            dashboardPage.style.display = 'flex';
+                            dashboardPage.classList.add('active');
+                            
+                            // Reset form
+                            loginForm.reset();
+                            
+                            // Initialize dashboard
+                            initializeDashboard();
+                            
+                            // Show welcome alert
+                            showAlert(`Login successful! Welcome ${admin.name}.`, 'success');
+                        } else {
+                            showLoginAlert('Invalid password. Please try again.');
+                        }
                     } else {
-                        showLoginAlert('Invalid credentials. Use: ghansah.henry@myumbbank.com / Windows@@055020');
+                        showLoginAlert('No admin found with this email. Please check your credentials.');
                     }
                 });
             }
@@ -2054,12 +2305,6 @@
                         // Clear current user
                         appState.currentUser = null;
                         
-                        // Clear app state
-                        appState.meetings = [];
-                        appState.attendees = [];
-                        appState.departments = [];
-                        appState.admins = [];
-                        
                         // Destroy charts
                         Object.values(appState.charts).forEach(chart => {
                             if (chart) chart.destroy();
@@ -2110,6 +2355,11 @@
                     });
                     const targetTab = parent.querySelector(`#${tabId}`);
                     if (targetTab) targetTab.classList.add('active');
+                    
+                    // Handle restricted access for non-super admins
+                    if (tabId === 'add-department' || tabId === 'add-admin') {
+                        checkAdminPermissions();
+                    }
                 });
             });
 
@@ -2120,7 +2370,7 @@
                     e.preventDefault();
                     
                     const newMeeting = {
-                        id: appState.meetings.length + 1,
+                        id: appState.meetings.length > 0 ? Math.max(...appState.meetings.map(m => m.id)) + 1 : 1,
                         title: document.getElementById('meeting-title').value,
                         department: document.getElementById('meeting-department').value,
                         date: document.getElementById('meeting-date').value,
@@ -2136,6 +2386,7 @@
                     };
                     
                     appState.meetings.push(newMeeting);
+                    saveDataToLocalStorage();
                     updateAllData();
                     showAlert('Meeting created successfully!', 'success');
                     this.reset();
@@ -2182,7 +2433,8 @@
                     e.preventDefault();
                     
                     const meetingSelect = document.getElementById('manual-attendee-meeting');
-                    const selectedMeeting = appState.meetings.find(m => m.title === meetingSelect.value);
+                    const meetingTitle = meetingSelect.value;
+                    const selectedMeeting = appState.meetings.find(m => m.title === meetingTitle);
                     
                     if (!selectedMeeting) {
                         showAlert('Please select a valid meeting', 'error');
@@ -2207,6 +2459,7 @@
                     
                     appState.attendees.push(newAttendee);
                     selectedMeeting.attendees.push(newAttendee);
+                    saveDataToLocalStorage();
                     updateAllData();
                     showAlert('Attendee added successfully!', 'success');
                     
@@ -2223,7 +2476,7 @@
                     e.preventDefault();
                     
                     const newDept = {
-                        id: appState.departments.length + 1,
+                        id: appState.departments.length > 0 ? Math.max(...appState.departments.map(d => d.id)) + 1 : 1,
                         name: document.getElementById('department-name').value,
                         head: document.getElementById('department-head').value,
                         email: document.getElementById('department-email').value,
@@ -2233,6 +2486,7 @@
                     };
                     
                     appState.departments.push(newDept);
+                    saveDataToLocalStorage();
                     updateAllData();
                     showAlert('Department added successfully!', 'success');
                     this.reset();
@@ -2250,17 +2504,27 @@
                     e.preventDefault();
                     
                     const newAdmin = {
-                        id: appState.admins.length + 1,
+                        id: appState.admins.length > 0 ? Math.max(...appState.admins.map(a => a.id)) + 1 : 1,
                         name: document.getElementById('admin-name').value,
                         email: document.getElementById('admin-email').value,
                         department: document.getElementById('admin-department').value,
                         role: document.getElementById('admin-role').value,
                         phone: document.getElementById('admin-phone').value,
+                        password: document.getElementById('admin-password').value,
                         lastLogin: 'Never',
-                        status: 'active'
+                        status: 'active',
+                        createdAt: new Date().toISOString().split('T')[0]
                     };
                     
+                    // Check if admin already exists
+                    const existingAdmin = appState.admins.find(a => a.email.toLowerCase() === newAdmin.email.toLowerCase());
+                    if (existingAdmin) {
+                        showAlert('An admin with this email already exists!', 'error');
+                        return;
+                    }
+                    
                     appState.admins.push(newAdmin);
+                    saveDataToLocalStorage();
                     updateAllData();
                     showAlert('Admin added successfully!', 'success');
                     this.reset();
@@ -2268,6 +2532,73 @@
                     // Switch to view admins tab
                     const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
                     if (viewTabBtn) viewTabBtn.click();
+                });
+            }
+
+            // Edit meeting form
+            const editMeetingForm = document.getElementById('edit-meeting-form');
+            if (editMeetingForm) {
+                editMeetingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const meetingId = parseInt(document.getElementById('edit-meeting-id').value);
+                    const meeting = appState.meetings.find(m => m.id === meetingId);
+                    
+                    if (meeting) {
+                        meeting.title = document.getElementById('edit-meeting-title').value;
+                        meeting.department = document.getElementById('edit-meeting-department').value;
+                        meeting.date = document.getElementById('edit-meeting-date').value;
+                        meeting.time = document.getElementById('edit-meeting-time').value;
+                        meeting.location = document.getElementById('edit-meeting-location').value;
+                        meeting.duration = parseFloat(document.getElementById('edit-meeting-duration').value);
+                        meeting.description = document.getElementById('edit-meeting-description').value;
+                        meeting.maxAttendees = document.getElementById('edit-meeting-max-attendees').value ? 
+                            parseInt(document.getElementById('edit-meeting-max-attendees').value) : null;
+                        meeting.status = document.getElementById('edit-meeting-status').value;
+                        
+                        saveDataToLocalStorage();
+                        updateAllData();
+                        showAlert('Meeting updated successfully!', 'success');
+                        document.getElementById('edit-meeting-modal').classList.add('hidden');
+                    }
+                });
+            }
+
+            // Edit department form
+            const editDepartmentForm = document.getElementById('edit-department-form');
+            if (editDepartmentForm) {
+                editDepartmentForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const deptId = parseInt(document.getElementById('edit-department-id').value);
+                    const dept = appState.departments.find(d => d.id === deptId);
+                    
+                    if (dept) {
+                        dept.name = document.getElementById('edit-department-name').value;
+                        dept.head = document.getElementById('edit-department-head').value;
+                        dept.email = document.getElementById('edit-department-email').value;
+                        dept.phone = document.getElementById('edit-department-phone').value;
+                        dept.description = document.getElementById('edit-department-description').value;
+                        
+                        // Update department in meetings
+                        appState.meetings.forEach(meeting => {
+                            if (meeting.department === dept.name) {
+                                meeting.department = dept.name;
+                            }
+                        });
+                        
+                        // Update department in admins
+                        appState.admins.forEach(admin => {
+                            if (admin.department === dept.name) {
+                                admin.department = dept.name;
+                            }
+                        });
+                        
+                        saveDataToLocalStorage();
+                        updateAllData();
+                        showAlert('Department updated successfully!', 'success');
+                        document.getElementById('edit-department-modal').classList.add('hidden');
+                    }
                 });
             }
 
@@ -2377,6 +2708,57 @@
             }
         }
 
+        // Check admin permissions for restricted access
+        function checkAdminPermissions() {
+            const currentUser = appState.currentUser;
+            
+            // Check for department form access
+            const deptFormContainer = document.getElementById('department-form-container');
+            const restrictedDeptAccess = document.getElementById('restricted-department-access');
+            const addDeptTabBtn = document.querySelector('.tab-btn[data-tab="add-department"]');
+            
+            if (deptFormContainer && restrictedDeptAccess && addDeptTabBtn) {
+                if (currentUser.role === 'super_admin') {
+                    deptFormContainer.style.display = 'block';
+                    restrictedDeptAccess.style.display = 'none';
+                    addDeptTabBtn.style.display = 'block';
+                } else {
+                    deptFormContainer.style.display = 'none';
+                    restrictedDeptAccess.style.display = 'block';
+                    addDeptTabBtn.style.display = 'none';
+                    
+                    // If on the add-department tab and not super admin, switch to view tab
+                    if (addDeptTabBtn.classList.contains('active')) {
+                        const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-departments"]');
+                        if (viewTabBtn) viewTabBtn.click();
+                    }
+                }
+            }
+            
+            // Check for admin form access
+            const adminFormContainer = document.getElementById('admin-form-container');
+            const restrictedAdminAccess = document.getElementById('restricted-admin-access');
+            const addAdminTabBtn = document.querySelector('.tab-btn[data-tab="add-admin"]');
+            
+            if (adminFormContainer && restrictedAdminAccess && addAdminTabBtn) {
+                if (currentUser.role === 'super_admin') {
+                    adminFormContainer.style.display = 'block';
+                    restrictedAdminAccess.style.display = 'none';
+                    addAdminTabBtn.style.display = 'block';
+                } else {
+                    adminFormContainer.style.display = 'none';
+                    restrictedAdminAccess.style.display = 'block';
+                    addAdminTabBtn.style.display = 'none';
+                    
+                    // If on the add-admin tab and not super admin, switch to view tab
+                    if (addAdminTabBtn.classList.contains('active')) {
+                        const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
+                        if (viewTabBtn) viewTabBtn.click();
+                    }
+                }
+            }
+        }
+
         // Update all data
         function updateAllData() {
             updateStats();
@@ -2424,7 +2806,7 @@
             recentMeetings.forEach(meeting => {
                 const row = document.createElement('tr');
                 const statusClass = meeting.status === 'active' ? 'active' : 
-                                  meeting.status === 'completed' ? 'completed' : 'pending';
+                                  meeting.status === 'completed' ? 'completed' : 'cancelled';
                 
                 row.innerHTML = `
                     <td>${meeting.title}</td>
@@ -2694,10 +3076,6 @@
                 const card = document.createElement('div');
                 card.className = 'meeting-summary-card';
                 
-                // Find meeting ID for export
-                const meeting = appState.meetings.find(m => m.title === meetingName);
-                const meetingId = meeting ? meeting.id : null;
-                
                 card.innerHTML = `
                     <div>
                         <h4 style="color: var(--mustard); margin-bottom: 5px;">${meetingName}</h4>
@@ -2743,12 +3121,16 @@
                     <td>${meetingCount}</td>
                     <td>${attendeeCount}</td>
                     <td class="action-buttons">
-                        <button class="btn btn-sm btn-secondary edit-dept-btn" data-id="${dept.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-dept-btn" data-id="${dept.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        ${appState.currentUser.role === 'super_admin' ? `
+                            <button class="btn btn-sm btn-warning edit-dept-btn" data-id="${dept.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        ` : ''}
+                        ${appState.currentUser.role === 'super_admin' ? `
+                            <button class="btn btn-sm btn-danger delete-dept-btn" data-id="${dept.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
                     </td>
                 `;
                 departmentsTable.appendChild(row);
@@ -2762,7 +3144,14 @@
                 });
             });
             
-            // Update department select in admin form
+            document.querySelectorAll('.edit-dept-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const deptId = parseInt(this.getAttribute('data-id'));
+                    editDepartment(deptId);
+                });
+            });
+            
+            // Update department selects
             updateDepartmentSelects();
         }
 
@@ -2787,12 +3176,11 @@
                     <td>${admin.lastLogin}</td>
                     <td>${statusBadge}</td>
                     <td class="action-buttons">
-                        <button class="btn btn-sm btn-secondary edit-admin-btn" data-id="${admin.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        ${appState.currentUser.role === 'super_admin' ? `
+                            <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
                     </td>
                 `;
                 adminsTable.appendChild(row);
@@ -2814,7 +3202,8 @@
         function updateDepartmentSelects() {
             const selects = [
                 document.getElementById('meeting-department'),
-                document.getElementById('admin-department')
+                document.getElementById('admin-department'),
+                document.getElementById('edit-meeting-department')
             ];
             
             selects.forEach(select => {
@@ -3011,7 +3400,6 @@
             }
             
             // Generate unique registration link
-            // In a real app, this would be your actual domain
             const registrationLink = `${window.location.origin}${window.location.pathname}?meeting=${meetingId}`;
             
             // Clear previous QR code
@@ -3157,6 +3545,7 @@
                 const meeting = appState.meetings.find(m => m.id === meetingId);
                 if (meeting) {
                     meeting.status = 'cancelled';
+                    saveDataToLocalStorage();
                     updateAllData();
                     showAlert('Meeting cancelled successfully!', 'success');
                 }
@@ -3168,7 +3557,49 @@
             const meeting = appState.meetings.find(m => m.id === meetingId);
             if (!meeting) return;
             
-            alert(`Demo: Would open edit form for meeting: ${meeting.title}\n\nIn a real app, this would open a form to edit meeting details.`);
+            // Populate edit form
+            document.getElementById('edit-meeting-id').value = meeting.id;
+            document.getElementById('edit-meeting-title').value = meeting.title;
+            document.getElementById('edit-meeting-date').value = meeting.date;
+            document.getElementById('edit-meeting-time').value = meeting.time;
+            document.getElementById('edit-meeting-location').value = meeting.location;
+            document.getElementById('edit-meeting-duration').value = meeting.duration;
+            document.getElementById('edit-meeting-description').value = meeting.description || '';
+            document.getElementById('edit-meeting-max-attendees').value = meeting.maxAttendees || '';
+            document.getElementById('edit-meeting-status').value = meeting.status;
+            
+            // Populate department dropdown
+            const deptSelect = document.getElementById('edit-meeting-department');
+            deptSelect.innerHTML = '<option value="">Select Department</option>';
+            appState.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.name;
+                option.textContent = dept.name;
+                if (dept.name === meeting.department) {
+                    option.selected = true;
+                }
+                deptSelect.appendChild(option);
+            });
+            
+            // Show modal
+            document.getElementById('edit-meeting-modal').classList.remove('hidden');
+        }
+
+        // Edit department
+        function editDepartment(deptId) {
+            const dept = appState.departments.find(d => d.id === deptId);
+            if (!dept) return;
+            
+            // Populate edit form
+            document.getElementById('edit-department-id').value = dept.id;
+            document.getElementById('edit-department-name').value = dept.name;
+            document.getElementById('edit-department-head').value = dept.head;
+            document.getElementById('edit-department-email').value = dept.email;
+            document.getElementById('edit-department-phone').value = dept.phone || '';
+            document.getElementById('edit-department-description').value = dept.description || '';
+            
+            // Show modal
+            document.getElementById('edit-department-modal').classList.remove('hidden');
         }
 
         // View attendee details
@@ -3195,7 +3626,53 @@
                 'other': 'Other'
             }[attendee.purpose] || attendee.purpose;
             
-            alert(`Attendee Details:\n\nName: ${attendee.name}\nEmail: ${attendee.email}\nPhone: ${attendee.phone}\nAccount: ${attendee.account || 'N/A'}\nMeeting: ${attendee.meetingTitle || attendee.meeting || 'N/A'}\nMeeting Date: ${attendee.meetingDate || 'N/A'}\nDepartment: ${attendee.departmentName || attendee.department || 'N/A'}\nPurpose: ${purposeText}\nRegistration Date: ${attendee.registrationDate}\nNotes: ${attendee.notes || 'None'}`);
+            const detailsDiv = document.getElementById('attendee-details-content');
+            detailsDiv.innerHTML = `
+                <div class="attendee-info-item">
+                    <label>Full Name</label>
+                    <p>${attendee.name}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Email Address</label>
+                    <p>${attendee.email}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Phone Number</label>
+                    <p>${attendee.phone}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Bank Account</label>
+                    <p>${attendee.account || 'Not provided'}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Meeting</label>
+                    <p>${attendee.meetingTitle || attendee.meeting || 'N/A'}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Meeting Date</label>
+                    <p>${attendee.meetingDate || 'N/A'}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Department</label>
+                    <p>${attendee.departmentName || attendee.department || 'N/A'}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Purpose of Meeting</label>
+                    <p>${purposeText}</p>
+                </div>
+                <div class="attendee-info-item">
+                    <label>Registration Date</label>
+                    <p>${attendee.registrationDate}</p>
+                </div>
+                ${attendee.notes ? `
+                <div class="attendee-info-item">
+                    <label>Additional Notes</label>
+                    <p>${attendee.notes}</p>
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('view-attendee-modal').classList.remove('hidden');
         }
 
         // Delete attendee
@@ -3214,6 +3691,7 @@
                 const updatedSavedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
                 localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedSavedAttendees));
                 
+                saveDataToLocalStorage();
                 updateAllData();
                 showAlert('Attendee deleted successfully!', 'success');
             }
@@ -3222,22 +3700,24 @@
         // Delete department
         function deleteDepartment(deptId) {
             if (confirm('Are you sure you want to delete this department? This will affect all related meetings and admins.')) {
+                const dept = appState.departments.find(d => d.id === deptId);
                 appState.departments = appState.departments.filter(d => d.id !== deptId);
                 
                 // Remove department from meetings
                 appState.meetings.forEach(meeting => {
-                    if (meeting.department === appState.departments.find(d => d.id === deptId)?.name) {
+                    if (meeting.department === dept.name) {
                         meeting.department = 'General';
                     }
                 });
                 
                 // Remove department from admins
                 appState.admins.forEach(admin => {
-                    if (admin.department === appState.departments.find(d => d.id === deptId)?.name) {
+                    if (admin.department === dept.name) {
                         admin.department = 'General';
                     }
                 });
                 
+                saveDataToLocalStorage();
                 updateAllData();
                 showAlert('Department deleted successfully!', 'success');
             }
@@ -3252,6 +3732,7 @@
             
             if (confirm('Are you sure you want to delete this admin?')) {
                 appState.admins = appState.admins.filter(a => a.id !== adminId);
+                saveDataToLocalStorage();
                 updateAllData();
                 showAlert('Admin deleted successfully!', 'success');
             }
@@ -3498,5 +3979,4 @@
         }
     </script>
 </body>
-
 </html>
