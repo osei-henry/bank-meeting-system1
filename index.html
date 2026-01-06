@@ -1620,6 +1620,14 @@
                     <h3>Registration Successful!</h3>
                     <p>Thank you for registering for the meeting. Your details have been saved successfully.</p>
                     <p>You will receive a confirmation email shortly.</p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="window.location.href = window.location.origin + window.location.pathname;">
+                            <i class="fas fa-home"></i> Return to Home
+                        </button>
+                        <button class="btn btn-primary" id="register-another-btn">
+                            <i class="fas fa-user-plus"></i> Register Another Person
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Demo Notice -->
@@ -1908,6 +1916,11 @@
                         this.processNotification(e.newValue);
                     }
                 });
+                
+                // Custom event listener for QR registration updates
+                window.addEventListener('qrRegistrationSuccess', (e) => {
+                    this.handleQRRegistration(e.detail);
+                });
             },
             
             startPolling() {
@@ -1974,6 +1987,50 @@
                 if (typeof updateAllData === 'function') {
                     updateAllData();
                 }
+            },
+            
+            handleQRRegistration(attendeeData) {
+                console.log('Handling QR registration:', attendeeData);
+                
+                // Show notification
+                this.showNotification(attendeeData);
+                
+                // Update local storage
+                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                savedAttendees.push(attendeeData);
+                localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
+                
+                // Update meeting attendees
+                const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+                const meeting = savedMeetings.find(m => m.id === attendeeData.meetingId);
+                if (meeting) {
+                    meeting.attendees = meeting.attendees || [];
+                    meeting.attendees.push(attendeeData);
+                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
+                }
+                
+                // Update appState
+                appState.attendees = savedAttendees;
+                appState.meetings = savedMeetings;
+                
+                // Trigger update for dashboard if open
+                if (appState.currentUser) {
+                    updateAllData();
+                }
+                
+                // Store notification for cross-tab
+                const notification = {
+                    id: Date.now(),
+                    type: 'new_registration',
+                    attendee: attendeeData,
+                    timestamp: new Date().toLocaleTimeString(),
+                    read: false
+                };
+                localStorage.setItem(`rt_notification_${notification.id}`, JSON.stringify(notification));
+                
+                // Trigger storage event for other tabs
+                const event = new Event('storage');
+                window.dispatchEvent(event);
             },
             
             showNotification(attendee) {
@@ -2501,83 +2558,142 @@
                 
                 newForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     registerAttendeeViaQR(meetingId);
+                    return false;
+                });
+            }
+            
+            // Add event listener for "Register Another" button
+            const registerAnotherBtn = document.getElementById('register-another-btn');
+            if (registerAnotherBtn) {
+                registerAnotherBtn.addEventListener('click', function() {
+                    // Reset form and show it again
+                    document.getElementById('attendee-registration-form').reset();
+                    document.getElementById('success-message').style.display = 'none';
+                    document.getElementById('registration-form-container').style.display = 'block';
                 });
             }
         }
 
         // Register attendee via QR code
         function registerAttendeeViaQR(meetingId) {
-            // Load current meetings data
-            const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-            if (!savedMeetings) {
-                showQRAlert('Meeting data not available!', 'error');
-                return;
+            // Prevent multiple submissions
+            const submitBtn = document.querySelector('#attendee-registration-form button[type="submit"]');
+            if (submitBtn.disabled) return;
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            try {
+                // Load current meetings data
+                const savedMeetings = localStorage.getItem('bankMeetingMeetings');
+                if (!savedMeetings) {
+                    showQRAlert('Meeting data not available!', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
+                    return;
+                }
+                
+                const meetings = JSON.parse(savedMeetings);
+                const meeting = meetings.find(m => m.id === meetingId);
+                
+                if (!meeting) {
+                    showQRAlert('Meeting not found!', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
+                    return;
+                }
+                
+                // Check if meeting is at capacity
+                if (meeting.maxAttendees && meeting.attendees && meeting.attendees.length >= meeting.maxAttendees) {
+                    showQRAlert('This meeting is already at full capacity!', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
+                    return;
+                }
+                
+                // Get form values
+                const attendeeData = {
+                    id: Date.now() + Math.floor(Math.random() * 1000), // More unique ID
+                    meetingId: meetingId,
+                    meetingTitle: meeting.title,
+                    meetingDate: meeting.date,
+                    meetingTime: meeting.time,
+                    name: document.getElementById('full-name').value.trim(),
+                    phone: document.getElementById('phone-number').value.trim(),
+                    email: document.getElementById('email-address').value.trim(),
+                    account: document.getElementById('bank-account').value.trim(),
+                    departmentId: document.getElementById('department').value,
+                    departmentName: document.getElementById('department').options[document.getElementById('department').selectedIndex].text,
+                    purpose: document.getElementById('purpose').value,
+                    notes: document.getElementById('additional-notes').value.trim(),
+                    registrationDate: new Date().toLocaleString(),
+                    status: 'registered'
+                };
+                
+                // Validate form
+                if (!validateQRForm(attendeeData)) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
+                    return;
+                }
+                
+                // Load current attendees
+                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                
+                // Check if attendee already registered for this meeting
+                const alreadyRegistered = savedAttendees.some(a => 
+                    a.email.toLowerCase() === attendeeData.email.toLowerCase() && 
+                    a.meetingId === meetingId
+                );
+                
+                if (alreadyRegistered) {
+                    showQRAlert('You are already registered for this meeting!', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
+                    return;
+                }
+                
+                // Add new attendee
+                savedAttendees.push(attendeeData);
+                
+                // Update meeting attendees
+                meeting.attendees = meeting.attendees || [];
+                meeting.attendees.push(attendeeData);
+                
+                // Save updated data to localStorage
+                localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
+                localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
+                
+                // Update appState for real-time updates
+                appState.attendees = savedAttendees;
+                appState.meetings = meetings;
+                
+                // Show success message
+                showQRSuccessMessage(attendeeData);
+                
+                // Show alert
+                showQRAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
+                
+                console.log('New attendee registered via QR:', attendeeData);
+                
+                // IMPORTANT: Trigger real-time updates for dashboard
+                // This sends the attendee data to the dashboard immediately
+                const event = new CustomEvent('qrRegistrationSuccess', { detail: attendeeData });
+                window.dispatchEvent(event);
+                
+                // Also trigger storage event for cross-tab communication
+                const storageEvent = new Event('storage');
+                window.dispatchEvent(storageEvent);
+                
+            } catch (error) {
+                console.error('Error registering attendee:', error);
+                showQRAlert('An error occurred. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
             }
-            
-            const meetings = JSON.parse(savedMeetings);
-            const meeting = meetings.find(m => m.id === meetingId);
-            
-            if (!meeting) {
-                showQRAlert('Meeting not found!', 'error');
-                return;
-            }
-            
-            // Check if meeting is at capacity
-            if (meeting.maxAttendees && meeting.attendees && meeting.attendees.length >= meeting.maxAttendees) {
-                showQRAlert('This meeting is already at full capacity!', 'error');
-                return;
-            }
-            
-            // Get form values
-            const attendeeData = {
-                id: Date.now(),
-                meetingId: meetingId,
-                meetingTitle: meeting.title,
-                meetingDate: meeting.date,
-                meetingTime: meeting.time,
-                name: document.getElementById('full-name').value.trim(),
-                phone: document.getElementById('phone-number').value.trim(),
-                email: document.getElementById('email-address').value.trim(),
-                account: document.getElementById('bank-account').value.trim(),
-                departmentId: document.getElementById('department').value,
-                departmentName: document.getElementById('department').options[document.getElementById('department').selectedIndex].text,
-                purpose: document.getElementById('purpose').value,
-                notes: document.getElementById('additional-notes').value.trim(),
-                registrationDate: new Date().toLocaleString(),
-                status: 'registered'
-            };
-            
-            // Validate form
-            if (!validateQRForm(attendeeData)) {
-                return;
-            }
-            
-            // Load current attendees
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            // Add new attendee
-            savedAttendees.push(attendeeData);
-            
-            // Update meeting attendees
-            meeting.attendees = meeting.attendees || [];
-            meeting.attendees.push(attendeeData);
-            
-            // Save updated data to localStorage
-            localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
-            localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-            
-            // Show success message
-            showQRSuccessMessage(attendeeData);
-            
-            // Show alert
-            showQRAlert(`Successfully registered ${attendeeData.name} for the meeting!`, 'success');
-            
-            console.log('New attendee registered via QR:', attendeeData);
-            
-            // Trigger real-time updates
-            const event = new Event('storage');
-            window.dispatchEvent(event);
         }
 
         // Validate QR form data
@@ -2620,6 +2736,11 @@
                 
                 // Show success message
                 successMessage.style.display = 'block';
+                
+                // Enable the submit button
+                const submitBtn = document.querySelector('#attendee-registration-form button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Registration';
             }
         }
 
@@ -2907,7 +3028,7 @@
                     showAlert('Attendee added successfully!', 'success');
                     
                     // Trigger real-time event
-                    const event = new Event('storage');
+                    const event = new CustomEvent('qrRegistrationSuccess', { detail: newAttendee });
                     window.dispatchEvent(event);
                     
                     // Close modal and reset form
