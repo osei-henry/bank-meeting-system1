@@ -91,6 +91,78 @@
             to { transform: rotate(360deg); }
         }
         
+        /* Confirmation Modal */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        
+        .confirmation-content {
+            background-color: var(--gray);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .confirmation-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .confirmation-icon.warning {
+            color: var(--warning);
+        }
+        
+        .confirmation-icon.danger {
+            color: var(--danger);
+        }
+        
+        .confirmation-icon.success {
+            color: var(--success);
+        }
+        
+        .confirmation-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--white);
+        }
+        
+        .confirmation-message {
+            color: #ccc;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .confirmation-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
         /* Export Options */
         .export-options {
             background: var(--light-gray);
@@ -252,8 +324,12 @@
 
         /* Dashboard Layout */
         #dashboard-page {
-            display: flex; /* Changed from 'none' to 'flex' when active */
+            display: none;
             min-height: 100vh;
+        }
+
+        #dashboard-page.active {
+            display: flex;
         }
 
         /* Sidebar Styles */
@@ -1082,6 +1158,14 @@
             .export-buttons .btn {
                 width: 100%;
             }
+            
+            .confirmation-content {
+                padding: 20px;
+            }
+            
+            .confirmation-buttons {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1119,6 +1203,35 @@
     </style>
 </head>
 <body>
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="confirmation-modal hidden">
+        <div class="confirmation-content">
+            <div id="confirmation-icon" class="confirmation-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 id="confirmation-title" class="confirmation-title">Confirm Action</h3>
+            <p id="confirmation-message" class="confirmation-message">Are you sure you want to perform this action?</p>
+            <div class="confirmation-buttons">
+                <button id="confirm-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="confirm-ok" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="confirmation-modal hidden">
+        <div class="confirmation-content">
+            <div class="confirmation-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="confirmation-title">Success!</h3>
+            <p id="success-message-text" class="confirmation-message">Operation completed successfully.</p>
+            <div class="confirmation-buttons">
+                <button id="success-ok" class="btn btn-success">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Server Status Indicator -->
     <div id="server-status" class="server-status disconnected">
         <i class="fas fa-server"></i>
@@ -2171,7 +2284,8 @@
                 serverAttendees: 0,
                 serverMeetings: 0,
                 serverDepartments: 0
-            }
+            },
+            pendingAction: null // Store pending actions for confirmation modal
         };
 
         // Initialize demo data with proper passwords
@@ -2313,6 +2427,102 @@
             }
         }
 
+        // Show confirmation modal
+        function showConfirmation(title, message, onConfirm, iconType = 'warning') {
+            appState.pendingAction = onConfirm;
+            
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const confirmationTitle = document.getElementById('confirmation-title');
+            const confirmationMessage = document.getElementById('confirmation-message');
+            const confirmationIcon = document.getElementById('confirmation-icon');
+            
+            if (confirmationModal && confirmationTitle && confirmationMessage && confirmationIcon) {
+                confirmationTitle.textContent = title;
+                confirmationMessage.textContent = message;
+                confirmationIcon.className = `confirmation-icon ${iconType}`;
+                
+                // Set icon based on type
+                const icon = confirmationIcon.querySelector('i');
+                if (icon) {
+                    if (iconType === 'warning') {
+                        icon.className = 'fas fa-exclamation-triangle';
+                    } else if (iconType === 'danger') {
+                        icon.className = 'fas fa-trash-alt';
+                    } else if (iconType === 'info') {
+                        icon.className = 'fas fa-info-circle';
+                    }
+                }
+                
+                confirmationModal.classList.remove('hidden');
+            }
+        }
+
+        // Show success modal
+        function showSuccessModal(message) {
+            const successModal = document.getElementById('success-modal');
+            const successMessage = document.getElementById('success-message-text');
+            
+            if (successModal && successMessage) {
+                successMessage.textContent = message;
+                successModal.classList.remove('hidden');
+            }
+        }
+
+        // Initialize confirmation modal event listeners
+        function initializeConfirmationModal() {
+            const confirmOkBtn = document.getElementById('confirm-ok');
+            const confirmCancelBtn = document.getElementById('confirm-cancel');
+            const successOkBtn = document.getElementById('success-ok');
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const successModal = document.getElementById('success-modal');
+            
+            if (confirmOkBtn) {
+                confirmOkBtn.addEventListener('click', function() {
+                    if (appState.pendingAction) {
+                        appState.pendingAction();
+                        appState.pendingAction = null;
+                    }
+                    confirmationModal.classList.add('hidden');
+                });
+            }
+            
+            if (confirmCancelBtn) {
+                confirmCancelBtn.addEventListener('click', function() {
+                    appState.pendingAction = null;
+                    confirmationModal.classList.add('hidden');
+                });
+            }
+            
+            if (successOkBtn) {
+                successOkBtn.addEventListener('click', function() {
+                    successModal.classList.add('hidden');
+                });
+            }
+            
+            // Close modals when clicking outside
+            confirmationModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    appState.pendingAction = null;
+                }
+            });
+            
+            successModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+            
+            // Close modals with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    confirmationModal.classList.add('hidden');
+                    successModal.classList.add('hidden');
+                    appState.pendingAction = null;
+                }
+            });
+        }
+
         // Show login alert
         function showLoginAlert(message) {
             const loginAlert = document.getElementById('login-alert');
@@ -2410,25 +2620,30 @@
                 });
             }
             
-            // Logout Functionality
+            // Logout Functionality with nice confirmation modal
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to logout?')) {
-                        // Clear current user
-                        appState.currentUser = null;
-                        
-                        // Destroy charts
-                        Object.values(appState.charts).forEach(chart => {
-                            if (chart) chart.destroy();
-                        });
-                        appState.charts = {};
-                        
-                        // Show login page, hide dashboard
-                        document.getElementById('dashboard-page').classList.remove('active');
-                        document.getElementById('login-page').classList.add('active');
-                        
-                        showAlert('You have been logged out successfully.', 'success');
-                    }
+                    showConfirmation(
+                        'Confirm Logout',
+                        'Are you sure you want to logout? You will need to log in again to access the dashboard.',
+                        function() {
+                            // Clear current user
+                            appState.currentUser = null;
+                            
+                            // Destroy charts
+                            Object.values(appState.charts).forEach(chart => {
+                                if (chart) chart.destroy();
+                            });
+                            appState.charts = {};
+                            
+                            // Show login page, hide dashboard
+                            document.getElementById('dashboard-page').classList.remove('active');
+                            document.getElementById('login-page').classList.add('active');
+                            
+                            showSuccessModal('You have been logged out successfully. Please log in again to access the dashboard.');
+                        },
+                        'warning'
+                    );
                 });
             }
             
@@ -2449,6 +2664,8 @@
             
             // Setup all other event listeners
             setupEventListeners();
+            // Initialize confirmation modal
+            initializeConfirmationModal();
         }
 
         // Setup all event listeners
@@ -2531,20 +2748,25 @@
             const clearLocalDataBtn = document.getElementById('clear-local-data');
             if (clearLocalDataBtn) {
                 clearLocalDataBtn.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to clear all local data? This cannot be undone!')) {
-                        localStorage.removeItem('bankMeetingMeetings');
-                        localStorage.removeItem('bankMeetingAttendees');
-                        localStorage.removeItem('bankMeetingDepartments');
-                        localStorage.removeItem('bankMeetingAdmins');
-                        
-                        appState.meetings = [];
-                        appState.attendees = [];
-                        appState.departments = [];
-                        appState.admins = [];
-                        
-                        updateAllData();
-                        showAlert('All local data cleared!', 'success');
-                    }
+                    showConfirmation(
+                        'Clear All Local Data',
+                        'Are you sure you want to clear all local data? This will delete all meetings, attendees, departments, and admin data from your browser. This action cannot be undone!',
+                        function() {
+                            localStorage.removeItem('bankMeetingMeetings');
+                            localStorage.removeItem('bankMeetingAttendees');
+                            localStorage.removeItem('bankMeetingDepartments');
+                            localStorage.removeItem('bankMeetingAdmins');
+                            
+                            appState.meetings = [];
+                            appState.attendees = [];
+                            appState.departments = [];
+                            appState.admins = [];
+                            
+                            updateAllData();
+                            showSuccessModal('All local data has been cleared successfully! The system has been reset to demo data.');
+                        },
+                        'danger'
+                    );
                 });
             }
             
@@ -2975,7 +3197,7 @@
                     
                     const emailBody = `Meeting Details:\n\nMeeting: ${meetingTitle}\nDate: ${meetingDate}\nTime: ${meetingTime}\nRegistration Link: ${registrationLink}`;
                     
-                    alert(`Demo: Email would be sent with meeting details:\n\n${emailBody}\n\nIn a real app, this would trigger an email service.`);
+                    showAlert('Demo: Email would be sent with meeting details (in a real app, this would trigger an email service).', 'info');
                 });
             }
 
@@ -3240,7 +3462,14 @@
             document.querySelectorAll('.cancel-meeting-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const meetingId = parseInt(this.getAttribute('data-id'));
-                    cancelMeeting(meetingId);
+                    showConfirmation(
+                        'Cancel Meeting',
+                        `Are you sure you want to cancel the meeting "${appState.meetings.find(m => m.id === meetingId)?.title}"? This action cannot be undone and all attendees will be notified.`,
+                        function() {
+                            cancelMeeting(meetingId);
+                        },
+                        'warning'
+                    );
                 });
             });
             
@@ -3320,7 +3549,16 @@
             document.querySelectorAll('.delete-attendee-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const attendeeId = parseInt(this.getAttribute('data-id'));
-                    deleteAttendee(attendeeId);
+                    const attendee = savedAttendees.find(a => a.id === attendeeId);
+                    
+                    showConfirmation(
+                        'Delete Attendee',
+                        `Are you sure you want to delete "${attendee?.name}" from the attendees list? This action cannot be undone.`,
+                        function() {
+                            deleteAttendee(attendeeId);
+                        },
+                        'danger'
+                    );
                 });
             });
             
@@ -3426,7 +3664,16 @@
             document.querySelectorAll('.delete-dept-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const deptId = parseInt(this.getAttribute('data-id'));
-                    deleteDepartment(deptId);
+                    const dept = appState.departments.find(d => d.id === deptId);
+                    
+                    showConfirmation(
+                        'Delete Department',
+                        `Are you sure you want to delete the "${dept?.name}" department? This will affect all related meetings and admins. This action cannot be undone!`,
+                        function() {
+                            deleteDepartment(deptId);
+                        },
+                        'danger'
+                    );
                 });
             });
             
@@ -3476,7 +3723,21 @@
             document.querySelectorAll('.delete-admin-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const adminId = parseInt(this.getAttribute('data-id'));
-                    deleteAdmin(adminId);
+                    const admin = appState.admins.find(a => a.id === adminId);
+                    
+                    if (adminId === 1) {
+                        showAlert('Cannot delete the super admin account!', 'error');
+                        return;
+                    }
+                    
+                    showConfirmation(
+                        'Delete Admin',
+                        `Are you sure you want to delete "${admin?.name}" from administrators? This action cannot be undone.`,
+                        function() {
+                            deleteAdmin(adminId);
+                        },
+                        'danger'
+                    );
                 });
             });
             
@@ -3681,7 +3942,7 @@
             console.log("Charts initialized");
         }
 
-        // Generate QR Code
+        // Generate QR Code - FIXED to redirect to registration form
         function generateQRCode(meetingId) {
             console.log("Generating QR code for meeting:", meetingId);
             
@@ -3691,8 +3952,10 @@
                 return;
             }
             
-            // Generate unique registration link
-            const registrationLink = `${window.location.origin}${window.location.pathname}?meeting=${meetingId}`;
+            // Generate unique registration link that opens the registration form
+            // Use URL parameters to pass meeting ID and hide dashboard
+            const currentUrl = window.location.href.split('?')[0]; // Get base URL without query params
+            const registrationLink = `${currentUrl}?registration=true&meeting=${meetingId}`;
             
             // Clear previous QR code
             const qrcodeDiv = document.getElementById('qrcode');
@@ -3741,6 +4004,116 @@
             if (qrModal) qrModal.classList.remove('hidden');
             
             showAlert(`QR Code generated for "${meeting.title}"`, 'success');
+        }
+
+        // Check URL parameters on page load to show registration form
+        function checkUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isRegistration = urlParams.get('registration');
+            const meetingId = urlParams.get('meeting');
+            
+            if (isRegistration === 'true' && meetingId) {
+                // Show registration form instead of login page
+                showRegistrationForm(parseInt(meetingId));
+            }
+        }
+
+        // Show registration form
+        function showRegistrationForm(meetingId) {
+            console.log("Showing registration form for meeting:", meetingId);
+            
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                showAlert('Meeting not found!', 'error');
+                return;
+            }
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show registration portal
+            const registrationPortal = document.getElementById('registration-portal');
+            if (registrationPortal) {
+                registrationPortal.style.display = 'block';
+                
+                // Update meeting information
+                document.getElementById('current-meeting-title').textContent = meeting.title;
+                document.getElementById('meeting-date').textContent = meeting.date;
+                document.getElementById('meeting-time').textContent = meeting.time;
+                document.getElementById('meeting-location').textContent = meeting.location;
+                document.getElementById('meeting-department').textContent = meeting.department;
+                document.getElementById('meeting-title').textContent = `Register for: ${meeting.title}`;
+                
+                // Populate department dropdown
+                const departmentSelect = document.getElementById('department');
+                if (departmentSelect) {
+                    departmentSelect.innerHTML = '<option value="">Select Department</option>';
+                    appState.departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.name;
+                        option.textContent = dept.name;
+                        if (dept.name === meeting.department) {
+                            option.selected = true;
+                        }
+                        departmentSelect.appendChild(option);
+                    });
+                }
+                
+                // Setup registration form submission
+                const registrationForm = document.getElementById('attendee-registration-form');
+                if (registrationForm) {
+                    registrationForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        // Get form data
+                        const newAttendee = {
+                            id: Date.now(),
+                            meetingId: meeting.id,
+                            meetingTitle: meeting.title,
+                            meetingDate: meeting.date,
+                            meetingTime: meeting.time,
+                            name: document.getElementById('full-name').value,
+                            email: document.getElementById('email-address').value,
+                            phone: document.getElementById('phone-number').value,
+                            account: document.getElementById('bank-account').value,
+                            department: document.getElementById('department').value,
+                            purpose: document.getElementById('purpose').value,
+                            notes: document.getElementById('additional-notes').value,
+                            registrationDate: new Date().toLocaleString()
+                        };
+                        
+                        // Get current attendees
+                        const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+                        savedAttendees.push(newAttendee);
+                        
+                        // Update meeting attendees
+                        meeting.attendees = meeting.attendees || [];
+                        meeting.attendees.push(newAttendee);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
+                        
+                        // Update appState
+                        appState.attendees = savedAttendees;
+                        
+                        // Show success message
+                        document.getElementById('registration-form-container').style.display = 'none';
+                        document.getElementById('success-message').style.display = 'block';
+                        
+                        // Setup register another button
+                        const registerAnotherBtn = document.getElementById('register-another-btn');
+                        if (registerAnotherBtn) {
+                            registerAnotherBtn.addEventListener('click', function() {
+                                document.getElementById('registration-form-container').style.display = 'block';
+                                document.getElementById('success-message').style.display = 'none';
+                                registrationForm.reset();
+                            });
+                        }
+                    });
+                }
+            }
         }
 
         // Show meeting details
@@ -3819,7 +4192,7 @@
                         </button>
                     ` : ''}
                     ${meeting.status === 'active' ? 
-                        `<button class="btn btn-danger" onclick="cancelMeeting(${meeting.id}); document.getElementById('meeting-details-modal').classList.add('hidden');">
+                        `<button class="btn btn-danger" onclick="showConfirmation('Cancel Meeting', 'Are you sure you want to cancel this meeting?', function() { cancelMeeting(${meeting.id}); document.getElementById('meeting-details-modal').classList.add('hidden'); }, 'warning')">
                             <i class="fas fa-times"></i> Cancel Meeting
                         </button>` : ''
                     }
@@ -3835,17 +4208,15 @@
 
         // Cancel meeting
         function cancelMeeting(meetingId) {
-            if (confirm('Are you sure you want to cancel this meeting?')) {
-                const meeting = appState.meetings.find(m => m.id === meetingId);
-                if (meeting) {
-                    meeting.status = 'cancelled';
-                    
-                    // Save to localStorage
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
-                    
-                    updateAllData();
-                    showAlert('Meeting cancelled successfully!', 'success');
-                }
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (meeting) {
+                meeting.status = 'cancelled';
+                
+                // Save to localStorage
+                localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
+                
+                updateAllData();
+                showSuccessModal(`Meeting "${meeting.title}" has been cancelled successfully.`);
             }
         }
 
@@ -3966,71 +4337,60 @@
 
         // Delete attendee
         function deleteAttendee(attendeeId) {
-            if (confirm('Are you sure you want to delete this attendee?')) {
-                // Remove from localStorage attendees
-                const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                const updatedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
-                localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedAttendees));
-                
-                // Remove from meetings attendees
-                const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
-                savedMeetings.forEach(meeting => {
-                    if (meeting.attendees) {
-                        meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
-                    }
-                });
-                localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
-                
-                // Update appState
-                appState.attendees = updatedAttendees;
-                appState.meetings = savedMeetings;
-                
-                updateAllData();
-                showAlert('Attendee deleted successfully!', 'success');
-            }
+            // Remove from localStorage attendees
+            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
+            const updatedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
+            localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedAttendees));
+            
+            // Remove from meetings attendees
+            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
+            savedMeetings.forEach(meeting => {
+                if (meeting.attendees) {
+                    meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
+                }
+            });
+            localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
+            
+            // Update appState
+            appState.attendees = updatedAttendees;
+            appState.meetings = savedMeetings;
+            
+            updateAllData();
+            showSuccessModal('Attendee has been deleted successfully.');
         }
 
         // Delete department
         function deleteDepartment(deptId) {
-            if (confirm('Are you sure you want to delete this department? This will affect all related meetings and admins.')) {
-                const dept = appState.departments.find(d => d.id === deptId);
-                appState.departments = appState.departments.filter(d => d.id !== deptId);
-                
-                // Remove department from meetings
-                appState.meetings.forEach(meeting => {
-                    if (meeting.department === dept.name) {
-                        meeting.department = 'General';
-                    }
-                });
-                
-                // Remove department from admins
-                appState.admins.forEach(admin => {
-                    if (admin.department === dept.name) {
-                        admin.department = 'General';
-                    }
-                });
-                
-                // Save all data
-                saveDataToLocalStorage();
-                
-                updateAllData();
-                showAlert('Department deleted successfully!', 'success');
-            }
+            const dept = appState.departments.find(d => d.id === deptId);
+            appState.departments = appState.departments.filter(d => d.id !== deptId);
+            
+            // Remove department from meetings
+            appState.meetings.forEach(meeting => {
+                if (meeting.department === dept.name) {
+                    meeting.department = 'General';
+                }
+            });
+            
+            // Remove department from admins
+            appState.admins.forEach(admin => {
+                if (admin.department === dept.name) {
+                    admin.department = 'General';
+                }
+            });
+            
+            // Save all data
+            saveDataToLocalStorage();
+            
+            updateAllData();
+            showSuccessModal(`Department "${dept.name}" has been deleted successfully.`);
         }
 
         // Delete admin
         function deleteAdmin(adminId) {
-            if (adminId === 1) {
-                showAlert('Cannot delete the super admin account!', 'error');
-                return;
-            }
-            
-            if (confirm('Are you sure you want to delete this admin?')) {
-                appState.admins = appState.admins.filter(a => a.id !== adminId);
-                saveDataToLocalStorage();
-                updateAllData();
-                showAlert('Admin deleted successfully!', 'success');
-            }
+            appState.admins = appState.admins.filter(a => a.id !== adminId);
+            saveDataToLocalStorage();
+            updateAllData();
+            showSuccessModal('Admin has been deleted successfully.');
         }
 
         // Export specific meeting attendees
@@ -4337,35 +4697,42 @@
 
         // Restore from backup file
         function restoreFromBackup(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (data.meetings) {
-                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(data.meetings));
-                        appState.meetings = data.meetings;
-                    }
-                    if (data.attendees) {
-                        localStorage.setItem('bankMeetingAttendees', JSON.stringify(data.attendees));
-                        appState.attendees = data.attendees;
-                    }
-                    if (data.departments) {
-                        localStorage.setItem('bankMeetingDepartments', JSON.stringify(data.departments));
-                        appState.departments = data.departments;
-                    }
-                    if (data.admins) {
-                        localStorage.setItem('bankMeetingAdmins', JSON.stringify(data.admins));
-                        appState.admins = data.admins;
-                    }
-                    
-                    updateAllData();
-                    showAlert('Data restored successfully from backup!', 'success');
-                } catch (error) {
-                    showAlert('Invalid backup file format', 'error');
-                }
-            };
-            reader.readAsText(file);
+            showConfirmation(
+                'Restore from Backup',
+                'Are you sure you want to restore data from backup? This will overwrite all current data. Make sure you have a current backup before proceeding.',
+                function() {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            if (data.meetings) {
+                                localStorage.setItem('bankMeetingMeetings', JSON.stringify(data.meetings));
+                                appState.meetings = data.meetings;
+                            }
+                            if (data.attendees) {
+                                localStorage.setItem('bankMeetingAttendees', JSON.stringify(data.attendees));
+                                appState.attendees = data.attendees;
+                            }
+                            if (data.departments) {
+                                localStorage.setItem('bankMeetingDepartments', JSON.stringify(data.departments));
+                                appState.departments = data.departments;
+                            }
+                            if (data.admins) {
+                                localStorage.setItem('bankMeetingAdmins', JSON.stringify(data.admins));
+                                appState.admins = data.admins;
+                            }
+                            
+                            updateAllData();
+                            showSuccessModal('Data restored successfully from backup!');
+                        } catch (error) {
+                            showAlert('Invalid backup file format', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                },
+                'warning'
+            );
         }
 
         // ==================== MAIN INITIALIZATION ====================
@@ -4376,6 +4743,9 @@
             
             // Load data from localStorage
             loadDataFromLocalStorage();
+            
+            // Check URL parameters for registration
+            checkUrlParameters();
             
             // Setup login form
             const loginForm = document.getElementById('login-form');
