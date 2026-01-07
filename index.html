@@ -1941,12 +1941,12 @@
         </main>
     </div>
 
-    <!-- QR Registration Portal -->
-    <div id="registration-portal" class="page" style="display: none;">
+    <!-- QR Registration Portal (Now a separate page) -->
+    <div id="registration-portal" class="page">
         <div class="registration-portal">
             <div class="bank-logo">
                 <i class="fas fa-university"></i>
-                <h1>Bank Meeting Registration</h1>
+                <h1>UMB Bank Meeting Registration</h1>
             </div>
             
             <div class="registration-card">
@@ -1956,29 +1956,29 @@
                 <!-- Registration Form -->
                 <div id="registration-form-container">
                     <div class="registration-header">
-                        <h2 id="meeting-title">Meeting Registration</h2>
-                        <p id="meeting-subtitle">Scan the QR code to register for this meeting</p>
+                        <h2 id="meeting-title-display">Meeting Registration</h2>
+                        <p id="meeting-subtitle-display">Scan the QR code to register for this meeting</p>
                     </div>
                     
                     <!-- Meeting Information -->
                     <div class="meeting-info">
-                        <h3 id="current-meeting-title">Loan Consultation Meeting</h3>
+                        <h3 id="current-meeting-title">Loading meeting details...</h3>
                         <div class="meeting-details">
                             <div class="detail-item">
                                 <i class="fas fa-calendar-alt"></i>
-                                <span id="meeting-date">January 15, 2024</span>
+                                <span id="meeting-date-display">Loading...</span>
                             </div>
                             <div class="detail-item">
                                 <i class="fas fa-clock"></i>
-                                <span id="meeting-time">10:00 AM - 11:00 AM</span>
+                                <span id="meeting-time-display">Loading...</span>
                             </div>
                             <div class="detail-item">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span id="meeting-location">Conference Room A</span>
+                                <span id="meeting-location-display">Loading...</span>
                             </div>
                             <div class="detail-item">
                                 <i class="fas fa-building"></i>
-                                <span id="meeting-department">Loan Department</span>
+                                <span id="meeting-department-display">Loading...</span>
                             </div>
                         </div>
                     </div>
@@ -2042,7 +2042,7 @@
                 </div>
                 
                 <!-- Success Message -->
-                <div class="success-message" id="success-message">
+                <div class="success-message" id="success-message" style="display: none;">
                     <i class="fas fa-check-circle"></i>
                     <h3>Registration Successful!</h3>
                     <p>Thank you for registering for the meeting. Your details have been saved successfully.</p>
@@ -2059,7 +2059,7 @@
                 
                 <!-- Demo Notice -->
                 <div class="demo-notice">
-                    <p><i class="fas fa-info-circle"></i> This is a demo registration form. In a real system, this would connect to your database.</p>
+                    <p><i class="fas fa-info-circle"></i> UMB Bank Meeting Registration System</p>
                 </div>
             </div>
         </div>
@@ -3453,7 +3453,7 @@
             }
         }
 
-        // ==================== QR CODE FUNCTIONALITY ====================
+        // ==================== QR CODE FUNCTIONALITY - FIXED ====================
         function generateQRCode(meetingId) {
             const meeting = appState.meetings.find(m => m.id === meetingId);
             if (!meeting) {
@@ -3461,9 +3461,10 @@
                 return;
             }
             
-            // Generate registration link
+            // Generate registration link - FIXED: Direct link to registration portal
             const currentUrl = window.location.href.split('?')[0];
-            const registrationLink = `${currentUrl}?registration=true&meeting=${meetingId}`;
+            // Create a direct link that bypasses the login page
+            const registrationLink = `${currentUrl}#registration-${meetingId}`;
             
             // Generate QR code
             const qrcodeDiv = document.getElementById('qrcode');
@@ -3510,7 +3511,103 @@
             showAlert(`QR Code generated for "${meeting.title}"`, 'success');
         }
 
-        // ==================== CHART FUNCTIONS - FIXED VERSION ====================
+        // ==================== REGISTRATION PORTAL FUNCTIONS ====================
+        function showRegistrationForm(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                // Meeting not found, show error
+                document.getElementById('current-meeting-title').textContent = 'Meeting Not Found';
+                document.getElementById('meeting-date-display').textContent = 'N/A';
+                document.getElementById('meeting-time-display').textContent = 'N/A';
+                document.getElementById('meeting-location-display').textContent = 'N/A';
+                document.getElementById('meeting-department-display').textContent = 'N/A';
+                
+                // Show error message
+                const alertContainer = document.getElementById('qr-alert-container');
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        The meeting you're trying to register for was not found or has been cancelled.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Update meeting details
+            document.getElementById('current-meeting-title').textContent = meeting.title;
+            document.getElementById('meeting-title-display').textContent = `Register for: ${meeting.title}`;
+            document.getElementById('meeting-subtitle-display').textContent = 'Please fill in your details below';
+            document.getElementById('meeting-date-display').textContent = meeting.date;
+            document.getElementById('meeting-time-display').textContent = meeting.time;
+            document.getElementById('meeting-location-display').textContent = meeting.location;
+            document.getElementById('meeting-department-display').textContent = meeting.department;
+            
+            // Populate department select
+            const departmentSelect = document.getElementById('department');
+            departmentSelect.innerHTML = '<option value="">Select Department</option>';
+            appState.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.name;
+                option.textContent = dept.name;
+                departmentSelect.appendChild(option);
+            });
+            
+            // Set default department to meeting department
+            departmentSelect.value = meeting.department;
+            
+            // Set up registration form submit
+            const registrationForm = document.getElementById('attendee-registration-form');
+            registrationForm.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const savedAttendees = localStorage.getItem('bankMeetingAttendees');
+                const currentAttendees = savedAttendees ? JSON.parse(savedAttendees) : [];
+                
+                const newAttendee = {
+                    id: currentAttendees.length > 0 ? Math.max(...currentAttendees.map(a => a.id)) + 1 : 1,
+                    name: document.getElementById('full-name').value,
+                    email: document.getElementById('email-address').value,
+                    phone: document.getElementById('phone-number').value,
+                    account: document.getElementById('bank-account').value || '',
+                    meetingId: meetingId,
+                    meetingTitle: meeting.title,
+                    meetingDate: meeting.date,
+                    meetingTime: meeting.time,
+                    department: document.getElementById('department').value,
+                    purpose: document.getElementById('purpose').value,
+                    notes: document.getElementById('additional-notes').value || '',
+                    registrationDate: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                };
+                
+                currentAttendees.push(newAttendee);
+                localStorage.setItem('bankMeetingAttendees', JSON.stringify(currentAttendees));
+                appState.attendees = currentAttendees;
+                
+                // Show success message
+                document.getElementById('registration-form-container').style.display = 'none';
+                document.getElementById('success-message').style.display = 'block';
+                
+                // Update data in admin panel
+                updateAllData();
+            };
+            
+            // Set up "Register Another Person" button
+            const registerAnotherBtn = document.getElementById('register-another-btn');
+            if (registerAnotherBtn) {
+                registerAnotherBtn.onclick = function() {
+                    document.getElementById('registration-form-container').style.display = 'block';
+                    document.getElementById('success-message').style.display = 'none';
+                    registrationForm.reset();
+                    departmentSelect.value = meeting.department;
+                };
+            }
+            
+            // Hide any existing alerts
+            const alertContainer = document.getElementById('qr-alert-container');
+            alertContainer.innerHTML = '';
+        }
+
+        // ==================== CHART FUNCTIONS ====================
         function initializeCharts() {
             console.log("Initializing charts...");
             
@@ -3622,7 +3719,7 @@
                 }
             }
             
-            // Department chart - FIXED VERSION
+            // Department chart
             const departmentCtx = document.getElementById('departmentChart');
             if (departmentCtx) {
                 try {
@@ -3913,25 +4010,35 @@
             // Load data from localStorage
             loadDataFromLocalStorage();
             
-            // Check for registration URL
+            // Check for registration in URL hash (for QR codes)
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#registration-')) {
+                const meetingId = parseInt(hash.replace('#registration-', ''));
+                if (meetingId && !isNaN(meetingId)) {
+                    // Show registration portal directly
+                    document.getElementById('login-page').classList.remove('active');
+                    document.getElementById('dashboard-page').classList.remove('active');
+                    document.getElementById('registration-portal').style.display = 'block';
+                    document.getElementById('registration-portal').classList.add('active');
+                    
+                    // Show registration form for this meeting
+                    showRegistrationForm(meetingId);
+                }
+            }
+            
+            // Check for registration URL parameters (old method)
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('registration') === 'true') {
                 const meetingId = parseInt(urlParams.get('meeting'));
                 if (meetingId) {
-                    // Show registration portal
+                    // Show registration portal directly
                     document.getElementById('login-page').classList.remove('active');
                     document.getElementById('dashboard-page').classList.remove('active');
                     document.getElementById('registration-portal').style.display = 'block';
+                    document.getElementById('registration-portal').classList.add('active');
                     
-                    // Update registration form with meeting details
-                    const meeting = appState.meetings.find(m => m.id === meetingId);
-                    if (meeting) {
-                        document.getElementById('current-meeting-title').textContent = meeting.title;
-                        document.getElementById('meeting-date').textContent = meeting.date;
-                        document.getElementById('meeting-time').textContent = meeting.time;
-                        document.getElementById('meeting-location').textContent = meeting.location;
-                        document.getElementById('meeting-department').textContent = meeting.department;
-                    }
+                    // Show registration form for this meeting
+                    showRegistrationForm(meetingId);
                 }
             }
             
@@ -3948,12 +4055,6 @@
                 }
             }, 100);
         });
-
-        // Function to show registration form (if needed)
-        function showRegistrationForm(meetingId) {
-            // This function would show the registration portal for QR code registrations
-            console.log("Showing registration form for meeting:", meetingId);
-        }
     </script>
 </body>
 </html>
