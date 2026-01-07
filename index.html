@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bank Meeting System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Add cache-busting query string to force refresh -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js?v=2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js?v=2"></script>
     <style>
         /* CSS Embedded Directly in HTML */
         * {
@@ -196,34 +197,77 @@
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%);
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)),
+                        url('https://gapsghana.com/wp-content/uploads/2023/04/ssnit-1.jpg?v=1687987293');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .bank-logo {
             text-align: center;
             margin-bottom: 40px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .bank-logo i {
             font-size: 4rem;
             color: var(--mustard);
             margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .bank-logo h1 {
             font-size: 2.5rem;
             color: var(--white);
             font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .login-card {
-            background-color: var(--gray);
+            background-color: rgba(26, 26, 26, 0.95);
             border-radius: 12px;
             padding: 40px;
             width: 100%;
             max-width: 400px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
+            animation: slideUp 0.8s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .login-card h2 {
@@ -235,6 +279,16 @@
 
         .form-group {
             margin-bottom: 24px;
+            animation: fadeIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-group:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .form-group:nth-child(2) {
+            animation-delay: 0.4s;
         }
 
         .form-group label {
@@ -284,6 +338,9 @@
             background-color: var(--mustard);
             color: var(--black);
             width: 100%;
+            animation: fadeIn 0.8s ease-out;
+            animation-fill-mode: both;
+            animation-delay: 0.6s;
         }
 
         .btn-primary:hover {
@@ -436,6 +493,11 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.9)),
+                        url('https://internationalbanker.com/wp-content/uploads/2018/10/Banking-Hall-of-UMB-East-Legon-Branch..jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
 
         .main-header {
@@ -444,7 +506,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: var(--dark-gray);
+            background-color: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(5px);
         }
 
         .main-header h1 {
@@ -477,7 +540,7 @@
         }
 
         .stat-card {
-            background-color: var(--gray);
+            background-color: rgba(26, 26, 26, 0.9);
             border-radius: 10px;
             padding: 25px;
             display: flex;
@@ -485,6 +548,7 @@
             gap: 20px;
             transition: transform 0.3s ease;
             border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
         }
 
         .stat-card:hover {
@@ -521,11 +585,12 @@
 
         /* Content Card */
         .content-card {
-            background-color: var(--gray);
+            background-color: rgba(26, 26, 26, 0.9);
             border-radius: 10px;
             padding: 25px;
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
+            backdrop-filter: blur(5px);
         }
 
         .content-card h3 {
@@ -802,17 +867,22 @@
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%);
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.9)),
+                        url('https://internationalbanker.com/wp-content/uploads/2018/10/Banking-Hall-of-UMB-East-Legon-Branch..jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
         }
 
         .registration-card {
-            background-color: var(--gray);
+            background-color: rgba(26, 26, 26, 0.95);
             border-radius: 12px;
             padding: 40px;
             width: 100%;
             max-width: 800px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
         }
 
         .registration-header {
@@ -1247,7 +1317,7 @@
             </div>
             <div class="login-card">
                 <h2>Admin Login</h2>
-                <div id="login-alert" class="alert alert-error"></div>
+                <div id="login-alert" class="alert alert-error" style="display: none;"></div>
                 <form id="login-form">
                     <div class="form-group">
                         <label for="email">Email</label>
@@ -2269,9 +2339,7 @@
     </div>
 
     <script>
-        // ==================== ENHANCED INITIALIZATION ====================
-        
-        // Application State
+        // ==================== APPLICATION STATE ====================
         const appState = {
             currentUser: null,
             meetings: [],
@@ -2285,10 +2353,10 @@
                 serverMeetings: 0,
                 serverDepartments: 0
             },
-            pendingAction: null // Store pending actions for confirmation modal
+            pendingAction: null
         };
 
-        // Initialize demo data with proper passwords
+        // ==================== DATA MANAGEMENT ====================
         function initializeDemoData() {
             console.log("Initializing demo data...");
             
@@ -2296,10 +2364,12 @@
             appState.departments = [
                 { id: 1, name: 'Loan Department', head: 'John Manager', email: 'loans@bank.com', phone: '+1234567890', description: 'Handles all loan applications and consultations', createdAt: '2024-01-01' },
                 { id: 2, name: 'Investment Banking', head: 'Sarah Investor', email: 'investments@bank.com', phone: '+1234567891', description: 'Investment advice and portfolio management', createdAt: '2024-01-01' },
-                { id: 3, name: 'Customer Service', head: 'Mike Support', email: 'support@bank.com', phone: '+1234567892', description: 'Customer support and general inquiries', createdAt: '2024-01-01' }
+                { id: 3, name: 'Customer Service', head: 'Mike Support', email: 'support@bank.com', phone: '+1234567892', description: 'Customer support and general inquiries', createdAt: '2024-01-01' },
+                { id: 4, name: 'Mortgage Services', head: 'Emma Home', email: 'mortgage@bank.com', phone: '+1234567893', description: 'Mortgage and home loan services', createdAt: '2024-01-01' },
+                { id: 5, name: 'Credit Card Division', head: 'Robert Card', email: 'creditcard@bank.com', phone: '+1234567894', description: 'Credit card applications and services', createdAt: '2024-01-01' }
             ];
 
-            // Demo admins WITH PROPER PASSWORDS
+            // Demo admins WITH CORRECT PASSWORD
             appState.admins = [
                 { 
                     id: 1, 
@@ -2308,7 +2378,7 @@
                     department: 'Loan Department', 
                     role: 'super_admin', 
                     phone: '+1234567893', 
-                    password: 'Windows@@055020', // Storing password
+                    password: 'Windows@@055020',
                     lastLogin: '2024-01-15 10:30:00', 
                     status: 'active',
                     createdAt: '2024-01-01'
@@ -2320,7 +2390,7 @@
                     department: 'Loan Department', 
                     role: 'admin', 
                     phone: '+1234567894', 
-                    password: 'admin123', // Default password for new admins
+                    password: 'admin123',
                     lastLogin: '2024-01-14 14:20:00', 
                     status: 'active',
                     createdAt: '2024-01-01'
@@ -2332,7 +2402,7 @@
                     department: 'Investment Banking', 
                     role: 'department_head', 
                     phone: '+1234567895', 
-                    password: 'admin123', // Default password for new admins
+                    password: 'admin123',
                     lastLogin: '2024-01-13 09:15:00', 
                     status: 'active',
                     createdAt: '2024-01-01'
@@ -2343,7 +2413,9 @@
             appState.meetings = [
                 { id: 1, title: 'Loan Consultation', department: 'Loan Department', date: '2024-01-15', time: '10:00', location: 'Conference Room A', duration: 1, description: 'Personal loan consultation session', maxAttendees: 10, status: 'active', createdAt: '2024-01-10', attendees: [] },
                 { id: 2, title: 'Investment Seminar', department: 'Investment Banking', date: '2024-01-14', time: '14:00', location: 'Auditorium', duration: 2, description: 'Quarterly investment seminar', maxAttendees: 50, status: 'completed', createdAt: '2024-01-05', attendees: [] },
-                { id: 3, title: 'Account Opening', department: 'Customer Service', date: '2024-01-16', time: '09:00', location: 'Service Desk 1', duration: 0.5, description: 'New account opening session', maxAttendees: 5, status: 'active', createdAt: '2024-01-12', attendees: [] }
+                { id: 3, title: 'Account Opening', department: 'Customer Service', date: '2024-01-16', time: '09:00', location: 'Service Desk 1', duration: 0.5, description: 'New account opening session', maxAttendees: 5, status: 'active', createdAt: '2024-01-12', attendees: [] },
+                { id: 4, title: 'Mortgage Advice', department: 'Mortgage Services', date: '2024-01-17', time: '11:00', location: 'Room 201', duration: 1.5, description: 'Home mortgage consultation', maxAttendees: 8, status: 'active', createdAt: '2024-01-13', attendees: [] },
+                { id: 5, title: 'Credit Card Workshop', department: 'Credit Card Division', date: '2024-01-18', time: '13:00', location: 'Training Room', duration: 2, description: 'Credit card benefits workshop', maxAttendees: 20, status: 'active', createdAt: '2024-01-14', attendees: [] }
             ];
 
             // Demo attendees
@@ -2351,33 +2423,32 @@
                 { id: 1, name: 'Alice Johnson', email: 'alice@email.com', phone: '+1234567001', account: 'ACC001234', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Interested in home loan', registrationDate: '2024-01-12 09:15:00' },
                 { id: 2, name: 'Bob Smith', email: 'bob@email.com', phone: '+1234567002', account: 'ACC001235', meetingId: 2, meetingTitle: 'Investment Seminar', meetingDate: '2024-01-14', meetingTime: '14:00', department: 'Investment Banking', purpose: 'investment', notes: 'Retirement planning', registrationDate: '2024-01-11 14:30:00' },
                 { id: 3, name: 'Charlie Brown', email: 'charlie@email.com', phone: '+1234567003', account: 'ACC001236', meetingId: 3, meetingTitle: 'Account Opening', meetingDate: '2024-01-16', meetingTime: '09:00', department: 'Customer Service', purpose: 'account_opening', notes: 'Opening business account', registrationDate: '2024-01-13 11:00:00' },
-                { id: 4, name: 'Diana Prince', email: 'diana@email.com', phone: '+1234567004', account: 'ACC001237', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Car loan inquiry', registrationDate: '2024-01-14 15:45:00' }
+                { id: 4, name: 'Diana Prince', email: 'diana@email.com', phone: '+1234567004', account: 'ACC001237', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Car loan inquiry', registrationDate: '2024-01-14 15:45:00' },
+                { id: 5, name: 'Edward Wilson', email: 'edward@email.com', phone: '+1234567005', account: 'ACC001238', meetingId: 4, meetingTitle: 'Mortgage Advice', meetingDate: '2024-01-17', meetingTime: '11:00', department: 'Mortgage Services', purpose: 'mortgage', notes: 'First-time home buyer', registrationDate: '2024-01-14 10:30:00' },
+                { id: 6, name: 'Fiona Garcia', email: 'fiona@email.com', phone: '+1234567006', account: 'ACC001239', meetingId: 5, meetingTitle: 'Credit Card Workshop', meetingDate: '2024-01-18', meetingTime: '13:00', department: 'Credit Card Division', purpose: 'credit_card', notes: 'Interested in premium cards', registrationDate: '2024-01-14 16:20:00' },
+                { id: 7, name: 'George Martinez', email: 'george@email.com', phone: '+1234567007', account: 'ACC001240', meetingId: 2, meetingTitle: 'Investment Seminar', meetingDate: '2024-01-14', meetingTime: '14:00', department: 'Investment Banking', purpose: 'investment', notes: 'Portfolio review', registrationDate: '2024-01-13 09:45:00' },
+                { id: 8, name: 'Helen Taylor', email: 'helen@email.com', phone: '+1234567008', account: 'ACC001241', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Education loan', registrationDate: '2024-01-15 09:00:00' }
             ];
 
             // Link attendees to meetings
-            appState.meetings[0].attendees = [appState.attendees[0], appState.attendees[3]];
-            appState.meetings[1].attendees = [appState.attendees[1]];
+            appState.meetings[0].attendees = [appState.attendees[0], appState.attendees[3], appState.attendees[7]];
+            appState.meetings[1].attendees = [appState.attendees[1], appState.attendees[6]];
             appState.meetings[2].attendees = [appState.attendees[2]];
+            appState.meetings[3].attendees = [appState.attendees[4]];
+            appState.meetings[4].attendees = [appState.attendees[5]];
 
-            console.log("Demo data initialized:", {
-                departments: appState.departments.length,
-                admins: appState.admins.length,
-                meetings: appState.meetings.length,
-                attendees: appState.attendees.length
-            });
+            console.log("Demo data initialized");
+            saveDataToLocalStorage();
         }
 
-        // Save all data to localStorage
         function saveDataToLocalStorage() {
             localStorage.setItem('bankMeetingAdmins', JSON.stringify(appState.admins));
             localStorage.setItem('bankMeetingDepartments', JSON.stringify(appState.departments));
             localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
             localStorage.setItem('bankMeetingAttendees', JSON.stringify(appState.attendees));
-            
             console.log("Data saved to localStorage");
         }
 
-        // Load data from localStorage
         function loadDataFromLocalStorage() {
             console.log("Loading data from localStorage...");
             
@@ -2386,29 +2457,56 @@
             const savedMeetings = localStorage.getItem('bankMeetingMeetings');
             const savedAttendees = localStorage.getItem('bankMeetingAttendees');
 
-            if (savedAdmins) appState.admins = JSON.parse(savedAdmins);
-            if (savedDepartments) appState.departments = JSON.parse(savedDepartments);
-            if (savedMeetings) appState.meetings = JSON.parse(savedMeetings);
-            if (savedAttendees) appState.attendees = JSON.parse(savedAttendees);
-
-            // If no data exists, initialize demo data
-            if (appState.admins.length === 0) {
-                console.log("No data found, initializing demo data");
-                initializeDemoData();
-                saveDataToLocalStorage();
+            if (savedAdmins) {
+                try {
+                    appState.admins = JSON.parse(savedAdmins);
+                    console.log(`Loaded ${appState.admins.length} admins`);
+                } catch (e) {
+                    console.error("Error parsing admins:", e);
+                    appState.admins = [];
+                }
             }
             
-            console.log("Data loaded from localStorage:", {
-                departments: appState.departments.length,
-                admins: appState.admins.length,
-                meetings: appState.meetings.length,
-                attendees: appState.attendees.length
-            });
+            if (savedDepartments) {
+                try {
+                    appState.departments = JSON.parse(savedDepartments);
+                    console.log(`Loaded ${appState.departments.length} departments`);
+                } catch (e) {
+                    console.error("Error parsing departments:", e);
+                    appState.departments = [];
+                }
+            }
+            
+            if (savedMeetings) {
+                try {
+                    appState.meetings = JSON.parse(savedMeetings);
+                    console.log(`Loaded ${appState.meetings.length} meetings`);
+                } catch (e) {
+                    console.error("Error parsing meetings:", e);
+                    appState.meetings = [];
+                }
+            }
+            
+            if (savedAttendees) {
+                try {
+                    appState.attendees = JSON.parse(savedAttendees);
+                    console.log(`Loaded ${appState.attendees.length} attendees`);
+                } catch (e) {
+                    console.error("Error parsing attendees:", e);
+                    appState.attendees = [];
+                }
+            }
+
+            // If no data exists, initialize demo data
+            if (appState.admins.length === 0 && appState.departments.length === 0 && 
+                appState.meetings.length === 0 && appState.attendees.length === 0) {
+                console.log("No data found, initializing demo data...");
+                initializeDemoData();
+            }
         }
 
-        // Show alert function
+        // ==================== UI FUNCTIONS ====================
         function showAlert(message, type = 'success') {
-            console.log(`Alert: ${type} - ${message}`);
             const alertContainer = document.getElementById('alert-container');
             if (alertContainer) {
                 const alertDiv = document.createElement('div');
@@ -2427,7 +2525,6 @@
             }
         }
 
-        // Show confirmation modal
         function showConfirmation(title, message, onConfirm, iconType = 'warning') {
             appState.pendingAction = onConfirm;
             
@@ -2441,7 +2538,6 @@
                 confirmationMessage.textContent = message;
                 confirmationIcon.className = `confirmation-icon ${iconType}`;
                 
-                // Set icon based on type
                 const icon = confirmationIcon.querySelector('i');
                 if (icon) {
                     if (iconType === 'warning') {
@@ -2457,7 +2553,6 @@
             }
         }
 
-        // Show success modal
         function showSuccessModal(message) {
             const successModal = document.getElementById('success-modal');
             const successMessage = document.getElementById('success-message-text');
@@ -2468,62 +2563,6 @@
             }
         }
 
-        // Initialize confirmation modal event listeners
-        function initializeConfirmationModal() {
-            const confirmOkBtn = document.getElementById('confirm-ok');
-            const confirmCancelBtn = document.getElementById('confirm-cancel');
-            const successOkBtn = document.getElementById('success-ok');
-            const confirmationModal = document.getElementById('confirmation-modal');
-            const successModal = document.getElementById('success-modal');
-            
-            if (confirmOkBtn) {
-                confirmOkBtn.addEventListener('click', function() {
-                    if (appState.pendingAction) {
-                        appState.pendingAction();
-                        appState.pendingAction = null;
-                    }
-                    confirmationModal.classList.add('hidden');
-                });
-            }
-            
-            if (confirmCancelBtn) {
-                confirmCancelBtn.addEventListener('click', function() {
-                    appState.pendingAction = null;
-                    confirmationModal.classList.add('hidden');
-                });
-            }
-            
-            if (successOkBtn) {
-                successOkBtn.addEventListener('click', function() {
-                    successModal.classList.add('hidden');
-                });
-            }
-            
-            // Close modals when clicking outside
-            confirmationModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.add('hidden');
-                    appState.pendingAction = null;
-                }
-            });
-            
-            successModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.add('hidden');
-                }
-            });
-            
-            // Close modals with Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    confirmationModal.classList.add('hidden');
-                    successModal.classList.add('hidden');
-                    appState.pendingAction = null;
-                }
-            });
-        }
-
-        // Show login alert
         function showLoginAlert(message) {
             const loginAlert = document.getElementById('login-alert');
             if (loginAlert) {
@@ -2537,11 +2576,10 @@
             }
         }
 
-        // Initialize Dashboard
+        // ==================== DASHBOARD FUNCTIONS ====================
         function initializeDashboard() {
             console.log("Initializing dashboard...");
             
-            // Get all DOM elements for dashboard
             const navItems = document.querySelectorAll('.nav-item:not(#logout-btn)');
             const pageContents = document.querySelectorAll('.page-content');
             const logoutBtn = document.getElementById('logout-btn');
@@ -2549,37 +2587,21 @@
             const createMeetingBtn = document.getElementById('create-meeting-btn');
             const currentAdminEmail = document.getElementById('current-admin-email');
             
-            console.log("Dashboard elements found:", {
-                navItems: navItems.length,
-                pageContents: pageContents.length,
-                logoutBtn: !!logoutBtn,
-                pageTitle: !!pageTitle,
-                createMeetingBtn: !!createMeetingBtn,
-                currentAdminEmail: !!currentAdminEmail
-            });
-            
-            // Set current admin email
-            if (currentAdminEmail) {
+            if (currentAdminEmail && appState.currentUser) {
                 currentAdminEmail.textContent = appState.currentUser.email;
             }
             
-            // Update all data
             updateAllData();
             
-            // Navigation Functionality
+            // Navigation
             if (navItems) {
                 navItems.forEach(item => {
-                    if (!item.id) { // Skip logout button
+                    if (!item.id) {
                         item.addEventListener('click', function() {
-                            console.log("Nav item clicked:", this.getAttribute('data-page'));
-                            // Update active nav item
                             navItems.forEach(nav => nav.classList.remove('active'));
                             this.classList.add('active');
                             
-                            // Get page to show
                             const page = this.getAttribute('data-page');
-                            
-                            // Update page title
                             const pageTitles = {
                                 'dashboard': 'Dashboard',
                                 'meetings': 'Meetings',
@@ -2588,11 +2610,11 @@
                                 'departments': 'Departments',
                                 'admins': 'Admins'
                             };
+                            
                             if (pageTitle) {
                                 pageTitle.textContent = pageTitles[page];
                             }
                             
-                            // Show corresponding content
                             pageContents.forEach(content => {
                                 content.classList.add('hidden');
                                 if (content.id === `${page}-content`) {
@@ -2600,7 +2622,6 @@
                                 }
                             });
                             
-                            // Update data for the specific page
                             if (page === 'dashboard') {
                                 updateDashboard();
                             } else if (page === 'meetings') {
@@ -2608,7 +2629,6 @@
                             } else if (page === 'attendees') {
                                 updateAttendeesPage();
                             } else if (page === 'export') {
-                                // Update server stats for export page
                                 updateServerStats();
                             } else if (page === 'departments') {
                                 updateDepartmentsPage();
@@ -2620,27 +2640,23 @@
                 });
             }
             
-            // Logout Functionality with nice confirmation modal
+            // Logout
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function() {
                     showConfirmation(
                         'Confirm Logout',
-                        'Are you sure you want to logout? You will need to log in again to access the dashboard.',
+                        'Are you sure you want to logout?',
                         function() {
-                            // Clear current user
                             appState.currentUser = null;
-                            
-                            // Destroy charts
                             Object.values(appState.charts).forEach(chart => {
                                 if (chart) chart.destroy();
                             });
                             appState.charts = {};
                             
-                            // Show login page, hide dashboard
                             document.getElementById('dashboard-page').classList.remove('active');
                             document.getElementById('login-page').classList.add('active');
                             
-                            showSuccessModal('You have been logged out successfully. Please log in again to access the dashboard.');
+                            showSuccessModal('You have been logged out successfully.');
                         },
                         'warning'
                     );
@@ -2653,156 +2669,75 @@
                     const createTabBtn = document.querySelector('.tab-btn[data-tab="create-meeting"]');
                     const meetingsNav = document.querySelector('.nav-item[data-page="meetings"]');
                     
-                    if (createTabBtn) {
-                        createTabBtn.click();
-                    }
-                    if (meetingsNav) {
-                        meetingsNav.click();
-                    }
+                    if (createTabBtn) createTabBtn.click();
+                    if (meetingsNav) meetingsNav.click();
                 });
             }
             
-            // Setup all other event listeners
             setupEventListeners();
-            // Initialize confirmation modal
             initializeConfirmationModal();
         }
 
-        // Setup all event listeners
+        // ==================== EVENT LISTENERS ====================
         function setupEventListeners() {
             console.log("Setting up event listeners...");
             
-            // Server connection button
-            const connectServerBtn = document.getElementById('connect-server-btn');
-            if (connectServerBtn) {
-                connectServerBtn.addEventListener('click', async function() {
-                    const serverUrl = document.getElementById('server-url').value;
-                    console.log("Connecting to server:", serverUrl);
-                    showAlert('Connecting to server...', 'warning');
-                });
-            }
-            
-            // Sync data button
-            const syncDataBtn = document.getElementById('sync-data-btn');
-            if (syncDataBtn) {
-                syncDataBtn.addEventListener('click', function() {
-                    console.log("Syncing data to server...");
-                    showAlert('Syncing data to server...', 'warning');
-                });
-            }
-            
-            // Export buttons
-            const exportAllCsvBtn = document.getElementById('export-all-csv');
-            if (exportAllCsvBtn) {
-                exportAllCsvBtn.addEventListener('click', exportAllAttendeesCSV);
-            }
-            
-            const exportMeetingsCsvBtn = document.getElementById('export-meetings-csv');
-            if (exportMeetingsCsvBtn) {
-                exportMeetingsCsvBtn.addEventListener('click', exportAllMeetingsCSV);
-            }
-            
-            const exportDepartmentsCsvBtn = document.getElementById('export-departments-csv');
-            if (exportDepartmentsCsvBtn) {
-                exportDepartmentsCsvBtn.addEventListener('click', exportDepartmentsCSV);
-            }
-            
-            const exportAdminsCsvBtn = document.getElementById('export-admins-csv');
-            if (exportAdminsCsvBtn) {
-                exportAdminsCsvBtn.addEventListener('click', exportAdminsCSV);
-            }
-            
-            // Backup buttons
-            const backupJsonBtn = document.getElementById('backup-json');
-            if (backupJsonBtn) {
-                backupJsonBtn.addEventListener('click', backupToJSON);
-            }
-            
-            const backupServerBtn = document.getElementById('backup-server');
-            if (backupServerBtn) {
-                backupServerBtn.addEventListener('click', function() {
-                    console.log("Backup to server...");
-                    showAlert('Backup to server...', 'warning');
-                });
-            }
-            
-            const restoreBackupBtn = document.getElementById('restore-backup');
-            if (restoreBackupBtn) {
-                restoreBackupBtn.addEventListener('click', () => {
-                    document.getElementById('backup-file').click();
-                });
-            }
-            
-            // Backup file input
-            const backupFileInput = document.getElementById('backup-file');
-            if (backupFileInput) {
-                backupFileInput.addEventListener('change', function(e) {
-                    if (e.target.files.length > 0) {
-                        restoreFromBackup(e.target.files[0]);
-                        e.target.value = ''; // Reset input
+            // Login form - REMOVED PRE-FILLED CREDENTIALS
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+                    
+                    console.log("Login attempt with email:", email);
+                    console.log("Loaded admins:", appState.admins);
+                    
+                    const admin = appState.admins.find(a => a.email.toLowerCase() === email.toLowerCase());
+                    
+                    if (admin) {
+                        console.log("Admin found:", admin.email);
+                        console.log("Stored password:", admin.password);
+                        console.log("Entered password:", password);
+                        
+                        if (admin.password === password) {
+                            console.log("Password matches!");
+                            
+                            // Update last login
+                            admin.lastLogin = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                            saveDataToLocalStorage();
+                            
+                            appState.currentUser = {
+                                id: admin.id,
+                                email: admin.email,
+                                name: admin.name,
+                                role: admin.role,
+                                department: admin.department
+                            };
+                            
+                            document.getElementById('login-page').classList.remove('active');
+                            document.getElementById('dashboard-page').classList.add('active');
+                            loginForm.reset();
+                            initializeDashboard();
+                            showAlert(`Login successful! Welcome ${admin.name}.`, 'success');
+                        } else {
+                            console.log("Password mismatch");
+                            showLoginAlert('Invalid password. Please try again.');
+                        }
+                    } else {
+                        console.log("Admin not found for email:", email);
+                        showLoginAlert('Invalid email or password. Please try again.');
                     }
                 });
             }
             
-            // Data management buttons
-            const clearLocalDataBtn = document.getElementById('clear-local-data');
-            if (clearLocalDataBtn) {
-                clearLocalDataBtn.addEventListener('click', function() {
-                    showConfirmation(
-                        'Clear All Local Data',
-                        'Are you sure you want to clear all local data? This will delete all meetings, attendees, departments, and admin data from your browser. This action cannot be undone!',
-                        function() {
-                            localStorage.removeItem('bankMeetingMeetings');
-                            localStorage.removeItem('bankMeetingAttendees');
-                            localStorage.removeItem('bankMeetingDepartments');
-                            localStorage.removeItem('bankMeetingAdmins');
-                            
-                            appState.meetings = [];
-                            appState.attendees = [];
-                            appState.departments = [];
-                            appState.admins = [];
-                            
-                            updateAllData();
-                            showSuccessModal('All local data has been cleared successfully! The system has been reset to demo data.');
-                        },
-                        'danger'
-                    );
-                });
-            }
-            
-            // Tab Navigation
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    const parent = this.closest('.content-card');
-                    
-                    // Update active tab button
-                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    parent.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    const targetTab = parent.querySelector(`#${tabId}`);
-                    if (targetTab) targetTab.classList.add('active');
-                    
-                    // Handle restricted access for non-super admins
-                    if (tabId === 'add-department' || tabId === 'add-admin') {
-                        checkAdminPermissions();
-                    }
-                });
-            });
-
             // Create meeting form
             const createMeetingForm = document.getElementById('create-meeting-form');
             if (createMeetingForm) {
                 createMeetingForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    console.log("Creating new meeting...");
-                    
-                    // Get meetings from localStorage to ensure we have latest
                     const savedMeetings = localStorage.getItem('bankMeetingMeetings');
                     const currentMeetings = savedMeetings ? JSON.parse(savedMeetings) : [];
                     
@@ -2822,289 +2757,77 @@
                         attendees: []
                     };
                     
-                    // Add to meetings array
                     currentMeetings.push(newMeeting);
-                    
-                    // Save to localStorage
                     localStorage.setItem('bankMeetingMeetings', JSON.stringify(currentMeetings));
-                    
-                    // Update appState
                     appState.meetings = currentMeetings;
                     
-                    // Update UI
                     updateAllData();
                     showAlert('Meeting created successfully!', 'success');
                     this.reset();
                     
-                    // Set default date to tomorrow
                     const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     document.getElementById('meeting-date').valueAsDate = tomorrow;
                     
-                    // Switch to active meetings tab
                     const activeTabBtn = document.querySelector('.tab-btn[data-tab="active-meetings"]');
                     if (activeTabBtn) activeTabBtn.click();
                 });
             }
-
-            // Add Attendee Button
+            
+            // Add attendee button
             const addAttendeeBtn = document.getElementById('add-attendee-btn');
             if (addAttendeeBtn) {
                 addAttendeeBtn.addEventListener('click', function() {
                     showAddAttendeeModal();
                 });
             }
-
-            // Manual Attendee Form
-            const manualAttendeeForm = document.getElementById('manual-attendee-form');
-            if (manualAttendeeForm) {
-                manualAttendeeForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    console.log("Adding manual attendee...");
-                    
-                    // Get meetings from localStorage
-                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                    const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                    
-                    const meetingSelect = document.getElementById('manual-attendee-meeting');
-                    const meetingTitle = meetingSelect.value;
-                    const selectedMeeting = meetings.find(m => m.title === meetingTitle);
-                    
-                    if (!selectedMeeting) {
-                        showAlert('Please select a valid meeting', 'error');
-                        return;
-                    }
-                    
-                    const newAttendee = {
-                        id: Date.now(),
-                        meetingId: selectedMeeting.id,
-                        meetingTitle: selectedMeeting.title,
-                        meetingDate: selectedMeeting.date,
-                        meetingTime: selectedMeeting.time,
-                        name: document.getElementById('manual-attendee-name').value,
-                        email: document.getElementById('manual-attendee-email').value,
-                        phone: document.getElementById('manual-attendee-phone').value,
-                        account: document.getElementById('manual-attendee-account').value,
-                        department: selectedMeeting.department,
-                        purpose: document.getElementById('manual-attendee-purpose').value,
-                        notes: document.getElementById('manual-attendee-notes').value,
-                        registrationDate: new Date().toLocaleString()
-                    };
-                    
-                    // Get current attendees
-                    const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                    savedAttendees.push(newAttendee);
-                    
-                    // Update meeting attendees
-                    selectedMeeting.attendees = selectedMeeting.attendees || [];
-                    selectedMeeting.attendees.push(newAttendee);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                    
-                    // Update appState
-                    appState.attendees = savedAttendees;
-                    appState.meetings = meetings;
-                    
-                    // Update UI
-                    updateAllData();
-                    showAlert('Attendee added successfully!', 'success');
-                    
-                    // Close modal and reset form
-                    document.getElementById('add-attendee-modal').classList.add('hidden');
-                    this.reset();
-                });
-            }
-
-            // Add department form
-            const addDeptForm = document.getElementById('add-department-form');
-            if (addDeptForm) {
-                addDeptForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    console.log("Adding new department...");
-                    
-                    // Get current departments
-                    const savedDepartments = localStorage.getItem('bankMeetingDepartments');
-                    const currentDepartments = savedDepartments ? JSON.parse(savedDepartments) : [];
-                    
-                    const newDept = {
-                        id: currentDepartments.length > 0 ? Math.max(...currentDepartments.map(d => d.id)) + 1 : 1,
-                        name: document.getElementById('department-name').value,
-                        head: document.getElementById('department-head').value,
-                        email: document.getElementById('department-email').value,
-                        phone: document.getElementById('department-phone').value,
-                        description: document.getElementById('department-description').value,
-                        createdAt: new Date().toISOString().split('T')[0]
-                    };
-                    
-                    currentDepartments.push(newDept);
-                    localStorage.setItem('bankMeetingDepartments', JSON.stringify(currentDepartments));
-                    
-                    appState.departments = currentDepartments;
-                    updateAllData();
-                    showAlert('Department added successfully!', 'success');
-                    this.reset();
-                    
-                    // Switch to view departments tab
-                    const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-departments"]');
-                    if (viewTabBtn) viewTabBtn.click();
-                });
-            }
-
-            // Add admin form
-            const addAdminForm = document.getElementById('add-admin-form');
-            if (addAdminForm) {
-                addAdminForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    console.log("Adding new admin...");
-                    
-                    // Get current admins
-                    const savedAdmins = localStorage.getItem('bankMeetingAdmins');
-                    const currentAdmins = savedAdmins ? JSON.parse(savedAdmins) : [];
-                    
-                    const newAdmin = {
-                        id: currentAdmins.length > 0 ? Math.max(...currentAdmins.map(a => a.id)) + 1 : 1,
-                        name: document.getElementById('admin-name').value,
-                        email: document.getElementById('admin-email').value,
-                        department: document.getElementById('admin-department').value,
-                        role: document.getElementById('admin-role').value,
-                        phone: document.getElementById('admin-phone').value,
-                        password: document.getElementById('admin-password').value,
-                        lastLogin: 'Never',
-                        status: 'active',
-                        createdAt: new Date().toISOString().split('T')[0]
-                    };
-                    
-                    // Check if admin already exists
-                    const existingAdmin = currentAdmins.find(a => a.email.toLowerCase() === newAdmin.email.toLowerCase());
-                    if (existingAdmin) {
-                        showAlert('An admin with this email already exists!', 'error');
-                        return;
-                    }
-                    
-                    currentAdmins.push(newAdmin);
-                    localStorage.setItem('bankMeetingAdmins', JSON.stringify(currentAdmins));
-                    
-                    appState.admins = currentAdmins;
-                    updateAllData();
-                    showAlert('Admin added successfully!', 'success');
-                    this.reset();
-                    
-                    // Switch to view admins tab
-                    const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
-                    if (viewTabBtn) viewTabBtn.click();
-                });
-            }
-
-            // Edit meeting form
-            const editMeetingForm = document.getElementById('edit-meeting-form');
-            if (editMeetingForm) {
-                editMeetingForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    console.log("Editing meeting...");
-                    
-                    // Get meetings from localStorage
-                    const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                    const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                    
-                    const meetingId = parseInt(document.getElementById('edit-meeting-id').value);
-                    const meeting = meetings.find(m => m.id === meetingId);
-                    
-                    if (meeting) {
-                        meeting.title = document.getElementById('edit-meeting-title').value;
-                        meeting.department = document.getElementById('edit-meeting-department').value;
-                        meeting.date = document.getElementById('edit-meeting-date').value;
-                        meeting.time = document.getElementById('edit-meeting-time').value;
-                        meeting.location = document.getElementById('edit-meeting-location').value;
-                        meeting.duration = parseFloat(document.getElementById('edit-meeting-duration').value);
-                        meeting.description = document.getElementById('edit-meeting-description').value;
-                        meeting.maxAttendees = document.getElementById('edit-meeting-max-attendees').value ? 
-                            parseInt(document.getElementById('edit-meeting-max-attendees').value) : null;
-                        meeting.status = document.getElementById('edit-meeting-status').value;
-                        
-                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                        appState.meetings = meetings;
-                        updateAllData();
-                        showAlert('Meeting updated successfully!', 'success');
-                        document.getElementById('edit-meeting-modal').classList.add('hidden');
-                    }
-                });
-            }
-
-            // Edit department form
-            const editDepartmentForm = document.getElementById('edit-department-form');
-            if (editDepartmentForm) {
-                editDepartmentForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    console.log("Editing department...");
-                    
-                    // Get departments from localStorage
-                    const savedDepartments = localStorage.getItem('bankMeetingDepartments');
-                    const departments = savedDepartments ? JSON.parse(savedDepartments) : [];
-                    
-                    const deptId = parseInt(document.getElementById('edit-department-id').value);
-                    const dept = departments.find(d => d.id === deptId);
-                    
-                    if (dept) {
-                        dept.name = document.getElementById('edit-department-name').value;
-                        dept.head = document.getElementById('edit-department-head').value;
-                        dept.email = document.getElementById('edit-department-email').value;
-                        dept.phone = document.getElementById('edit-department-phone').value;
-                        dept.description = document.getElementById('edit-department-description').value;
-                        
-                        // Get meetings from localStorage
-                        const savedMeetings = localStorage.getItem('bankMeetingMeetings');
-                        const meetings = savedMeetings ? JSON.parse(savedMeetings) : [];
-                        
-                        // Update department in meetings
-                        meetings.forEach(meeting => {
-                            if (meeting.department === dept.name) {
-                                meeting.department = dept.name;
-                            }
-                        });
-                        
-                        // Update department in admins
-                        const savedAdmins = localStorage.getItem('bankMeetingAdmins');
-                        const admins = savedAdmins ? JSON.parse(savedAdmins) : [];
-                        
-                        admins.forEach(admin => {
-                            if (admin.department === dept.name) {
-                                admin.department = dept.name;
-                            }
-                        });
-                        
-                        // Save all updated data
-                        localStorage.setItem('bankMeetingDepartments', JSON.stringify(departments));
-                        localStorage.setItem('bankMeetingMeetings', JSON.stringify(meetings));
-                        localStorage.setItem('bankMeetingAdmins', JSON.stringify(admins));
-                        
-                        // Update appState
-                        appState.departments = departments;
-                        appState.meetings = meetings;
-                        appState.admins = admins;
-                        
-                        updateAllData();
-                        showAlert('Department updated successfully!', 'success');
-                        document.getElementById('edit-department-modal').classList.add('hidden');
-                    }
-                });
-            }
-
-            // QR Modal functionality
-            const closeModalBtns = document.querySelectorAll('.close-modal');
             
+            // Export buttons
+            const exportAllCsvBtn = document.getElementById('export-all-csv');
+            if (exportAllCsvBtn) {
+                exportAllCsvBtn.addEventListener('click', exportAllAttendeesCSV);
+            }
+            
+            const exportMeetingsCsvBtn = document.getElementById('export-meetings-csv');
+            if (exportMeetingsCsvBtn) {
+                exportMeetingsCsvBtn.addEventListener('click', exportAllMeetingsCSV);
+            }
+            
+            // Backup buttons
+            const backupJsonBtn = document.getElementById('backup-json');
+            if (backupJsonBtn) {
+                backupJsonBtn.addEventListener('click', backupToJSON);
+            }
+            
+            // Tab navigation
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    const parent = this.closest('.content-card');
+                    
+                    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    parent.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    const targetTab = parent.querySelector(`#${tabId}`);
+                    if (targetTab) targetTab.classList.add('active');
+                    
+                    if (tabId === 'add-department' || tabId === 'add-admin') {
+                        checkAdminPermissions();
+                    }
+                });
+            });
+            
+            // Modal close buttons
+            const closeModalBtns = document.querySelectorAll('.close-modal');
             closeModalBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     this.closest('.modal').classList.add('hidden');
                 });
             });
-
+            
             // Close modal when clicking outside
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', function(e) {
@@ -3113,7 +2836,7 @@
                     }
                 });
             });
-
+            
             // Close modal with Escape key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
@@ -3122,146 +2845,12 @@
                     });
                 }
             });
-
-            // Download QR Code
-            const downloadQrBtn = document.getElementById('download-qr-btn');
-            if (downloadQrBtn) {
-                downloadQrBtn.addEventListener('click', function() {
-                    const qrcodeDiv = document.getElementById('qrcode');
-                    const canvas = qrcodeDiv.querySelector('canvas');
-                    
-                    if (canvas) {
-                        const link = document.createElement('a');
-                        link.download = 'meeting-qr-code.png';
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
-                        showAlert('QR Code downloaded successfully!', 'success');
-                    } else {
-                        showAlert('No QR code found to download', 'error');
-                    }
-                });
-            }
-
-            // Copy link to clipboard
-            const copyLinkBtn = document.getElementById('copy-link-btn');
-            if (copyLinkBtn) {
-                copyLinkBtn.addEventListener('click', function() {
-                    const link = document.getElementById('qr-meeting-link');
-                    if (link) {
-                        const textToCopy = link.textContent || link.innerText;
-                        
-                        // Use the modern clipboard API
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(textToCopy).then(() => {
-                                showAlert('Registration link copied to clipboard!', 'success');
-                            }).catch(err => {
-                                console.error('Failed to copy: ', err);
-                                // Fallback for older browsers
-                                copyTextFallback(textToCopy);
-                            });
-                        } else {
-                            // Fallback for older browsers
-                            copyTextFallback(textToCopy);
-                        }
-                    }
-                    
-                    function copyTextFallback(text) {
-                        const textArea = document.createElement('textarea');
-                        textArea.value = text;
-                        textArea.style.position = 'fixed';
-                        textArea.style.opacity = '0';
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        
-                        try {
-                            document.execCommand('copy');
-                            showAlert('Registration link copied to clipboard!', 'success');
-                        } catch (err) {
-                            console.error('Fallback copy failed: ', err);
-                            showAlert('Failed to copy link', 'error');
-                        }
-                        
-                        document.body.removeChild(textArea);
-                    }
-                });
-            }
-
-            // Send email (demo function)
-            const sendEmailBtn = document.getElementById('send-email-btn');
-            if (sendEmailBtn) {
-                sendEmailBtn.addEventListener('click', function() {
-                    const meetingTitle = document.getElementById('qr-meeting-title').textContent;
-                    const meetingDate = document.getElementById('qr-meeting-date').textContent;
-                    const meetingTime = document.getElementById('qr-meeting-time').textContent;
-                    const registrationLink = document.getElementById('qr-meeting-link').textContent;
-                    
-                    const emailBody = `Meeting Details:\n\nMeeting: ${meetingTitle}\nDate: ${meetingDate}\nTime: ${meetingTime}\nRegistration Link: ${registrationLink}`;
-                    
-                    showAlert('Demo: Email would be sent with meeting details (in a real app, this would trigger an email service).', 'info');
-                });
-            }
-
-            console.log("Event listeners setup complete");
         }
 
-        // Check admin permissions for restricted access
-        function checkAdminPermissions() {
-            const currentUser = appState.currentUser;
-            
-            // Check for department form access
-            const deptFormContainer = document.getElementById('department-form-container');
-            const restrictedDeptAccess = document.getElementById('restricted-department-access');
-            const addDeptTabBtn = document.querySelector('.tab-btn[data-tab="add-department"]');
-            
-            if (deptFormContainer && restrictedDeptAccess && addDeptTabBtn) {
-                if (currentUser.role === 'super_admin') {
-                    deptFormContainer.style.display = 'block';
-                    restrictedDeptAccess.style.display = 'none';
-                    addDeptTabBtn.style.display = 'block';
-                } else {
-                    deptFormContainer.style.display = 'none';
-                    restrictedDeptAccess.style.display = 'block';
-                    addDeptTabBtn.style.display = 'none';
-                    
-                    // If on the add-department tab and not super admin, switch to view tab
-                    if (addDeptTabBtn.classList.contains('active')) {
-                        const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-departments"]');
-                        if (viewTabBtn) viewTabBtn.click();
-                    }
-                }
-            }
-            
-            // Check for admin form access
-            const adminFormContainer = document.getElementById('admin-form-container');
-            const restrictedAdminAccess = document.getElementById('restricted-admin-access');
-            const addAdminTabBtn = document.querySelector('.tab-btn[data-tab="add-admin"]');
-            
-            if (adminFormContainer && restrictedAdminAccess && addAdminTabBtn) {
-                if (currentUser.role === 'super_admin') {
-                    adminFormContainer.style.display = 'block';
-                    restrictedAdminAccess.style.display = 'none';
-                    addAdminTabBtn.style.display = 'block';
-                } else {
-                    adminFormContainer.style.display = 'none';
-                    restrictedAdminAccess.style.display = 'block';
-                    addAdminTabBtn.style.display = 'none';
-                    
-                    // If on the add-admin tab and not super admin, switch to view tab
-                    if (addAdminTabBtn.classList.contains('active')) {
-                        const viewTabBtn = document.querySelector('.tab-btn[data-tab="view-admins"]');
-                        if (viewTabBtn) viewTabBtn.click();
-                    }
-                }
-            }
-        }
-
-        // Update all data
+        // ==================== DATA UPDATE FUNCTIONS ====================
         function updateAllData() {
             console.log("Updating all data...");
-            
-            // Load latest data from localStorage
             loadDataFromLocalStorage();
-            
             updateStats();
             updateDashboard();
             updateMeetingsPage();
@@ -3269,11 +2858,8 @@
             updateDepartmentsPage();
             updateAdminsPage();
             initializeCharts();
-            
-            console.log("All data updated");
         }
 
-        // Update statistics
         function updateStats() {
             const statMeetings = document.getElementById('stat-meetings');
             const statAttendees = document.getElementById('stat-attendees');
@@ -3288,54 +2874,30 @@
             statMeetings.textContent = activeMeetings;
             statAttendees.textContent = totalAttendees;
             statDepartments.textContent = totalDepartments;
-            
-            console.log("Stats updated:", { activeMeetings, totalAttendees, totalDepartments });
         }
 
-        // Update server stats
-        function updateServerStats() {
-            // Update data status display
-            const dataStatus = document.getElementById('data-status');
-            if (dataStatus) {
-                dataStatus.innerHTML = `
-                    <strong>Local Data:</strong><br>
-                    • Attendees: ${appState.attendees.length}<br>
-                    • Meetings: ${appState.meetings.length}<br>
-                    • Departments: ${appState.departments.length}<br>
-                    <br>
-                    <strong>Server Data:</strong><br>
-                    • Attendees: 0 (Offline)<br>
-                    • Meetings: 0 (Offline)<br>
-                    • Departments: 0 (Offline)<br>
-                    <br>
-                    <strong>Last Sync:</strong> Never
-                `;
-            }
-        }
-
-        // Update dashboard
         function updateDashboard() {
-            // Update recent meetings table
+            console.log("Updating dashboard...");
             const recentMeetingsTable = document.getElementById('recent-meetings-table');
             if (!recentMeetingsTable) return;
             
             recentMeetingsTable.innerHTML = '';
             
-            // Sort meetings by date (newest first) and take top 5
             const recentMeetings = [...appState.meetings]
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time))
                 .slice(0, 5);
             
             recentMeetings.forEach(meeting => {
                 const row = document.createElement('tr');
                 const statusClass = meeting.status === 'active' ? 'active' : 
                                   meeting.status === 'completed' ? 'completed' : 'cancelled';
+                const meetingAttendees = appState.attendees.filter(a => a.meetingId === meeting.id).length;
                 
                 row.innerHTML = `
                     <td>${meeting.title}</td>
                     <td>${meeting.date} ${meeting.time}</td>
                     <td>${meeting.department}</td>
-                    <td>${meeting.attendees ? meeting.attendees.length : 0}</td>
+                    <td>${meetingAttendees}</td>
                     <td><span class="status ${statusClass}">${meeting.status}</span></td>
                     <td>
                         <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
@@ -3349,7 +2911,7 @@
                 recentMeetingsTable.appendChild(row);
             });
             
-            // Add event listeners to view buttons
+            // Add event listeners for dynamic buttons
             document.querySelectorAll('.view-meeting-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const meetingId = parseInt(this.getAttribute('data-id'));
@@ -3357,7 +2919,6 @@
                 });
             });
             
-            // Add event listeners to QR buttons
             document.querySelectorAll('.generate-qr-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const meetingId = parseInt(this.getAttribute('data-id'));
@@ -3366,11 +2927,10 @@
             });
         }
 
-        // Update meetings page
         function updateMeetingsPage() {
             console.log("Updating meetings page...");
             
-            // Update department select in create meeting form
+            // Update department select for creating meetings
             const departmentSelect = document.getElementById('meeting-department');
             if (departmentSelect) {
                 departmentSelect.innerHTML = '<option value="">Select Department</option>';
@@ -3397,22 +2957,20 @@
                 
                 const activeMeetings = appState.meetings.filter(m => m.status === 'active');
                 activeMeetings.forEach(meeting => {
+                    const meetingAttendees = appState.attendees.filter(a => a.meetingId === meeting.id).length;
+                    const maxAttendeesText = meeting.maxAttendees ? `${meetingAttendees}/${meeting.maxAttendees}` : meetingAttendees;
+                    
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${meeting.title}</td>
                         <td>${meeting.date} ${meeting.time}</td>
                         <td>${meeting.department}</td>
                         <td>${meeting.location}</td>
-                        <td>${meeting.attendees ? meeting.attendees.length : 0}${meeting.maxAttendees ? '/' + meeting.maxAttendees : ''}</td>
+                        <td>${maxAttendeesText}</td>
                         <td>
                             <button class="btn btn-sm btn-primary generate-qr-btn" data-id="${meeting.id}">
                                 <i class="fas fa-qrcode"></i> Generate QR
                             </button>
-                            ${meeting.attendees && meeting.attendees.length > 0 ? `
-                                <button class="btn btn-sm btn-success export-meeting-btn" data-meeting="${meeting.title}" style="margin-top: 5px;">
-                                    <i class="fas fa-file-excel"></i> Export
-                                </button>
-                            ` : ''}
                         </td>
                         <td class="action-buttons">
                             <button class="btn btn-sm btn-secondary view-meeting-btn" data-id="${meeting.id}">
@@ -3437,14 +2995,16 @@
                 
                 const pastMeetings = appState.meetings.filter(m => m.status !== 'active');
                 pastMeetings.forEach(meeting => {
-                    const row = document.createElement('tr');
+                    const meetingAttendees = appState.attendees.filter(a => a.meetingId === meeting.id).length;
                     const statusClass = meeting.status === 'completed' ? 'completed' : 'cancelled';
+                    
+                    const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${meeting.title}</td>
                         <td>${meeting.date} ${meeting.time}</td>
                         <td>${meeting.department}</td>
                         <td>${meeting.location}</td>
-                        <td>${meeting.attendees ? meeting.attendees.length : 0}</td>
+                        <td>${meetingAttendees}</td>
                         <td><span class="status ${statusClass}">${meeting.status}</span></td>
                     `;
                     pastTable.appendChild(row);
@@ -3459,20 +3019,6 @@
                 });
             });
             
-            document.querySelectorAll('.cancel-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingId = parseInt(this.getAttribute('data-id'));
-                    showConfirmation(
-                        'Cancel Meeting',
-                        `Are you sure you want to cancel the meeting "${appState.meetings.find(m => m.id === meetingId)?.title}"? This action cannot be undone and all attendees will be notified.`,
-                        function() {
-                            cancelMeeting(meetingId);
-                        },
-                        'warning'
-                    );
-                });
-            });
-            
             document.querySelectorAll('.view-meeting-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const meetingId = parseInt(this.getAttribute('data-id'));
@@ -3483,48 +3029,48 @@
             document.querySelectorAll('.edit-meeting-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const meetingId = parseInt(this.getAttribute('data-id'));
-                    editMeeting(meetingId);
+                    showEditMeetingModal(meetingId);
                 });
             });
             
-            document.querySelectorAll('.export-meeting-btn').forEach(btn => {
+            document.querySelectorAll('.cancel-meeting-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const meetingName = this.getAttribute('data-meeting');
-                    exportMeetingAttendees(meetingName);
+                    const meetingId = parseInt(this.getAttribute('data-id'));
+                    const meeting = appState.meetings.find(m => m.id === meetingId);
+                    showConfirmation(
+                        'Cancel Meeting',
+                        `Are you sure you want to cancel the meeting "${meeting?.title}"?`,
+                        function() {
+                            cancelMeeting(meetingId);
+                        },
+                        'warning'
+                    );
                 });
             });
         }
 
-        // Update attendees page
         function updateAttendeesPage() {
+            console.log("Updating attendees page...");
+            
             const attendeesTable = document.getElementById('attendees-table');
             if (!attendeesTable) return;
             
             attendeesTable.innerHTML = '';
             
-            // Get attendees from localStorage (most up-to-date)
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            savedAttendees.forEach(attendee => {
-                const row = document.createElement('tr');
-                const purposeText = {
-                    'loan_consultation': 'Loan Consultation',
-                    'account_opening': 'Account Opening',
-                    'investment': 'Investment',
-                    'business': 'Business',
-                    'mortgage': 'Mortgage Inquiry',
-                    'credit_card': 'Credit Card Application',
-                    'other': 'Other'
-                }[attendee.purpose] || attendee.purpose;
+            appState.attendees.forEach(attendee => {
+                const meeting = appState.meetings.find(m => m.id === attendee.meetingId);
+                const meetingTitle = meeting ? meeting.title : 'Unknown Meeting';
+                const meetingDate = meeting ? meeting.date : 'Unknown Date';
                 
+                const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${attendee.name}</td>
                     <td>${attendee.email}</td>
                     <td>${attendee.phone}</td>
                     <td>${attendee.account || 'N/A'}</td>
-                    <td>${attendee.meetingTitle || attendee.meeting || 'N/A'}</td>
-                    <td>${attendee.meetingDate || 'N/A'}</td>
-                    <td>${attendee.departmentName || attendee.department || 'N/A'}</td>
+                    <td>${meetingTitle}</td>
+                    <td>${meetingDate}</td>
+                    <td>${attendee.department}</td>
                     <td>${attendee.registrationDate}</td>
                     <td class="action-buttons">
                         <button class="btn btn-sm btn-secondary view-attendee-btn" data-id="${attendee.id}">
@@ -3538,22 +3084,21 @@
                 attendeesTable.appendChild(row);
             });
             
-            // Add event listeners
+            // Add event listeners for attendee buttons
             document.querySelectorAll('.view-attendee-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const attendeeId = parseInt(this.getAttribute('data-id'));
-                    viewAttendeeDetails(attendeeId);
+                    showAttendeeDetails(attendeeId);
                 });
             });
             
             document.querySelectorAll('.delete-attendee-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const attendeeId = parseInt(this.getAttribute('data-id'));
-                    const attendee = savedAttendees.find(a => a.id === attendeeId);
-                    
+                    const attendee = appState.attendees.find(a => a.id === attendeeId);
                     showConfirmation(
                         'Delete Attendee',
-                        `Are you sure you want to delete "${attendee?.name}" from the attendees list? This action cannot be undone.`,
+                        `Are you sure you want to delete "${attendee?.name}"?`,
                         function() {
                             deleteAttendee(attendeeId);
                         },
@@ -3561,408 +3106,369 @@
                     );
                 });
             });
-            
-            // Update meeting summary section
-            updateMeetingSummary();
         }
 
-        // Update meeting summary section
-        function updateMeetingSummary() {
-            const meetingsSummaryDiv = document.getElementById('meetings-summary');
-            if (!meetingsSummaryDiv) return;
-            
-            // Get attendees from localStorage
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            // Group by meeting
-            const groupedByMeeting = {};
-            savedAttendees.forEach(attendee => {
-                const meetingKey = attendee.meetingTitle || attendee.meeting || 'Unknown Meeting';
-                if (!groupedByMeeting[meetingKey]) {
-                    groupedByMeeting[meetingKey] = {
-                        attendees: [],
-                        date: attendee.meetingDate || 'Unknown Date',
-                        department: attendee.departmentName || attendee.department || 'Unknown'
-                    };
-                }
-                groupedByMeeting[meetingKey].attendees.push(attendee);
-            });
-            
-            // Create summary cards
-            meetingsSummaryDiv.innerHTML = '';
-            
-            if (Object.keys(groupedByMeeting).length === 0) {
-                meetingsSummaryDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No meeting attendees yet.</p>';
-                return;
-            }
-            
-            Object.entries(groupedByMeeting).forEach(([meetingName, data]) => {
-                const card = document.createElement('div');
-                card.className = 'meeting-summary-card';
-                
-                card.innerHTML = `
-                    <div>
-                        <h4 style="color: var(--mustard); margin-bottom: 5px;">${meetingName}</h4>
-                        <p style="color: #ccc; font-size: 0.9rem;">
-                            <i class="fas fa-calendar"></i> ${data.date} | 
-                            <i class="fas fa-users"></i> ${data.attendees.length} attendees | 
-                            <i class="fas fa-building"></i> ${data.department}
-                        </p>
-                    </div>
-                    <button class="btn btn-sm btn-primary export-meeting-btn" data-meeting="${meetingName}">
-                        <i class="fas fa-file-excel"></i> Export
-                    </button>
-                `;
-                
-                meetingsSummaryDiv.appendChild(card);
-            });
-            
-            // Add event listeners to export buttons
-            document.querySelectorAll('.export-meeting-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const meetingName = this.getAttribute('data-meeting');
-                    exportMeetingAttendees(meetingName);
-                });
-            });
-        }
-
-        // Update departments page
         function updateDepartmentsPage() {
+            console.log("Updating departments page...");
+            
             const departmentsTable = document.getElementById('departments-table');
             if (!departmentsTable) return;
             
             departmentsTable.innerHTML = '';
             
             appState.departments.forEach(dept => {
-                const meetingCount = appState.meetings.filter(m => m.department === dept.name).length;
-                const attendeeCount = appState.attendees.filter(a => a.department === dept.name).length;
+                const departmentMeetings = appState.meetings.filter(m => m.department === dept.name).length;
+                const departmentAttendees = appState.attendees.filter(a => a.department === dept.name).length;
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${dept.name}</td>
                     <td>${dept.head}</td>
                     <td>${dept.email}</td>
-                    <td>${meetingCount}</td>
-                    <td>${attendeeCount}</td>
+                    <td>${departmentMeetings}</td>
+                    <td>${departmentAttendees}</td>
                     <td class="action-buttons">
-                        ${appState.currentUser && appState.currentUser.role === 'super_admin' ? `
-                            <button class="btn btn-sm btn-warning edit-dept-btn" data-id="${dept.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        ` : ''}
-                        ${appState.currentUser && appState.currentUser.role === 'super_admin' ? `
-                            <button class="btn btn-sm btn-danger delete-dept-btn" data-id="${dept.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
+                        <button class="btn btn-sm btn-secondary edit-department-btn" data-id="${dept.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-department-btn" data-id="${dept.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 `;
                 departmentsTable.appendChild(row);
             });
-            
-            // Add event listeners
-            document.querySelectorAll('.delete-dept-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const deptId = parseInt(this.getAttribute('data-id'));
-                    const dept = appState.departments.find(d => d.id === deptId);
-                    
-                    showConfirmation(
-                        'Delete Department',
-                        `Are you sure you want to delete the "${dept?.name}" department? This will affect all related meetings and admins. This action cannot be undone!`,
-                        function() {
-                            deleteDepartment(deptId);
-                        },
-                        'danger'
-                    );
-                });
-            });
-            
-            document.querySelectorAll('.edit-dept-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const deptId = parseInt(this.getAttribute('data-id'));
-                    editDepartment(deptId);
-                });
-            });
-            
-            // Update department selects
-            updateDepartmentSelects();
         }
 
-        // Update admins page
         function updateAdminsPage() {
+            console.log("Updating admins page...");
+            
             const adminsTable = document.getElementById('admins-table');
             if (!adminsTable) return;
             
             adminsTable.innerHTML = '';
             
             appState.admins.forEach(admin => {
-                const row = document.createElement('tr');
-                const statusBadge = admin.status === 'active' ? 
-                    '<span class="badge badge-success">Active</span>' : 
-                    '<span class="badge badge-warning">Inactive</span>';
+                const roleBadge = admin.role === 'super_admin' ? 'badge-success' : 
+                                admin.role === 'department_head' ? 'badge-warning' : '';
+                const roleText = admin.role === 'super_admin' ? 'Super Admin' : 
+                               admin.role === 'department_head' ? 'Dept Head' : 'Admin';
                 
+                const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${admin.name}</td>
                     <td>${admin.email}</td>
                     <td>${admin.department}</td>
-                    <td>${admin.role.replace('_', ' ').toUpperCase()}</td>
-                    <td>${admin.lastLogin}</td>
-                    <td>${statusBadge}</td>
+                    <td><span class="badge ${roleBadge}">${roleText}</span></td>
+                    <td>${admin.lastLogin || 'Never'}</td>
+                    <td><span class="status active">Active</span></td>
                     <td class="action-buttons">
-                        ${appState.currentUser && appState.currentUser.role === 'super_admin' ? `
-                            <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
+                        <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 `;
                 adminsTable.appendChild(row);
             });
-            
-            // Add event listeners
-            document.querySelectorAll('.delete-admin-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const adminId = parseInt(this.getAttribute('data-id'));
-                    const admin = appState.admins.find(a => a.id === adminId);
-                    
-                    if (adminId === 1) {
-                        showAlert('Cannot delete the super admin account!', 'error');
-                        return;
-                    }
-                    
-                    showConfirmation(
-                        'Delete Admin',
-                        `Are you sure you want to delete "${admin?.name}" from administrators? This action cannot be undone.`,
-                        function() {
-                            deleteAdmin(adminId);
-                        },
-                        'danger'
-                    );
-                });
-            });
-            
-            // Update department select in admin form
-            updateDepartmentSelects();
         }
 
-        // Update department selects
-        function updateDepartmentSelects() {
-            const selects = [
-                document.getElementById('meeting-department'),
-                document.getElementById('admin-department'),
-                document.getElementById('edit-meeting-department')
-            ];
-            
-            selects.forEach(select => {
-                if (select) {
-                    const currentValue = select.value;
-                    select.innerHTML = '<option value="">Select Department</option>';
-                    appState.departments.forEach(dept => {
-                        const option = document.createElement('option');
-                        option.value = dept.name;
-                        option.textContent = dept.name;
-                        select.appendChild(option);
-                    });
-                    select.value = currentValue;
-                }
-            });
-        }
-
-        // Initialize charts
-        function initializeCharts() {
-            console.log("Initializing charts...");
-            
-            // Destroy existing charts
-            Object.values(appState.charts).forEach(chart => {
-                if (chart) chart.destroy();
-            });
-            
-            // Meeting attendance chart
-            const attendanceCtx = document.getElementById('attendanceChart');
-            if (attendanceCtx) {
-                const attendanceCtx2d = attendanceCtx.getContext('2d');
-                
-                // Get last 7 days
-                const last7Days = [];
-                for (let i = 6; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    last7Days.push(date.toISOString().split('T')[0]);
-                }
-                
-                // Count attendees per day
-                const attendanceData = last7Days.map(date => {
-                    return appState.attendees.filter(a => {
-                        const attendeeDate = new Date(a.registrationDate).toISOString().split('T')[0];
-                        return attendeeDate === date;
-                    }).length;
-                });
-                
-                appState.charts.attendance = new Chart(attendanceCtx2d, {
-                    type: 'line',
-                    data: {
-                        labels: last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })),
-                        datasets: [{
-                            label: 'Daily Registrations',
-                            data: attendanceData,
-                            borderColor: '#FFDB58',
-                            backgroundColor: 'rgba(255, 219, 88, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#FFDB58',
-                            pointBorderColor: '#000000',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: { 
-                                    color: '#FFFFFF',
-                                    font: { size: 14 }
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Meeting Registration Trend (Last 7 Days)',
-                                color: '#FFFFFF',
-                                font: { size: 16, weight: 'bold' }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                ticks: { 
-                                    color: '#CCCCCC',
-                                    font: { size: 12 }
-                                },
-                                grid: { 
-                                    color: '#444444',
-                                    drawBorder: false
-                                }
-                            },
-                            y: {
-                                ticks: { 
-                                    color: '#CCCCCC',
-                                    font: { size: 12 }
-                                },
-                                grid: { 
-                                    color: '#444444',
-                                    drawBorder: false
-                                },
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Number of Registrations',
-                                    color: '#CCCCCC',
-                                    font: { size: 14 }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Department distribution chart
-            const departmentCtx = document.getElementById('departmentChart');
-            if (departmentCtx) {
-                const departmentCtx2d = departmentCtx.getContext('2d');
-                
-                // Get department data
-                const departmentLabels = appState.departments.map(d => d.name);
-                const departmentData = appState.departments.map(dept => {
-                    return appState.meetings.filter(m => m.department === dept.name).length;
-                });
-                
-                // Use department data, if no data, show placeholder
-                const hasData = departmentData.some(count => count > 0);
-                
-                if (!hasData) {
-                    departmentLabels.push('No Meetings');
-                    departmentData.push(1);
-                }
-                
-                const departmentColors = ['#FFDB58', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#E91E63', '#00BCD4'];
-                
-                appState.charts.department = new Chart(departmentCtx2d, {
-                    type: 'doughnut',
-                    data: {
-                        labels: departmentLabels,
-                        datasets: [{
-                            data: departmentData,
-                            backgroundColor: departmentColors.slice(0, departmentLabels.length),
-                            borderColor: '#1a1a1a',
-                            borderWidth: 2,
-                            hoverOffset: 15
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: { 
-                                    color: '#FFFFFF',
-                                    font: { size: 12 },
-                                    padding: 20
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Meetings Distribution by Department',
-                                color: '#FFFFFF',
-                                font: { size: 16, weight: 'bold' }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = Math.round((value / total) * 100);
-                                        return `${label}: ${value} meetings (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '60%',
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
-                        }
-                    }
-                });
-            }
-            
-            console.log("Charts initialized");
-        }
-
-        // Generate QR Code - FIXED to redirect to registration form
-        function generateQRCode(meetingId) {
-            console.log("Generating QR code for meeting:", meetingId);
-            
+        // ==================== MEETING FUNCTIONS ====================
+        function showMeetingDetails(meetingId) {
             const meeting = appState.meetings.find(m => m.id === meetingId);
             if (!meeting) {
                 showAlert('Meeting not found!', 'error');
                 return;
             }
             
-            // Generate unique registration link that opens the registration form
-            // Use URL parameters to pass meeting ID and hide dashboard
-            const currentUrl = window.location.href.split('?')[0]; // Get base URL without query params
+            const modalContent = document.getElementById('meeting-details-content');
+            if (modalContent) {
+                const meetingAttendees = appState.attendees.filter(a => a.meetingId === meetingId);
+                
+                modalContent.innerHTML = `
+                    <div class="meeting-info">
+                        <h3>${meeting.title}</h3>
+                        <div class="meeting-details">
+                            <div class="detail-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span><strong>Date:</strong> ${meeting.date}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>Time:</strong> ${meeting.time}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span><strong>Location:</strong> ${meeting.location}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-building"></i>
+                                <span><strong>Department:</strong> ${meeting.department}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-hourglass-half"></i>
+                                <span><strong>Duration:</strong> ${meeting.duration} hours</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-users"></i>
+                                <span><strong>Attendees:</strong> ${meetingAttendees.length}${meeting.maxAttendees ? '/' + meeting.maxAttendees : ''}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-info-circle"></i>
+                                <span><strong>Status:</strong> <span class="status ${meeting.status}">${meeting.status}</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${meeting.description ? `
+                    <div style="margin-top: 20px;">
+                        <h4><i class="fas fa-align-left"></i> Description</h4>
+                        <p>${meeting.description}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${meetingAttendees.length > 0 ? `
+                    <div style="margin-top: 20px;">
+                        <h4><i class="fas fa-users"></i> Registered Attendees (${meetingAttendees.length})</h4>
+                        <div style="max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                            ${meetingAttendees.map(attendee => `
+                                <div class="attendee-info-item" style="margin-bottom: 10px;">
+                                    <p><strong>${attendee.name}</strong></p>
+                                    <p><small>${attendee.email} | ${attendee.phone}</small></p>
+                                    <p><small>Purpose: ${attendee.purpose}</small></p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary generate-qr-btn" data-id="${meeting.id}">
+                            <i class="fas fa-qrcode"></i> Generate QR Code
+                        </button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('meeting-details-modal').classList.add('hidden')">
+                            Close
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener to the QR button in the modal
+                const qrBtn = modalContent.querySelector('.generate-qr-btn');
+                if (qrBtn) {
+                    qrBtn.addEventListener('click', function() {
+                        document.getElementById('meeting-details-modal').classList.add('hidden');
+                        generateQRCode(meetingId);
+                    });
+                }
+            }
+            
+            document.getElementById('meeting-details-modal').classList.remove('hidden');
+        }
+
+        function showEditMeetingModal(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                showAlert('Meeting not found!', 'error');
+                return;
+            }
+            
+            document.getElementById('edit-meeting-id').value = meeting.id;
+            document.getElementById('edit-meeting-title').value = meeting.title;
+            document.getElementById('edit-meeting-date').value = meeting.date;
+            document.getElementById('edit-meeting-time').value = meeting.time;
+            document.getElementById('edit-meeting-location').value = meeting.location;
+            document.getElementById('edit-meeting-duration').value = meeting.duration;
+            document.getElementById('edit-meeting-description').value = meeting.description || '';
+            document.getElementById('edit-meeting-max-attendees').value = meeting.maxAttendees || '';
+            document.getElementById('edit-meeting-status').value = meeting.status;
+            
+            // Populate department select
+            const deptSelect = document.getElementById('edit-meeting-department');
+            deptSelect.innerHTML = '<option value="">Select Department</option>';
+            appState.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.name;
+                option.textContent = dept.name;
+                option.selected = dept.name === meeting.department;
+                deptSelect.appendChild(option);
+            });
+            
+            // Add form submit event
+            const editForm = document.getElementById('edit-meeting-form');
+            editForm.onsubmit = function(e) {
+                e.preventDefault();
+                
+                meeting.title = document.getElementById('edit-meeting-title').value;
+                meeting.department = document.getElementById('edit-meeting-department').value;
+                meeting.date = document.getElementById('edit-meeting-date').value;
+                meeting.time = document.getElementById('edit-meeting-time').value;
+                meeting.location = document.getElementById('edit-meeting-location').value;
+                meeting.duration = parseFloat(document.getElementById('edit-meeting-duration').value);
+                meeting.description = document.getElementById('edit-meeting-description').value;
+                meeting.maxAttendees = document.getElementById('edit-meeting-max-attendees').value ? 
+                    parseInt(document.getElementById('edit-meeting-max-attendees').value) : null;
+                meeting.status = document.getElementById('edit-meeting-status').value;
+                
+                saveDataToLocalStorage();
+                updateAllData();
+                document.getElementById('edit-meeting-modal').classList.add('hidden');
+                showAlert('Meeting updated successfully!', 'success');
+            };
+            
+            document.getElementById('edit-meeting-modal').classList.remove('hidden');
+        }
+
+        function cancelMeeting(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (meeting) {
+                meeting.status = 'cancelled';
+                saveDataToLocalStorage();
+                updateAllData();
+                showAlert('Meeting cancelled successfully!', 'success');
+            }
+        }
+
+        // ==================== ATTENDEE FUNCTIONS ====================
+        function showAddAttendeeModal() {
+            const meetingSelect = document.getElementById('manual-attendee-meeting');
+            meetingSelect.innerHTML = '<option value="">Select Meeting</option>';
+            
+            appState.meetings.filter(m => m.status === 'active').forEach(meeting => {
+                const option = document.createElement('option');
+                option.value = meeting.id;
+                option.textContent = `${meeting.title} (${meeting.date} ${meeting.time})`;
+                meetingSelect.appendChild(option);
+            });
+            
+            const addForm = document.getElementById('manual-attendee-form');
+            addForm.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const savedAttendees = localStorage.getItem('bankMeetingAttendees');
+                const currentAttendees = savedAttendees ? JSON.parse(savedAttendees) : [];
+                
+                const meetingId = parseInt(document.getElementById('manual-attendee-meeting').value);
+                const meeting = appState.meetings.find(m => m.id === meetingId);
+                
+                if (!meeting) {
+                    showAlert('Please select a valid meeting', 'error');
+                    return;
+                }
+                
+                const newAttendee = {
+                    id: currentAttendees.length > 0 ? Math.max(...currentAttendees.map(a => a.id)) + 1 : 1,
+                    name: document.getElementById('manual-attendee-name').value,
+                    email: document.getElementById('manual-attendee-email').value,
+                    phone: document.getElementById('manual-attendee-phone').value,
+                    account: document.getElementById('manual-attendee-account').value || '',
+                    meetingId: meetingId,
+                    meetingTitle: meeting.title,
+                    meetingDate: meeting.date,
+                    meetingTime: meeting.time,
+                    department: meeting.department,
+                    purpose: document.getElementById('manual-attendee-purpose').value,
+                    notes: document.getElementById('manual-attendee-notes').value || '',
+                    registrationDate: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                };
+                
+                currentAttendees.push(newAttendee);
+                localStorage.setItem('bankMeetingAttendees', JSON.stringify(currentAttendees));
+                appState.attendees = currentAttendees;
+                
+                document.getElementById('add-attendee-modal').classList.add('hidden');
+                updateAllData();
+                showAlert('Attendee added successfully!', 'success');
+                addForm.reset();
+            };
+            
+            document.getElementById('add-attendee-modal').classList.remove('hidden');
+        }
+
+        function showAttendeeDetails(attendeeId) {
+            const attendee = appState.attendees.find(a => a.id === attendeeId);
+            if (!attendee) {
+                showAlert('Attendee not found!', 'error');
+                return;
+            }
+            
+            const modalContent = document.getElementById('attendee-details-content');
+            if (modalContent) {
+                modalContent.innerHTML = `
+                    <div class="attendee-info-item">
+                        <label>Full Name</label>
+                        <p>${attendee.name}</p>
+                    </div>
+                    <div class="attendee-info-item">
+                        <label>Email Address</label>
+                        <p>${attendee.email}</p>
+                    </div>
+                    <div class="attendee-info-item">
+                        <label>Phone Number</label>
+                        <p>${attendee.phone}</p>
+                    </div>
+                    ${attendee.account ? `
+                    <div class="attendee-info-item">
+                        <label>Bank Account Number</label>
+                        <p>${attendee.account}</p>
+                    </div>
+                    ` : ''}
+                    <div class="attendee-info-item">
+                        <label>Meeting</label>
+                        <p>${attendee.meetingTitle}</p>
+                    </div>
+                    <div class="attendee-info-item">
+                        <label>Meeting Date & Time</label>
+                        <p>${attendee.meetingDate} ${attendee.meetingTime}</p>
+                    </div>
+                    <div class="attendee-info-item">
+                        <label>Department</label>
+                        <p>${attendee.department}</p>
+                    </div>
+                    <div class="attendee-info-item">
+                        <label>Purpose of Meeting</label>
+                        <p>${attendee.purpose.replace('_', ' ').toUpperCase()}</p>
+                    </div>
+                    <div class="attendee-info-item">
+                        <label>Registration Date</label>
+                        <p>${attendee.registrationDate}</p>
+                    </div>
+                    ${attendee.notes ? `
+                    <div class="attendee-info-item">
+                        <label>Additional Notes</label>
+                        <p>${attendee.notes}</p>
+                    </div>
+                    ` : ''}
+                `;
+            }
+            
+            document.getElementById('view-attendee-modal').classList.remove('hidden');
+        }
+
+        function deleteAttendee(attendeeId) {
+            const index = appState.attendees.findIndex(a => a.id === attendeeId);
+            if (index !== -1) {
+                appState.attendees.splice(index, 1);
+                saveDataToLocalStorage();
+                updateAllData();
+                showAlert('Attendee deleted successfully!', 'success');
+            }
+        }
+
+        // ==================== QR CODE FUNCTIONALITY ====================
+        function generateQRCode(meetingId) {
+            const meeting = appState.meetings.find(m => m.id === meetingId);
+            if (!meeting) {
+                showAlert('Meeting not found!', 'error');
+                return;
+            }
+            
+            // Generate registration link
+            const currentUrl = window.location.href.split('?')[0];
             const registrationLink = `${currentUrl}?registration=true&meeting=${meetingId}`;
             
-            // Clear previous QR code
+            // Generate QR code
             const qrcodeDiv = document.getElementById('qrcode');
             if (qrcodeDiv) {
                 qrcodeDiv.innerHTML = '';
-                
-                // Generate new QR code using QRCode.js
                 try {
                     new QRCode(qrcodeDiv, {
                         text: registrationLink,
@@ -3973,8 +3479,6 @@
                         correctLevel: QRCode.CorrectLevel.H
                     });
                 } catch (error) {
-                    console.error('QR Code generation error:', error);
-                    // Fallback if QRCode library fails
                     qrcodeDiv.innerHTML = `
                         <div style="width: 200px; height: 200px; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
                             <div style="text-align: center; padding: 20px;">
@@ -4006,475 +3510,213 @@
             showAlert(`QR Code generated for "${meeting.title}"`, 'success');
         }
 
-        // Check URL parameters on page load to show registration form
-        function checkUrlParameters() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const isRegistration = urlParams.get('registration');
-            const meetingId = urlParams.get('meeting');
+        // ==================== CHART FUNCTIONS - FIXED VERSION ====================
+        function initializeCharts() {
+            console.log("Initializing charts...");
             
-            if (isRegistration === 'true' && meetingId) {
-                // Show registration form instead of login page
-                showRegistrationForm(parseInt(meetingId));
-            }
-        }
-
-        // Show registration form
-        function showRegistrationForm(meetingId) {
-            console.log("Showing registration form for meeting:", meetingId);
-            
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) {
-                showAlert('Meeting not found!', 'error');
-                return;
-            }
-            
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
+            // Destroy existing charts
+            Object.values(appState.charts).forEach(chart => {
+                if (chart) chart.destroy();
             });
+            appState.charts = {};
             
-            // Show registration portal
-            const registrationPortal = document.getElementById('registration-portal');
-            if (registrationPortal) {
-                registrationPortal.style.display = 'block';
-                
-                // Update meeting information
-                document.getElementById('current-meeting-title').textContent = meeting.title;
-                document.getElementById('meeting-date').textContent = meeting.date;
-                document.getElementById('meeting-time').textContent = meeting.time;
-                document.getElementById('meeting-location').textContent = meeting.location;
-                document.getElementById('meeting-department').textContent = meeting.department;
-                document.getElementById('meeting-title').textContent = `Register for: ${meeting.title}`;
-                
-                // Populate department dropdown
-                const departmentSelect = document.getElementById('department');
-                if (departmentSelect) {
-                    departmentSelect.innerHTML = '<option value="">Select Department</option>';
+            // Attendance chart
+            const attendanceCtx = document.getElementById('attendanceChart');
+            if (attendanceCtx) {
+                try {
+                    const attendanceCtx2d = attendanceCtx.getContext('2d');
+                    
+                    // Create data for the last 7 days
+                    const last7Days = [];
+                    const today = new Date();
+                    for (let i = 6; i >= 0; i--) {
+                        const date = new Date(today);
+                        date.setDate(date.getDate() - i);
+                        last7Days.push(date.toISOString().split('T')[0]);
+                    }
+                    
+                    // Count attendees per day
+                    const attendanceData = last7Days.map(date => {
+                        return appState.attendees.filter(a => {
+                            if (!a.registrationDate) return false;
+                            const attendeeDate = a.registrationDate.split(' ')[0];
+                            return attendeeDate === date;
+                        }).length;
+                    });
+                    
+                    // Format labels for display
+                    const formattedLabels = last7Days.map(d => {
+                        const dateObj = new Date(d);
+                        const day = dateObj.getDate();
+                        const month = dateObj.toLocaleString('default', { month: 'short' });
+                        const weekday = dateObj.toLocaleString('default', { weekday: 'short' });
+                        return `${weekday}, ${month} ${day}`;
+                    });
+                    
+                    appState.charts.attendance = new Chart(attendanceCtx2d, {
+                        type: 'line',
+                        data: {
+                            labels: formattedLabels,
+                            datasets: [{
+                                label: 'Daily Registrations',
+                                data: attendanceData,
+                                borderColor: '#FFDB58',
+                                backgroundColor: 'rgba(255, 219, 88, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#FFDB58',
+                                pointBorderColor: '#000000',
+                                pointBorderWidth: 2,
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: { 
+                                        color: '#FFFFFF',
+                                        font: { size: 14 }
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    titleColor: '#FFDB58',
+                                    bodyColor: '#FFFFFF',
+                                    borderColor: '#FFDB58',
+                                    borderWidth: 1
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { 
+                                        color: '#CCCCCC',
+                                        font: { size: 12 }
+                                    },
+                                    grid: { 
+                                        color: '#444444',
+                                        drawBorder: false
+                                    }
+                                },
+                                y: {
+                                    ticks: { 
+                                        color: '#CCCCCC',
+                                        font: { size: 12 }
+                                    },
+                                    grid: { 
+                                        color: '#444444',
+                                        drawBorder: false
+                                    },
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    console.log("Attendance chart created successfully");
+                } catch (error) {
+                    console.error("Error creating attendance chart:", error);
+                    attendanceCtx.innerHTML = '<p style="color: #fff; text-align: center; padding: 50px;">Chart could not be loaded</p>';
+                }
+            }
+            
+            // Department chart - FIXED VERSION
+            const departmentCtx = document.getElementById('departmentChart');
+            if (departmentCtx) {
+                try {
+                    const departmentCtx2d = departmentCtx.getContext('2d');
+                    
+                    // Get all unique departments from attendees
+                    const departmentCounts = {};
                     appState.departments.forEach(dept => {
-                        const option = document.createElement('option');
-                        option.value = dept.name;
-                        option.textContent = dept.name;
-                        if (dept.name === meeting.department) {
-                            option.selected = true;
-                        }
-                        departmentSelect.appendChild(option);
+                        departmentCounts[dept.name] = 0; // Initialize all departments with 0
                     });
-                }
-                
-                // Setup registration form submission
-                const registrationForm = document.getElementById('attendee-registration-form');
-                if (registrationForm) {
-                    registrationForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        // Get form data
-                        const newAttendee = {
-                            id: Date.now(),
-                            meetingId: meeting.id,
-                            meetingTitle: meeting.title,
-                            meetingDate: meeting.date,
-                            meetingTime: meeting.time,
-                            name: document.getElementById('full-name').value,
-                            email: document.getElementById('email-address').value,
-                            phone: document.getElementById('phone-number').value,
-                            account: document.getElementById('bank-account').value,
-                            department: document.getElementById('department').value,
-                            purpose: document.getElementById('purpose').value,
-                            notes: document.getElementById('additional-notes').value,
-                            registrationDate: new Date().toLocaleString()
-                        };
-                        
-                        // Get current attendees
-                        const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-                        savedAttendees.push(newAttendee);
-                        
-                        // Update meeting attendees
-                        meeting.attendees = meeting.attendees || [];
-                        meeting.attendees.push(newAttendee);
-                        
-                        // Save to localStorage
-                        localStorage.setItem('bankMeetingAttendees', JSON.stringify(savedAttendees));
-                        
-                        // Update appState
-                        appState.attendees = savedAttendees;
-                        
-                        // Show success message
-                        document.getElementById('registration-form-container').style.display = 'none';
-                        document.getElementById('success-message').style.display = 'block';
-                        
-                        // Setup register another button
-                        const registerAnotherBtn = document.getElementById('register-another-btn');
-                        if (registerAnotherBtn) {
-                            registerAnotherBtn.addEventListener('click', function() {
-                                document.getElementById('registration-form-container').style.display = 'block';
-                                document.getElementById('success-message').style.display = 'none';
-                                registrationForm.reset();
-                            });
+                    
+                    // Count attendees per department
+                    appState.attendees.forEach(attendee => {
+                        if (attendee.department && departmentCounts[attendee.department] !== undefined) {
+                            departmentCounts[attendee.department]++;
                         }
                     });
+                    
+                    // Prepare data for chart
+                    const departments = Object.keys(departmentCounts);
+                    const attendeesCount = Object.values(departmentCounts);
+                    
+                    // Generate distinct colors for each department
+                    const colors = departments.map((_, i) => {
+                        const hue = (i * 360 / departments.length) % 360;
+                        return `hsl(${hue}, 70%, 60%)`;
+                    });
+                    
+                    // Create hover colors (slightly darker)
+                    const hoverColors = colors.map(color => {
+                        return color.replace('60%)', '50%)');
+                    });
+                    
+                    appState.charts.department = new Chart(departmentCtx2d, {
+                        type: 'pie',
+                        data: {
+                            labels: departments,
+                            datasets: [{
+                                data: attendeesCount,
+                                backgroundColor: colors,
+                                borderColor: '#1a1a1a',
+                                borderWidth: 2,
+                                hoverBackgroundColor: hoverColors,
+                                hoverBorderColor: '#FFDB58',
+                                hoverBorderWidth: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        color: '#FFFFFF',
+                                        font: { size: 12 },
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        pointStyle: 'circle'
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    titleColor: '#FFDB58',
+                                    bodyColor: '#FFFFFF',
+                                    borderColor: '#FFDB58',
+                                    borderWidth: 1,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.raw || 0;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                            return `${label}: ${value} attendees (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            },
+                            cutout: '0%',
+                            animation: {
+                                animateScale: true,
+                                animateRotate: true
+                            }
+                        }
+                    });
+                    console.log("Department chart created successfully with", departments.length, "departments");
+                } catch (error) {
+                    console.error("Error creating department chart:", error);
+                    departmentCtx.innerHTML = '<p style="color: #fff; text-align: center; padding: 50px;">Chart could not be loaded</p>';
                 }
             }
         }
 
-        // Show meeting details
-        function showMeetingDetails(meetingId) {
-            console.log("Showing meeting details:", meetingId);
-            
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) return;
-            
-            const detailsDiv = document.getElementById('meeting-details-content');
-            if (!detailsDiv) return;
-            
-            const statusClass = meeting.status === 'active' ? 'active' : 
-                              meeting.status === 'completed' ? 'completed' : 'cancelled';
-            
-            detailsDiv.innerHTML = `
-                <div class="meeting-header" style="margin-bottom: 20px;">
-                    <h3 style="color: var(--mustard); margin-bottom: 10px;">${meeting.title}</h3>
-                    <p><strong>Status:</strong> <span class="status ${statusClass}">${meeting.status}</span></p>
-                </div>
-                
-                <div class="meeting-info" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-                    <div>
-                        <p><strong>Date & Time:</strong><br>${meeting.date} at ${meeting.time}</p>
-                        <p><strong>Duration:</strong><br>${meeting.duration} hour${meeting.duration > 1 ? 's' : ''}</p>
-                        <p><strong>Location:</strong><br>${meeting.location}</p>
-                    </div>
-                    <div>
-                        <p><strong>Department:</strong><br>${meeting.department}</p>
-                        <p><strong>Maximum Attendees:</strong><br>${meeting.maxAttendees || 'Unlimited'}</p>
-                        <p><strong>Current Attendees:</strong><br>${meeting.attendees ? meeting.attendees.length : 0}</p>
-                    </div>
-                </div>
-                
-                <div class="meeting-description" style="margin-bottom: 20px;">
-                    <p><strong>Description:</strong></p>
-                    <p>${meeting.description || 'No description provided.'}</p>
-                </div>
-                
-                <div class="attendees-section" style="margin-bottom: 25px;">
-                    <h4 style="color: var(--mustard); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                        <i class="fas fa-users"></i> Attendees (${meeting.attendees ? meeting.attendees.length : 0})
-                    </h4>
-                    ${meeting.attendees && meeting.attendees.length > 0 ? 
-                        `<div style="max-height: 200px; overflow-y: auto;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Name</th>
-                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Email</th>
-                                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color);">Phone</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${meeting.attendees.map(a => `
-                                        <tr>
-                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.name}</td>
-                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.email}</td>
-                                            <td style="padding: 10px; border-bottom: 1px solid var(--border-color);">${a.phone}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>` : 
-                        '<p style="text-align: center; color: #999; padding: 20px;">No attendees yet.</p>'
-                    }
-                </div>
-                
-                <div class="meeting-actions" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" onclick="generateQRCode(${meeting.id})">
-                        <i class="fas fa-qrcode"></i> Generate QR Code
-                    </button>
-                    ${meeting.attendees && meeting.attendees.length > 0 ? `
-                        <button class="btn btn-success" onclick="exportMeetingAttendees('${meeting.title}'); document.getElementById('meeting-details-modal').classList.add('hidden');">
-                            <i class="fas fa-file-excel"></i> Export Attendees
-                        </button>
-                    ` : ''}
-                    ${meeting.status === 'active' ? 
-                        `<button class="btn btn-danger" onclick="showConfirmation('Cancel Meeting', 'Are you sure you want to cancel this meeting?', function() { cancelMeeting(${meeting.id}); document.getElementById('meeting-details-modal').classList.add('hidden'); }, 'warning')">
-                            <i class="fas fa-times"></i> Cancel Meeting
-                        </button>` : ''
-                    }
-                    <button class="btn btn-secondary" onclick="document.getElementById('meeting-details-modal').classList.add('hidden');">
-                        <i class="fas fa-times"></i> Close
-                    </button>
-                </div>
-            `;
-            
-            const detailsModal = document.getElementById('meeting-details-modal');
-            if (detailsModal) detailsModal.classList.remove('hidden');
-        }
-
-        // Cancel meeting
-        function cancelMeeting(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (meeting) {
-                meeting.status = 'cancelled';
-                
-                // Save to localStorage
-                localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
-                
-                updateAllData();
-                showSuccessModal(`Meeting "${meeting.title}" has been cancelled successfully.`);
-            }
-        }
-
-        // Edit meeting
-        function editMeeting(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) return;
-            
-            // Populate edit form
-            document.getElementById('edit-meeting-id').value = meeting.id;
-            document.getElementById('edit-meeting-title').value = meeting.title;
-            document.getElementById('edit-meeting-date').value = meeting.date;
-            document.getElementById('edit-meeting-time').value = meeting.time;
-            document.getElementById('edit-meeting-location').value = meeting.location;
-            document.getElementById('edit-meeting-duration').value = meeting.duration;
-            document.getElementById('edit-meeting-description').value = meeting.description || '';
-            document.getElementById('edit-meeting-max-attendees').value = meeting.maxAttendees || '';
-            document.getElementById('edit-meeting-status').value = meeting.status;
-            
-            // Populate department dropdown
-            const deptSelect = document.getElementById('edit-meeting-department');
-            deptSelect.innerHTML = '<option value="">Select Department</option>';
-            appState.departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept.name;
-                option.textContent = dept.name;
-                if (dept.name === meeting.department) {
-                    option.selected = true;
-                }
-                deptSelect.appendChild(option);
-            });
-            
-            // Show modal
-            document.getElementById('edit-meeting-modal').classList.remove('hidden');
-        }
-
-        // Edit department
-        function editDepartment(deptId) {
-            const dept = appState.departments.find(d => d.id === deptId);
-            if (!dept) return;
-            
-            // Populate edit form
-            document.getElementById('edit-department-id').value = dept.id;
-            document.getElementById('edit-department-name').value = dept.name;
-            document.getElementById('edit-department-head').value = dept.head;
-            document.getElementById('edit-department-email').value = dept.email;
-            document.getElementById('edit-department-phone').value = dept.phone || '';
-            document.getElementById('edit-department-description').value = dept.description || '';
-            
-            // Show modal
-            document.getElementById('edit-department-modal').classList.remove('hidden');
-        }
-
-        // View attendee details
-        function viewAttendeeDetails(attendeeId) {
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            const attendee = savedAttendees.find(a => a.id === attendeeId);
-            if (!attendee) return;
-            
-            const purposeText = {
-                'loan_consultation': 'Loan Consultation',
-                'account_opening': 'Account Opening',
-                'investment': 'Investment',
-                'business': 'Business',
-                'mortgage': 'Mortgage Inquiry',
-                'credit_card': 'Credit Card Application',
-                'other': 'Other'
-            }[attendee.purpose] || attendee.purpose;
-            
-            const detailsDiv = document.getElementById('attendee-details-content');
-            detailsDiv.innerHTML = `
-                <div class="attendee-info-item">
-                    <label>Full Name</label>
-                    <p>${attendee.name}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Email Address</label>
-                    <p>${attendee.email}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Phone Number</label>
-                    <p>${attendee.phone}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Bank Account</label>
-                    <p>${attendee.account || 'Not provided'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Meeting</label>
-                    <p>${attendee.meetingTitle || attendee.meeting || 'N/A'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Meeting Date</label>
-                    <p>${attendee.meetingDate || 'N/A'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Department</label>
-                    <p>${attendee.departmentName || attendee.department || 'N/A'}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Purpose of Meeting</label>
-                    <p>${purposeText}</p>
-                </div>
-                <div class="attendee-info-item">
-                    <label>Registration Date</label>
-                    <p>${attendee.registrationDate}</p>
-                </div>
-                ${attendee.notes ? `
-                <div class="attendee-info-item">
-                    <label>Additional Notes</label>
-                    <p>${attendee.notes}</p>
-                </div>
-                ` : ''}
-            `;
-            
-            document.getElementById('view-attendee-modal').classList.remove('hidden');
-        }
-
-        // Delete attendee
-        function deleteAttendee(attendeeId) {
-            // Remove from localStorage attendees
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            const updatedAttendees = savedAttendees.filter(a => a.id !== attendeeId);
-            localStorage.setItem('bankMeetingAttendees', JSON.stringify(updatedAttendees));
-            
-            // Remove from meetings attendees
-            const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
-            savedMeetings.forEach(meeting => {
-                if (meeting.attendees) {
-                    meeting.attendees = meeting.attendees.filter(a => a.id !== attendeeId);
-                }
-            });
-            localStorage.setItem('bankMeetingMeetings', JSON.stringify(savedMeetings));
-            
-            // Update appState
-            appState.attendees = updatedAttendees;
-            appState.meetings = savedMeetings;
-            
-            updateAllData();
-            showSuccessModal('Attendee has been deleted successfully.');
-        }
-
-        // Delete department
-        function deleteDepartment(deptId) {
-            const dept = appState.departments.find(d => d.id === deptId);
-            appState.departments = appState.departments.filter(d => d.id !== deptId);
-            
-            // Remove department from meetings
-            appState.meetings.forEach(meeting => {
-                if (meeting.department === dept.name) {
-                    meeting.department = 'General';
-                }
-            });
-            
-            // Remove department from admins
-            appState.admins.forEach(admin => {
-                if (admin.department === dept.name) {
-                    admin.department = 'General';
-                }
-            });
-            
-            // Save all data
-            saveDataToLocalStorage();
-            
-            updateAllData();
-            showSuccessModal(`Department "${dept.name}" has been deleted successfully.`);
-        }
-
-        // Delete admin
-        function deleteAdmin(adminId) {
-            appState.admins = appState.admins.filter(a => a.id !== adminId);
-            saveDataToLocalStorage();
-            updateAllData();
-            showSuccessModal('Admin has been deleted successfully.');
-        }
-
-        // Export specific meeting attendees
-        function exportMeetingAttendees(meetingName) {
-            // Get attendees from localStorage
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            // Filter by meeting
-            const meetingAttendees = savedAttendees.filter(attendee => 
-                (attendee.meetingTitle === meetingName) || (attendee.meeting === meetingName)
-            );
-            
-            if (meetingAttendees.length === 0) {
-                showAlert('No attendees found for this meeting', 'error');
-                return;
-            }
-            
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += `Meeting: ${meetingName}\n`;
-            csvContent += `Total Attendees: ${meetingAttendees.length}\n\n`;
-            csvContent += "Name,Email,Phone,Account Number,Department,Purpose,Registration Date,Notes\n";
-            
-            meetingAttendees.forEach(attendee => {
-                const purposeText = {
-                    'loan_consultation': 'Loan Consultation',
-                    'account_opening': 'Account Opening',
-                    'investment': 'Investment',
-                    'business': 'Business',
-                    'mortgage': 'Mortgage Inquiry',
-                    'credit_card': 'Credit Card Application',
-                    'other': 'Other'
-                }[attendee.purpose] || attendee.purpose;
-                
-                const row = [
-                    `"${attendee.name}"`,
-                    `"${attendee.email}"`,
-                    `"${attendee.phone}"`,
-                    `"${attendee.account || ''}"`,
-                    `"${attendee.departmentName || attendee.department || ''}"`,
-                    `"${purposeText}"`,
-                    `"${attendee.registrationDate}"`,
-                    `"${attendee.notes || ''}"`
-                ].join(',');
-                
-                csvContent += row + "\n";
-            });
-            
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const fileName = `attendees_${meetingName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported ${meetingAttendees.length} attendees for "${meetingName}"`, 'success');
-        }
-
-        // Show add attendee modal
-        function showAddAttendeeModal() {
-            const meetingSelect = document.getElementById('manual-attendee-meeting');
-            if (meetingSelect) {
-                meetingSelect.innerHTML = '<option value="">Select Meeting</option>';
-                appState.meetings.forEach(meeting => {
-                    if (meeting.status === 'active') {
-                        const option = document.createElement('option');
-                        option.value = meeting.title;
-                        option.textContent = `${meeting.title} (${meeting.date} ${meeting.time})`;
-                        meetingSelect.appendChild(option);
-                    }
-                });
-            }
-            
-            document.getElementById('add-attendee-modal').classList.remove('hidden');
-        }
-
-        // ==================== CSV EXPORT FUNCTIONS ====================
-
-        // Export all attendees to CSV
+        // ==================== EXPORT FUNCTIONS ====================
         function exportAllAttendeesCSV() {
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
             
@@ -4483,7 +3725,6 @@
                 return;
             }
             
-            // Create CSV content
             let csvContent = "data:text/csv;charset=utf-8,";
             csvContent += "Name,Email,Phone,Account Number,Meeting,Meeting Date,Department,Purpose,Registration Date,Notes\n";
             
@@ -4514,22 +3755,18 @@
                 csvContent += row + "\n";
             });
             
-            // Create download link
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
             const fileName = `bank_meeting_attendees_${new Date().toISOString().split('T')[0]}.csv`;
             link.setAttribute("download", fileName);
             document.body.appendChild(link);
-            
-            // Trigger download
             link.click();
             document.body.removeChild(link);
             
             showAlert(`Exported ${savedAttendees.length} attendees`, 'success');
         }
 
-        // Export all meetings to CSV
         function exportAllMeetingsCSV() {
             const savedMeetings = JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]');
             const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
@@ -4539,15 +3776,11 @@
                 return;
             }
             
-            // Create CSV content
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Meeting ID,Title,Date,Time,Location,Department,Duration (hours),Maximum Attendees,Current Attendees,Attendance Rate,Status,Description,Created Date\n";
+            csvContent += "Meeting ID,Title,Date,Time,Location,Department,Duration (hours),Maximum Attendees,Current Attendees,Status,Description\n";
             
             savedMeetings.forEach(meeting => {
                 const meetingAttendees = savedAttendees.filter(a => a.meetingId === meeting.id);
-                const attendanceRate = meeting.maxAttendees ? 
-                    `${((meetingAttendees.length / meeting.maxAttendees) * 100).toFixed(1)}%` : 
-                    'N/A';
                 
                 const row = [
                     `"${meeting.id}"`,
@@ -4559,117 +3792,25 @@
                     `"${meeting.duration}"`,
                     `"${meeting.maxAttendees || 'Unlimited'}"`,
                     `"${meetingAttendees.length}"`,
-                    `"${attendanceRate}"`,
                     `"${meeting.status}"`,
-                    `"${meeting.description || ''}"`,
-                    `"${meeting.createdAt}"`
+                    `"${meeting.description || ''}"`
                 ].join(',');
                 
                 csvContent += row + "\n";
             });
             
-            // Create download link
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
             const fileName = `bank_meetings_summary_${new Date().toISOString().split('T')[0]}.csv`;
             link.setAttribute("download", fileName);
             document.body.appendChild(link);
-            
-            // Trigger download
             link.click();
             document.body.removeChild(link);
             
             showAlert(`Exported ${savedMeetings.length} meetings`, 'success');
         }
 
-        // Export departments to CSV
-        function exportDepartmentsCSV() {
-            const savedDepartments = JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]');
-            
-            if (savedDepartments.length === 0) {
-                showAlert('No departments to export', 'error');
-                return;
-            }
-            
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Department ID,Department Name,Department Head,Email,Phone,Description,Created Date\n";
-            
-            savedDepartments.forEach(dept => {
-                const row = [
-                    `"${dept.id}"`,
-                    `"${dept.name}"`,
-                    `"${dept.head}"`,
-                    `"${dept.email}"`,
-                    `"${dept.phone || ''}"`,
-                    `"${dept.description || ''}"`,
-                    `"${dept.createdAt}"`
-                ].join(',');
-                
-                csvContent += row + "\n";
-            });
-            
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const fileName = `bank_departments_${new Date().toISOString().split('T')[0]}.csv`;
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported ${savedDepartments.length} departments`, 'success');
-        }
-
-        // Export admins to CSV
-        function exportAdminsCSV() {
-            const savedAdmins = JSON.parse(localStorage.getItem('bankMeetingAdmins') || '[]');
-            
-            if (savedAdmins.length === 0) {
-                showAlert('No admins to export', 'error');
-                return;
-            }
-            
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Admin ID,Name,Email,Department,Role,Phone,Last Login,Status,Created Date\n";
-            
-            savedAdmins.forEach(admin => {
-                const row = [
-                    `"${admin.id}"`,
-                    `"${admin.name}"`,
-                    `"${admin.email}"`,
-                    `"${admin.department}"`,
-                    `"${admin.role}"`,
-                    `"${admin.phone || ''}"`,
-                    `"${admin.lastLogin}"`,
-                    `"${admin.status}"`,
-                    `"${admin.createdAt}"`
-                ].join(',');
-                
-                csvContent += row + "\n";
-            });
-            
-            // Create download link
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const fileName = `bank_admins_${new Date().toISOString().split('T')[0]}.csv`;
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            
-            // Trigger download
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported ${savedAdmins.length} admins`, 'success');
-        }
-
-        // Backup all data to JSON
         function backupToJSON() {
             const data = {
                 backupDate: new Date().toISOString(),
@@ -4695,113 +3836,124 @@
             showAlert('All data backed up to JSON file!', 'success');
         }
 
-        // Restore from backup file
-        function restoreFromBackup(file) {
-            showConfirmation(
-                'Restore from Backup',
-                'Are you sure you want to restore data from backup? This will overwrite all current data. Make sure you have a current backup before proceeding.',
-                function() {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            const data = JSON.parse(e.target.result);
-                            
-                            if (data.meetings) {
-                                localStorage.setItem('bankMeetingMeetings', JSON.stringify(data.meetings));
-                                appState.meetings = data.meetings;
-                            }
-                            if (data.attendees) {
-                                localStorage.setItem('bankMeetingAttendees', JSON.stringify(data.attendees));
-                                appState.attendees = data.attendees;
-                            }
-                            if (data.departments) {
-                                localStorage.setItem('bankMeetingDepartments', JSON.stringify(data.departments));
-                                appState.departments = data.departments;
-                            }
-                            if (data.admins) {
-                                localStorage.setItem('bankMeetingAdmins', JSON.stringify(data.admins));
-                                appState.admins = data.admins;
-                            }
-                            
-                            updateAllData();
-                            showSuccessModal('Data restored successfully from backup!');
-                        } catch (error) {
-                            showAlert('Invalid backup file format', 'error');
-                        }
-                    };
-                    reader.readAsText(file);
-                },
-                'warning'
-            );
+        // ==================== ADMIN PERMISSIONS ====================
+        function checkAdminPermissions() {
+            if (!appState.currentUser) return;
+            
+            const isSuperAdmin = appState.currentUser.role === 'super_admin';
+            
+            // Show/hide restricted access messages
+            const restrictedDeptAccess = document.getElementById('restricted-department-access');
+            const deptFormContainer = document.getElementById('department-form-container');
+            const restrictedAdminAccess = document.getElementById('restricted-admin-access');
+            const adminFormContainer = document.getElementById('admin-form-container');
+            
+            if (restrictedDeptAccess) restrictedDeptAccess.classList.toggle('hidden', isSuperAdmin);
+            if (deptFormContainer) deptFormContainer.classList.toggle('hidden', !isSuperAdmin);
+            if (restrictedAdminAccess) restrictedAdminAccess.classList.toggle('hidden', isSuperAdmin);
+            if (adminFormContainer) adminFormContainer.classList.toggle('hidden', !isSuperAdmin);
+        }
+
+        // ==================== INITIALIZATION ====================
+        function initializeConfirmationModal() {
+            const confirmOkBtn = document.getElementById('confirm-ok');
+            const confirmCancelBtn = document.getElementById('confirm-cancel');
+            const successOkBtn = document.getElementById('success-ok');
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const successModal = document.getElementById('success-modal');
+            
+            if (confirmOkBtn) {
+                confirmOkBtn.addEventListener('click', function() {
+                    if (appState.pendingAction) {
+                        appState.pendingAction();
+                        appState.pendingAction = null;
+                    }
+                    confirmationModal.classList.add('hidden');
+                });
+            }
+            
+            if (confirmCancelBtn) {
+                confirmCancelBtn.addEventListener('click', function() {
+                    appState.pendingAction = null;
+                    confirmationModal.classList.add('hidden');
+                });
+            }
+            
+            if (successOkBtn) {
+                successOkBtn.addEventListener('click', function() {
+                    successModal.classList.add('hidden');
+                });
+            }
+        }
+
+        function updateServerStats() {
+            const dataStatus = document.getElementById('data-status');
+            if (dataStatus) {
+                const meetingsCount = appState.meetings.length;
+                const attendeesCount = appState.attendees.length;
+                const departmentsCount = appState.departments.length;
+                const adminsCount = appState.admins.length;
+                
+                dataStatus.innerHTML = `
+                    <strong>Local Storage Data:</strong><br>
+                    • Meetings: ${meetingsCount}<br>
+                    • Attendees: ${attendeesCount}<br>
+                    • Departments: ${departmentsCount}<br>
+                    • Admins: ${adminsCount}<br>
+                    <br>
+                    <strong>Last Updated:</strong> ${new Date().toLocaleString()}
+                `;
+            }
         }
 
         // ==================== MAIN INITIALIZATION ====================
-
-        // Start the application when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM loaded, initializing application...");
+            console.log("Bank Meeting System initialized");
             
             // Load data from localStorage
             loadDataFromLocalStorage();
             
-            // Check URL parameters for registration
-            checkUrlParameters();
-            
-            // Setup login form
-            const loginForm = document.getElementById('login-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
+            // Check for registration URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('registration') === 'true') {
+                const meetingId = parseInt(urlParams.get('meeting'));
+                if (meetingId) {
+                    // Show registration portal
+                    document.getElementById('login-page').classList.remove('active');
+                    document.getElementById('dashboard-page').classList.remove('active');
+                    document.getElementById('registration-portal').style.display = 'block';
                     
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    
-                    console.log("Login attempt:", email);
-                    
-                    // Find admin by email
-                    const admin = appState.admins.find(a => a.email.toLowerCase() === email.toLowerCase());
-                    
-                    if (admin) {
-                        // Check password
-                        if (admin.password === password) {
-                            // Update last login
-                            admin.lastLogin = new Date().toLocaleString();
-                            saveDataToLocalStorage();
-                            
-                            // Set current user
-                            appState.currentUser = {
-                                id: admin.id,
-                                email: admin.email,
-                                name: admin.name,
-                                role: admin.role,
-                                department: admin.department
-                            };
-                            
-                            console.log("Login successful:", appState.currentUser);
-                            
-                            // Hide login page, show dashboard
-                            document.getElementById('login-page').classList.remove('active');
-                            document.getElementById('dashboard-page').classList.add('active');
-                            
-                            // Reset form
-                            loginForm.reset();
-                            
-                            // Initialize dashboard
-                            initializeDashboard();
-                            
-                            // Show welcome alert
-                            showAlert(`Login successful! Welcome ${admin.name}.`, 'success');
-                        } else {
-                            showLoginAlert('Invalid password. Please try again.');
-                        }
-                    } else {
-                        showLoginAlert('No admin found with this email. Please check your credentials.');
+                    // Update registration form with meeting details
+                    const meeting = appState.meetings.find(m => m.id === meetingId);
+                    if (meeting) {
+                        document.getElementById('current-meeting-title').textContent = meeting.title;
+                        document.getElementById('meeting-date').textContent = meeting.date;
+                        document.getElementById('meeting-time').textContent = meeting.time;
+                        document.getElementById('meeting-location').textContent = meeting.location;
+                        document.getElementById('meeting-department').textContent = meeting.department;
                     }
-                });
+                }
             }
             
-            console.log("Application initialized successfully!");
+            // Initialize confirmation modal
+            initializeConfirmationModal();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Initialize charts when page is fully loaded
+            setTimeout(() => {
+                if (appState.currentUser) {
+                    initializeCharts();
+                }
+            }, 100);
         });
+
+        // Function to show registration form (if needed)
+        function showRegistrationForm(meetingId) {
+            // This function would show the registration portal for QR code registrations
+            console.log("Showing registration form for meeting:", meetingId);
+        }
     </script>
 </body>
 </html>
