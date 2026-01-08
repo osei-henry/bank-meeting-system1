@@ -2521,11 +2521,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
 
     <script>
         // ==================== SUPABASE CONFIGURATION ====================
-        // Replace these with your actual Supabase credentials
         const DEFAULT_SUPABASE_URL = 'https://jnimtlyymxykufmaykdm.supabase.co';
         const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuaW10bHl5bXh5a3VmbWF5a2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3ODA3MTQsImV4cCI6MjA4MzM1NjcxNH0.b5huSUA1Pvh0QeIGU1LmzHwR3diQafqNrxqR-r_9mlM';
         
-        // Initialize Supabase client
         let supabase = null;
         let realtimeSubscriptions = [];
         let autoSyncInterval = null;
@@ -2549,11 +2547,81 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             supabaseConnected: false
         };
 
+        // ==================== DEBUGGING FUNCTIONS ====================
+        function debugLog(message, data = null) {
+            console.log(`[DEBUG] ${new Date().toLocaleTimeString()} - ${message}`);
+            if (data) console.log(data);
+            
+            // Show in debug console
+            const debugDiv = document.getElementById('debug-console') || createDebugConsole();
+            const logEntry = document.createElement('div');
+            logEntry.style.cssText = 'padding: 5px; border-bottom: 1px solid #444; font-size: 12px; color: #ccc; font-family: monospace;';
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugDiv.appendChild(logEntry);
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+
+        function createDebugConsole() {
+            const debugDiv = document.createElement('div');
+            debugDiv.id = 'debug-console';
+            debugDiv.style.cssText = `
+                position: fixed;
+                bottom: 60px;
+                right: 20px;
+                width: 400px;
+                height: 200px;
+                background: rgba(0,0,0,0.95);
+                border: 2px solid var(--mustard);
+                border-radius: 8px;
+                padding: 10px;
+                font-family: monospace;
+                font-size: 12px;
+                overflow-y: auto;
+                z-index: 9999;
+                display: none;
+                color: #fff;
+            `;
+            debugDiv.innerHTML = '<div style="color: var(--mustard); margin-bottom: 10px; font-weight: bold;">Debug Console</div>';
+            document.body.appendChild(debugDiv);
+            
+            // Add toggle button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.innerHTML = '<i class="fas fa-bug"></i>';
+            toggleBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 60px;
+                background: var(--danger);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                cursor: pointer;
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+            `;
+            toggleBtn.onclick = () => {
+                debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
+            };
+            document.body.appendChild(toggleBtn);
+            
+            return debugDiv;
+        }
+
         // ==================== INITIALIZE SUPABASE ====================
         function initializeSupabase() {
             try {
+                debugLog('Initializing Supabase...');
+                
                 const supabaseUrl = localStorage.getItem('supabase_url') || DEFAULT_SUPABASE_URL;
                 const supabaseKey = localStorage.getItem('supabase_key') || DEFAULT_SUPABASE_KEY;
+                
+                debugLog(`Using URL: ${supabaseUrl}`);
+                debugLog(`Using Key: ${supabaseKey.substring(0, 20)}...`);
                 
                 // Update UI with saved credentials
                 const urlInput = document.getElementById('server-url');
@@ -2562,30 +2630,34 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                 if (keyInput) keyInput.value = supabaseKey;
                 
                 // Initialize Supabase client
-                supabase = supabase.createClient(supabaseUrl, supabaseKey, {
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
                     auth: {
-                        autoRefreshToken: true,
-                        persistSession: true,
-                        detectSessionInUrl: true
+                        autoRefreshToken: false,
+                        persistSession: false,
+                        detectSessionInUrl: false
                     },
-                    realtime: {
-                        params: {
-                            eventsPerSecond: 10
+                    global: {
+                        headers: {
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`
                         }
                     }
                 });
                 
-                console.log('Supabase initialized');
+                debugLog('Supabase client initialized successfully');
                 return true;
             } catch (error) {
-                console.error('Error initializing Supabase:', error);
+                debugLog('Error initializing Supabase:', error);
+                showAlert('Failed to initialize Supabase client: ' + error.message, 'error');
                 updateServerStatus(false);
                 return false;
             }
         }
 
-        // ==================== SUPABASE CONNECTION ====================
+        // ==================== TEST SUPABASE CONNECTION ====================
         async function testSupabaseConnection() {
+            debugLog('Testing Supabase connection...');
+            
             try {
                 if (!supabase) {
                     if (!initializeSupabase()) {
@@ -2594,195 +2666,107 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                 }
                 
                 updateServerStatus('syncing');
+                showAlert('Testing connection to Supabase...', 'info');
                 
-                // Test connection with a simple query
+                // Test with a simple query
+                debugLog('Sending test query...');
+                
                 const { data, error } = await supabase
-                    .from('admins')
-                    .select('count')
-                    .limit(1);
+                    .from('_test_connection')
+                    .select('*')
+                    .limit(1)
+                    .maybeSingle();
                 
                 if (error) {
-                    // If the admins table doesn't exist, try creating it
-                    console.log('Admins table might not exist, trying to create demo data...');
-                    await createDemoDataInSupabase();
+                    debugLog('Supabase error response:', error);
                     
-                    // Try query again
-                    const { data: newData, error: newError } = await supabase
-                        .from('admins')
-                        .select('count')
-                        .limit(1);
-                    
-                    if (newError) throw newError;
+                    // Check error type
+                    if (error.code === 'PGRST116') {
+                        debugLog('Connection successful! (Table not found error is expected)');
+                        appState.supabaseConnected = true;
+                        updateServerStatus(true);
+                        
+                        // Save credentials
+                        const urlInput = document.getElementById('server-url');
+                        const keyInput = document.getElementById('supabase-key');
+                        if (urlInput && keyInput) {
+                            localStorage.setItem('supabase_url', urlInput.value || DEFAULT_SUPABASE_URL);
+                            localStorage.setItem('supabase_key', keyInput.value || DEFAULT_SUPABASE_KEY);
+                        }
+                        
+                        showAlert('Connected to Supabase successfully! Tables may need to be created.', 'success');
+                        return true;
+                    } else if (error.message && error.message.includes('JWT')) {
+                        debugLog('JWT Authentication error');
+                        showAlert('Invalid Supabase anon key. Please check your credentials.', 'error');
+                        appState.supabaseConnected = false;
+                        updateServerStatus(false);
+                        return false;
+                    } else if (error.message && (error.message.includes('fetch') || error.message.includes('network'))) {
+                        debugLog('Network error');
+                        showAlert('Network error. Check your Supabase URL and internet connection.', 'error');
+                        appState.supabaseConnected = false;
+                        updateServerStatus(false);
+                        return false;
+                    } else {
+                        debugLog('Other Supabase error:', error);
+                        showAlert('Connection error: ' + error.message, 'error');
+                        appState.supabaseConnected = false;
+                        updateServerStatus(false);
+                        return false;
+                    }
                 }
                 
-                console.log('Supabase connected successfully');
+                debugLog('Supabase connected successfully with data response');
                 appState.supabaseConnected = true;
                 updateServerStatus(true);
                 
-                // Save credentials to localStorage
-                localStorage.setItem('supabase_url', document.getElementById('server-url')?.value || DEFAULT_SUPABASE_URL);
-                localStorage.setItem('supabase_key', document.getElementById('supabase-key')?.value || DEFAULT_SUPABASE_KEY);
-                
-                return true;
-            } catch (error) {
-                console.error('Supabase connection error:', error);
-                appState.supabaseConnected = false;
-                updateServerStatus(false);
-                return false;
-            }
-        }
-
-        // ==================== CREATE DEMO DATA IN SUPABASE ====================
-        async function createDemoDataInSupabase() {
-            try {
-                console.log('Creating demo data in Supabase...');
-                
-                // Create tables if they don't exist (simplified approach)
-                // In a real app, you'd have proper SQL migrations
-                const demoAdmins = [
-                    { 
-                        name: 'Henry Ghansah', 
-                        email: 'ghansah.henry@myumbbank.com', 
-                        department: 'Loan Department', 
-                        role: 'super_admin', 
-                        phone: '+1234567893', 
-                        password: 'Windows@@055020',
-                        last_login: new Date().toISOString(), 
-                        status: 'active',
-                        created_at: new Date().toISOString()
-                    }
-                ];
-                
-                // Insert demo admin
-                const { error: adminError } = await supabase
-                    .from('admins')
-                    .upsert(demoAdmins);
-                
-                if (adminError) {
-                    console.log('Note: Could not insert admin data, table might not exist yet.');
+                // Save credentials
+                const urlInput = document.getElementById('server-url');
+                const keyInput = document.getElementById('supabase-key');
+                if (urlInput && keyInput) {
+                    localStorage.setItem('supabase_url', urlInput.value || DEFAULT_SUPABASE_URL);
+                    localStorage.setItem('supabase_key', keyInput.value || DEFAULT_SUPABASE_KEY);
                 }
                 
+                showAlert('Connected to Supabase successfully!', 'success');
                 return true;
+                
             } catch (error) {
-                console.error('Error creating demo data:', error);
+                debugLog('Connection test error:', error);
+                appState.supabaseConnected = false;
+                updateServerStatus(false);
+                showAlert('Connection failed: ' + error.message, 'error');
                 return false;
-            }
-        }
-
-        // ==================== REAL-TIME UPDATES ====================
-        async function initializeRealtimeUpdates() {
-            if (!appState.supabaseConnected || !supabase) return;
-            
-            console.log("Initializing real-time updates...");
-            
-            // Unsubscribe from existing subscriptions
-            realtimeSubscriptions.forEach(sub => {
-                supabase.removeChannel(sub);
-            });
-            realtimeSubscriptions = [];
-            
-            // Subscribe to new attendees
-            try {
-                const attendeesChannel = supabase
-                    .channel('new-attendees')
-                    .on(
-                        'postgres_changes',
-                        {
-                            event: 'INSERT',
-                            schema: 'public',
-                            table: 'attendees'
-                        },
-                        (payload) => {
-                            console.log('New attendee registered:', payload.new);
-                            showRealtimeNotification({
-                                type: 'new_registration',
-                                title: 'New Registration',
-                                message: `${payload.new.name} registered for ${payload.new.meeting_title}`,
-                                data: payload.new
-                            });
-                            
-                            // Update local state
-                            const exists = appState.attendees.some(a => a.id === payload.new.id);
-                            if (!exists) {
-                                appState.attendees.unshift(payload.new);
-                                updateStats();
-                                updateAttendeesPage();
-                            }
-                        }
-                    )
-                    .subscribe();
-                
-                realtimeSubscriptions.push(attendeesChannel);
-                
-                // Subscribe to meeting updates
-                const meetingsChannel = supabase
-                    .channel('meeting-updates')
-                    .on(
-                        'postgres_changes',
-                        {
-                            event: '*',
-                            schema: 'public',
-                            table: 'meetings'
-                        },
-                        (payload) => {
-                            console.log('Meeting updated:', payload);
-                            
-                            if (payload.eventType === 'INSERT') {
-                                appState.meetings.unshift(payload.new);
-                            } else if (payload.eventType === 'UPDATE') {
-                                const index = appState.meetings.findIndex(m => m.id === payload.new.id);
-                                if (index !== -1) {
-                                    appState.meetings[index] = payload.new;
-                                }
-                            } else if (payload.eventType === 'DELETE') {
-                                appState.meetings = appState.meetings.filter(m => m.id !== payload.old.id);
-                            }
-                            
-                            updateStats();
-                            updateMeetingsPage();
-                            updateDashboard();
-                        }
-                    )
-                    .subscribe();
-                
-                realtimeSubscriptions.push(meetingsChannel);
-                
-                // Live registration counter
-                updateLiveRegistrationCounter();
-                setInterval(updateLiveRegistrationCounter, 30000);
-                
-                console.log("Real-time updates initialized");
-            } catch (error) {
-                console.error('Error initializing real-time updates:', error);
             }
         }
 
         // ==================== SIMPLE LOGIN SYSTEM ====================
         async function simpleLogin(email, password) {
             try {
-                console.log('Attempting login with:', email);
+                debugLog(`Login attempt: ${email}`);
                 
-                // Load admins from localStorage first
+                // Load admins from localStorage
                 loadDataFromLocalStorage();
                 
                 // Check if we have demo data
                 if (appState.admins.length === 0) {
-                    console.log('No admins found, initializing demo data...');
+                    debugLog('No admins found, initializing demo data');
                     initializeDemoData();
                     loadDataFromLocalStorage();
                 }
                 
-                // Find admin by email
-                const admin = appState.admins.find(a => a.email === email);
+                // Find admin by email (case-insensitive)
+                const admin = appState.admins.find(a => a.email.toLowerCase() === email.toLowerCase());
                 
                 if (!admin) {
-                    console.log('Admin not found:', email);
+                    debugLog('Admin not found');
                     return { success: false, error: 'Invalid email or password' };
                 }
                 
-                // Check password (in a real app, use proper password hashing)
+                // Check password (exact match)
                 if (admin.password !== password) {
-                    console.log('Password mismatch for:', email);
+                    debugLog('Password mismatch');
                     return { success: false, error: 'Invalid email or password' };
                 }
                 
@@ -2799,36 +2783,15 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                     department: admin.department
                 };
                 
-                // Save to localStorage for persistence
+                // Save to localStorage
                 localStorage.setItem('current_admin', JSON.stringify(appState.currentUser));
                 
-                console.log('Login successful for:', email);
+                debugLog('Login successful');
                 return { success: true, user: admin };
                 
             } catch (error) {
-                console.error('Login error:', error);
+                debugLog('Login error:', error);
                 return { success: false, error: 'Login failed: ' + error.message };
-            }
-        }
-
-        // ==================== LOGOUT ====================
-        function simpleLogout() {
-            try {
-                localStorage.removeItem('current_admin');
-                appState.currentUser = null;
-                
-                // Stop real-time updates
-                if (supabase && realtimeSubscriptions.length > 0) {
-                    realtimeSubscriptions.forEach(sub => {
-                        supabase.removeChannel(sub);
-                    });
-                    realtimeSubscriptions = [];
-                }
-                
-                return { success: true };
-            } catch (error) {
-                console.error('Logout error:', error);
-                return { success: false, error: error.message };
             }
         }
 
@@ -2840,12 +2803,12 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                     const admin = JSON.parse(savedAdmin);
                     appState.currentUser = admin;
                     
-                    // Show dashboard if user is already logged in
+                    // Show dashboard if logged in
                     if (appState.currentUser) {
                         document.getElementById('login-page').classList.remove('active');
                         document.getElementById('dashboard-page').classList.add('active');
                         
-                        // Update admin email display
+                        // Update admin email
                         const adminEmailSpan = document.getElementById('current-admin-email');
                         if (adminEmailSpan) {
                             adminEmailSpan.textContent = appState.currentUser.email;
@@ -2854,37 +2817,37 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                         // Initialize dashboard
                         initializeDashboard();
                         
-                        // Try to connect to Supabase in background
-                        testSupabaseConnection().then(connected => {
-                            if (connected) {
-                                initializeRealtimeUpdates();
-                            }
-                        });
+                        // Try to connect to Supabase
+                        setTimeout(() => {
+                            testSupabaseConnection().then(connected => {
+                                if (connected) {
+                                    debugLog('Auto-connected to Supabase');
+                                }
+                            });
+                        }, 500);
                         
                         return true;
                     }
                 }
                 return false;
             } catch (error) {
-                console.error('Error checking session:', error);
+                debugLog('Session check error:', error);
                 return false;
             }
         }
 
         // ==================== DATA MANAGEMENT ====================
         function initializeDemoData() {
-            console.log("Initializing demo data...");
+            debugLog("Initializing demo data...");
             
             // Demo departments
             appState.departments = [
                 { id: 1, name: 'Loan Department', head: 'John Manager', email: 'loans@bank.com', phone: '+1234567890', description: 'Handles all loan applications and consultations', createdAt: '2024-01-01' },
                 { id: 2, name: 'Investment Banking', head: 'Sarah Investor', email: 'investments@bank.com', phone: '+1234567891', description: 'Investment advice and portfolio management', createdAt: '2024-01-01' },
-                { id: 3, name: 'Customer Service', head: 'Mike Support', email: 'support@bank.com', phone: '+1234567892', description: 'Customer support and general inquiries', createdAt: '2024-01-01' },
-                { id: 4, name: 'Mortgage Services', head: 'Emma Home', email: 'mortgage@bank.com', phone: '+1234567893', description: 'Mortgage and home loan services', createdAt: '2024-01-01' },
-                { id: 5, name: 'Credit Card Division', head: 'Robert Card', email: 'creditcard@bank.com', phone: '+1234567894', description: 'Credit card applications and services', createdAt: '2024-01-01' }
+                { id: 3, name: 'Customer Service', head: 'Mike Support', email: 'support@bank.com', phone: '+1234567892', description: 'Customer support and general inquiries', createdAt: '2024-01-01' }
             ];
 
-            // Demo admins WITH CORRECT PASSWORD
+            // Demo admins
             appState.admins = [
                 { 
                     id: 1, 
@@ -2894,7 +2857,7 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                     role: 'super_admin', 
                     phone: '+1234567893', 
                     password: 'Windows@@055020',
-                    lastLogin: '2024-01-15 10:30:00', 
+                    lastLogin: new Date().toISOString(), 
                     status: 'active',
                     createdAt: '2024-01-01'
                 },
@@ -2906,19 +2869,7 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                     role: 'admin', 
                     phone: '+1234567894', 
                     password: 'admin123',
-                    lastLogin: '2024-01-14 14:20:00', 
-                    status: 'active',
-                    createdAt: '2024-01-01'
-                },
-                { 
-                    id: 3, 
-                    name: 'Sarah Investor', 
-                    email: 'sarah@bank.com', 
-                    department: 'Investment Banking', 
-                    role: 'department_head', 
-                    phone: '+1234567895', 
-                    password: 'admin123',
-                    lastLogin: '2024-01-13 09:15:00', 
+                    lastLogin: new Date().toISOString(), 
                     status: 'active',
                     createdAt: '2024-01-01'
                 }
@@ -2927,28 +2878,16 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             // Demo meetings
             appState.meetings = [
                 { id: 1, title: 'Loan Consultation', department: 'Loan Department', date: '2024-01-15', time: '10:00', location: 'Conference Room A', duration: 1, description: 'Personal loan consultation session', maxAttendees: 10, status: 'active', createdAt: '2024-01-10', attendees: [] },
-                { id: 2, title: 'Investment Seminar', department: 'Investment Banking', date: '2024-01-14', time: '14:00', location: 'Auditorium', duration: 2, description: 'Quarterly investment seminar', maxAttendees: 50, status: 'completed', createdAt: '2024-01-05', attendees: [] },
-                { id: 3, title: 'Account Opening', department: 'Customer Service', date: '2024-01-16', time: '09:00', location: 'Service Desk 1', duration: 0.5, description: 'New account opening session', maxAttendees: 5, status: 'active', createdAt: '2024-01-12', attendees: [] },
-                { id: 4, title: 'Mortgage Advice', department: 'Mortgage Services', date: '2024-01-17', time: '11:00', location: 'Room 201', duration: 1.5, description: 'Home mortgage consultation', maxAttendees: 8, status: 'active', createdAt: '2024-01-13', attendees: [] },
-                { id: 5, title: 'Credit Card Workshop', department: 'Credit Card Division', date: '2024-01-18', time: '13:00', location: 'Training Room', duration: 2, description: 'Credit card benefits workshop', maxAttendees: 20, status: 'active', createdAt: '2024-01-14', attendees: [] }
+                { id: 2, title: 'Investment Seminar', department: 'Investment Banking', date: '2024-01-16', time: '14:00', location: 'Auditorium', duration: 2, description: 'Quarterly investment seminar', maxAttendees: 50, status: 'active', createdAt: '2024-01-05', attendees: [] }
             ];
 
             // Demo attendees
             appState.attendees = [
                 { id: 1, name: 'Alice Johnson', email: 'alice@email.com', phone: '+1234567001', account: 'ACC001234', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Interested in home loan', registrationDate: '2024-01-12 09:15:00' },
-                { id: 2, name: 'Bob Smith', email: 'bob@email.com', phone: '+1234567002', account: 'ACC001235', meetingId: 2, meetingTitle: 'Investment Seminar', meetingDate: '2024-01-14', meetingTime: '14:00', department: 'Investment Banking', purpose: 'investment', notes: 'Retirement planning', registrationDate: '2024-01-11 14:30:00' },
-                { id: 3, name: 'Charlie Brown', email: 'charlie@email.com', phone: '+1234567003', account: 'ACC001236', meetingId: 3, meetingTitle: 'Account Opening', meetingDate: '2024-01-16', meetingTime: '09:00', department: 'Customer Service', purpose: 'account_opening', notes: 'Opening business account', registrationDate: '2024-01-13 11:00:00' },
-                { id: 4, name: 'Diana Prince', email: 'diana@email.com', phone: '+1234567004', account: 'ACC001237', meetingId: 1, meetingTitle: 'Loan Consultation', meetingDate: '2024-01-15', meetingTime: '10:00', department: 'Loan Department', purpose: 'loan_consultation', notes: 'Car loan inquiry', registrationDate: '2024-01-14 15:45:00' },
-                { id: 5, name: 'Edward Wilson', email: 'edward@email.com', phone: '+1234567005', account: 'ACC001238', meetingId: 4, meetingTitle: 'Mortgage Advice', meetingDate: '2024-01-17', meetingTime: '11:00', department: 'Mortgage Services', purpose: 'mortgage', notes: 'First-time home buyer', registrationDate: '2024-01-14 10:30:00' }
+                { id: 2, name: 'Bob Smith', email: 'bob@email.com', phone: '+1234567002', account: 'ACC001235', meetingId: 2, meetingTitle: 'Investment Seminar', meetingDate: '2024-01-16', meetingTime: '14:00', department: 'Investment Banking', purpose: 'investment', notes: 'Retirement planning', registrationDate: '2024-01-11 14:30:00' }
             ];
 
-            // Link attendees to meetings
-            appState.meetings[0].attendees = [appState.attendees[0], appState.attendees[3]];
-            appState.meetings[1].attendees = [appState.attendees[1]];
-            appState.meetings[2].attendees = [appState.attendees[2]];
-            appState.meetings[3].attendees = [appState.attendees[4]];
-
-            console.log("Demo data initialized");
+            debugLog("Demo data initialized");
             saveDataToLocalStorage();
         }
 
@@ -2957,11 +2896,11 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             localStorage.setItem('bankMeetingDepartments', JSON.stringify(appState.departments));
             localStorage.setItem('bankMeetingMeetings', JSON.stringify(appState.meetings));
             localStorage.setItem('bankMeetingAttendees', JSON.stringify(appState.attendees));
-            console.log("Data saved to localStorage");
+            debugLog("Data saved to localStorage");
         }
 
         function loadDataFromLocalStorage() {
-            console.log("Loading data from localStorage...");
+            debugLog("Loading data from localStorage...");
             
             const savedAdmins = localStorage.getItem('bankMeetingAdmins');
             const savedDepartments = localStorage.getItem('bankMeetingDepartments');
@@ -2971,9 +2910,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             if (savedAdmins) {
                 try {
                     appState.admins = JSON.parse(savedAdmins);
-                    console.log(`Loaded ${appState.admins.length} admins`);
+                    debugLog(`Loaded ${appState.admins.length} admins`);
                 } catch (e) {
-                    console.error("Error parsing admins:", e);
+                    debugLog("Error parsing admins:", e);
                     appState.admins = [];
                 }
             }
@@ -2981,9 +2920,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             if (savedDepartments) {
                 try {
                     appState.departments = JSON.parse(savedDepartments);
-                    console.log(`Loaded ${appState.departments.length} departments`);
+                    debugLog(`Loaded ${appState.departments.length} departments`);
                 } catch (e) {
-                    console.error("Error parsing departments:", e);
+                    debugLog("Error parsing departments:", e);
                     appState.departments = [];
                 }
             }
@@ -2991,9 +2930,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             if (savedMeetings) {
                 try {
                     appState.meetings = JSON.parse(savedMeetings);
-                    console.log(`Loaded ${appState.meetings.length} meetings`);
+                    debugLog(`Loaded ${appState.meetings.length} meetings`);
                 } catch (e) {
-                    console.error("Error parsing meetings:", e);
+                    debugLog("Error parsing meetings:", e);
                     appState.meetings = [];
                 }
             }
@@ -3001,9 +2940,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             if (savedAttendees) {
                 try {
                     appState.attendees = JSON.parse(savedAttendees);
-                    console.log(`Loaded ${appState.attendees.length} attendees`);
+                    debugLog(`Loaded ${appState.attendees.length} attendees`);
                 } catch (e) {
-                    console.error("Error parsing attendees:", e);
+                    debugLog("Error parsing attendees:", e);
                     appState.attendees = [];
                 }
             }
@@ -3011,624 +2950,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             // If no data exists, initialize demo data
             if (appState.admins.length === 0 && appState.departments.length === 0 && 
                 appState.meetings.length === 0 && appState.attendees.length === 0) {
-                console.log("No data found, initializing demo data...");
+                debugLog("No data found, initializing demo data");
                 initializeDemoData();
             }
-        }
-
-        // ==================== SUPABASE DATA FUNCTIONS ====================
-        async function saveMeetingsToSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const meetingsData = appState.meetings.map(m => ({
-                    title: m.title,
-                    department: m.department,
-                    meeting_date: m.date,
-                    meeting_time: m.time,
-                    location: m.location,
-                    duration: m.duration,
-                    description: m.description,
-                    max_attendees: m.maxAttendees,
-                    status: m.status,
-                    created_by: appState.currentUser?.email,
-                    created_at: m.createdAt || new Date().toISOString()
-                }));
-                
-                const { data, error } = await supabase
-                    .from('meetings')
-                    .upsert(meetingsData, { onConflict: 'id' });
-                
-                if (error) throw error;
-                console.log('Meetings saved to Supabase');
-                return true;
-            } catch (error) {
-                console.error('Error saving meetings:', error);
-                return false;
-            }
-        }
-
-        async function saveAttendeesToSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const attendeesData = appState.attendees.map(a => ({
-                    name: a.name,
-                    email: a.email,
-                    phone: a.phone,
-                    account_number: a.account,
-                    meeting_id: a.meetingId,
-                    meeting_title: a.meetingTitle,
-                    meeting_date: a.meetingDate,
-                    meeting_time: a.meetingTime,
-                    department: a.department,
-                    purpose: a.purpose,
-                    notes: a.notes,
-                    registration_date: a.registrationDate || new Date().toISOString()
-                }));
-                
-                const { data, error } = await supabase
-                    .from('attendees')
-                    .upsert(attendeesData, { onConflict: 'id' });
-                
-                if (error) throw error;
-                console.log('Attendees saved to Supabase');
-                return true;
-            } catch (error) {
-                console.error('Error saving attendees:', error);
-                return false;
-            }
-        }
-
-        async function saveDepartmentsToSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const departmentsData = appState.departments.map(d => ({
-                    name: d.name,
-                    head: d.head,
-                    email: d.email,
-                    phone: d.phone,
-                    description: d.description,
-                    created_at: d.createdAt || new Date().toISOString()
-                }));
-                
-                const { data, error } = await supabase
-                    .from('departments')
-                    .upsert(departmentsData, { onConflict: 'id' });
-                
-                if (error) throw error;
-                console.log('Departments saved to Supabase');
-                return true;
-            } catch (error) {
-                console.error('Error saving departments:', error);
-                return false;
-            }
-        }
-
-        async function saveAdminsToSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const adminsData = appState.admins.map(a => ({
-                    name: a.name,
-                    email: a.email,
-                    department: a.department,
-                    role: a.role,
-                    phone: a.phone,
-                    password: a.password,
-                    last_login: a.lastLogin,
-                    status: a.status,
-                    created_at: a.createdAt || new Date().toISOString()
-                }));
-                
-                const { data, error } = await supabase
-                    .from('admins')
-                    .upsert(adminsData, { onConflict: 'id' });
-                
-                if (error) throw error;
-                console.log('Admins saved to Supabase');
-                return true;
-            } catch (error) {
-                console.error('Error saving admins:', error);
-                return false;
-            }
-        }
-
-        async function loadMeetingsFromSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('meetings')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                appState.meetings = data.map(m => ({
-                    id: m.id,
-                    title: m.title,
-                    department: m.department,
-                    date: m.meeting_date,
-                    time: m.meeting_time,
-                    location: m.location,
-                    duration: m.duration,
-                    description: m.description,
-                    maxAttendees: m.max_attendees,
-                    status: m.status,
-                    createdAt: m.created_at,
-                    attendees: []
-                }));
-                
-                console.log(`Loaded ${appState.meetings.length} meetings from Supabase`);
-                return true;
-            } catch (error) {
-                console.error('Error loading meetings:', error);
-                return false;
-            }
-        }
-
-        async function loadAttendeesFromSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('attendees')
-                    .select('*')
-                    .order('registration_date', { ascending: false });
-                
-                if (error) throw error;
-                
-                appState.attendees = data.map(a => ({
-                    id: a.id,
-                    name: a.name,
-                    email: a.email,
-                    phone: a.phone,
-                    account: a.account_number,
-                    meetingId: a.meeting_id,
-                    meetingTitle: a.meeting_title,
-                    meetingDate: a.meeting_date,
-                    meetingTime: a.meeting_time,
-                    department: a.department,
-                    purpose: a.purpose,
-                    notes: a.notes,
-                    registrationDate: a.registration_date
-                }));
-                
-                console.log(`Loaded ${appState.attendees.length} attendees from Supabase`);
-                return true;
-            } catch (error) {
-                console.error('Error loading attendees:', error);
-                return false;
-            }
-        }
-
-        async function loadDepartmentsFromSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('departments')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                appState.departments = data.map(d => ({
-                    id: d.id,
-                    name: d.name,
-                    head: d.head,
-                    email: d.email,
-                    phone: d.phone,
-                    description: d.description,
-                    createdAt: d.created_at
-                }));
-                
-                console.log(`Loaded ${appState.departments.length} departments from Supabase`);
-                return true;
-            } catch (error) {
-                console.error('Error loading departments:', error);
-                return false;
-            }
-        }
-
-        async function loadAdminsFromSupabase() {
-            if (!appState.supabaseConnected) return false;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('admins')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                appState.admins = data.map(a => ({
-                    id: a.id,
-                    name: a.name,
-                    email: a.email,
-                    department: a.department,
-                    role: a.role,
-                    phone: a.phone,
-                    password: a.password,
-                    lastLogin: a.last_login,
-                    status: a.status,
-                    createdAt: a.created_at
-                }));
-                
-                console.log(`Loaded ${appState.admins.length} admins from Supabase`);
-                return true;
-            } catch (error) {
-                console.error('Error loading admins:', error);
-                return false;
-            }
-        }
-
-        // ==================== SYNC FUNCTIONS ====================
-        async function syncAllToSupabase() {
-            if (!appState.supabaseConnected) {
-                showAlert('Not connected to Supabase', 'error');
-                return false;
-            }
-            
-            updateServerStatus('syncing');
-            
-            try {
-                const results = await Promise.allSettled([
-                    saveMeetingsToSupabase(),
-                    saveAttendeesToSupabase(),
-                    saveDepartmentsToSupabase(),
-                    saveAdminsToSupabase()
-                ]);
-                
-                const success = results.every(r => r.status === 'fulfilled' && r.value === true);
-                
-                if (success) {
-                    updateServerStatus(true);
-                    showAlert('All data synchronized with Supabase!', 'success');
-                    return true;
-                } else {
-                    updateServerStatus(false);
-                    showAlert('Some data failed to sync. Please check connection.', 'error');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Sync error:', error);
-                updateServerStatus(false);
-                showAlert('Sync failed: ' + error.message, 'error');
-                return false;
-            }
-        }
-
-        async function loadAllFromSupabase() {
-            if (!appState.supabaseConnected) {
-                showAlert('Not connected to Supabase', 'error');
-                return false;
-            }
-            
-            updateServerStatus('syncing');
-            
-            try {
-                const results = await Promise.allSettled([
-                    loadMeetingsFromSupabase(),
-                    loadAttendeesFromSupabase(),
-                    loadDepartmentsFromSupabase(),
-                    loadAdminsFromSupabase()
-                ]);
-                
-                const success = results.every(r => r.status === 'fulfilled' && r.value === true);
-                
-                if (success) {
-                    saveDataToLocalStorage();
-                    updateAllData();
-                    updateServerStatus(true);
-                    showAlert('All data loaded from Supabase!', 'success');
-                    return true;
-                } else {
-                    updateServerStatus(false);
-                    showAlert('Failed to load some data. Using local storage.', 'error');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Load error:', error);
-                updateServerStatus(false);
-                showAlert('Load failed: ' + error.message, 'error');
-                return false;
-            }
-        }
-
-        // ==================== BACKUP & RESTORE ====================
-        async function backupToSupabaseStorage() {
-            if (!appState.supabaseConnected) {
-                showAlert('Not connected to Supabase', 'error');
-                return false;
-            }
-            
-            try {
-                const backupData = {
-                    backup_date: new Date().toISOString(),
-                    version: '2.0',
-                    meetings: appState.meetings,
-                    attendees: appState.attendees,
-                    departments: appState.departments,
-                    admins: appState.admins
-                };
-                
-                const jsonString = JSON.stringify(backupData, null, 2);
-                const fileName = `backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-                
-                // Upload to Supabase Storage
-                const { data, error } = await supabase.storage
-                    .from('backups')
-                    .upload(fileName, jsonString, {
-                        contentType: 'application/json',
-                        upsert: true
-                    });
-                
-                if (error) throw error;
-                
-                showAlert(`Backup created successfully: ${fileName}`, 'success');
-                updateBackupHistory();
-                return true;
-                
-            } catch (error) {
-                console.error('Backup error:', error);
-                showAlert(`Backup failed: ${error.message}`, 'error');
-                return false;
-            }
-        }
-
-        async function listBackups() {
-            if (!appState.supabaseConnected) return [];
-            
-            try {
-                const { data, error } = await supabase.storage
-                    .from('backups')
-                    .list();
-                
-                if (error) throw error;
-                
-                return data
-                    .filter(file => file.name.endsWith('.json'))
-                    .sort((a, b) => b.created_at.localeCompare(a.created_at));
-                
-            } catch (error) {
-                console.error('List backups error:', error);
-                return [];
-            }
-        }
-
-        async function restoreFromBackup(fileName) {
-            if (!appState.supabaseConnected) {
-                showAlert('Not connected to Supabase', 'error');
-                return false;
-            }
-            
-            try {
-                // Download backup file
-                const { data, error } = await supabase.storage
-                    .from('backups')
-                    .download(fileName);
-                
-                if (error) throw error;
-                
-                // Parse backup data
-                const jsonString = await data.text();
-                const backupData = JSON.parse(jsonString);
-                
-                // Restore to local storage
-                if (backupData.meetings) {
-                    appState.meetings = backupData.meetings;
-                    localStorage.setItem('bankMeetingMeetings', JSON.stringify(backupData.meetings));
-                }
-                if (backupData.attendees) {
-                    appState.attendees = backupData.attendees;
-                    localStorage.setItem('bankMeetingAttendees', JSON.stringify(backupData.attendees));
-                }
-                if (backupData.departments) {
-                    appState.departments = backupData.departments;
-                    localStorage.setItem('bankMeetingDepartments', JSON.stringify(backupData.departments));
-                }
-                if (backupData.admins) {
-                    appState.admins = backupData.admins;
-                    localStorage.setItem('bankMeetingAdmins', JSON.stringify(backupData.admins));
-                }
-                
-                updateAllData();
-                showSuccessModal(`Successfully restored backup from ${fileName}`);
-                return true;
-                
-            } catch (error) {
-                console.error('Restore error:', error);
-                showAlert(`Restore failed: ${error.message}`, 'error');
-                return false;
-            }
-        }
-
-        async function updateBackupHistory() {
-            const backups = await listBackups();
-            const historyList = document.getElementById('backup-history-list');
-            
-            if (historyList) {
-                if (backups.length === 0) {
-                    historyList.innerHTML = '<p style="color: #999; text-align: center;">No backups found</p>';
-                    return;
-                }
-                
-                historyList.innerHTML = backups.slice(0, 5).map(backup => `
-                    <div class="backup-item">
-                        <div class="backup-info">
-                            <div class="backup-name">${backup.name}</div>
-                            <div class="backup-meta">
-                                ${new Date(backup.created_at).toLocaleString()} | 
-                                ${formatFileSize(backup.metadata?.size || 0)}
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-primary restore-backup-btn" data-file="${backup.name}">
-                            <i class="fas fa-redo"></i> Restore
-                        </button>
-                    </div>
-                `).join('');
-                
-                // Add event listeners for restore buttons
-                document.querySelectorAll('.restore-backup-btn').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const fileName = this.getAttribute('data-file');
-                        showConfirmation(
-                            'Restore Backup',
-                            `Are you sure you want to restore from "${fileName}"? This will replace ALL current data.`,
-                            async () => {
-                                await restoreFromBackup(fileName);
-                            },
-                            'warning'
-                        );
-                    });
-                });
-            }
-        }
-
-        // ==================== CSV IMPORT/EXPORT ====================
-        async function importCSVToSupabase(csvText, tableName) {
-            if (!appState.supabaseConnected) {
-                showAlert('Not connected to Supabase', 'error');
-                return { success: false, error: 'Not connected to Supabase' };
-            }
-            
-            try {
-                // Parse CSV
-                const rows = csvText.split('\n').filter(row => row.trim());
-                if (rows.length < 2) {
-                    return { success: false, error: 'CSV file is empty or has no data' };
-                }
-                
-                const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
-                
-                const data = rows.slice(1).map(row => {
-                    if (!row.trim()) return null;
-                    const values = row.split(',').map(v => v.trim().replace(/"/g, ''));
-                    const obj = {};
-                    headers.forEach((header, index) => {
-                        obj[header] = values[index] || '';
-                    });
-                    return obj;
-                }).filter(item => item !== null);
-                
-                if (data.length === 0) {
-                    return { success: false, error: 'No valid data found in CSV' };
-                }
-                
-                // Insert into Supabase
-                const { error } = await supabase
-                    .from(tableName)
-                    .upsert(data, { onConflict: 'id' });
-                
-                if (error) throw error;
-                
-                return { success: true, count: data.length };
-            } catch (error) {
-                console.error('CSV import error:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        async function exportSupabaseToCSV(tableName, fileName) {
-            if (!appState.supabaseConnected) {
-                showAlert('Not connected to Supabase', 'error');
-                return;
-            }
-            
-            try {
-                const { data, error } = await supabase
-                    .from(tableName)
-                    .select('*');
-                
-                if (error) throw error;
-                
-                if (!data || data.length === 0) {
-                    showAlert(`No data found in ${tableName}`, 'error');
-                    return;
-                }
-                
-                // Convert to CSV
-                const headers = Object.keys(data[0]);
-                const csvRows = [
-                    headers.join(','),
-                    ...data.map(row => 
-                        headers.map(header => 
-                            JSON.stringify(row[header] || '')
-                        ).join(',')
-                    )
-                ];
-                
-                const csvString = csvRows.join('\n');
-                const blob = new Blob([csvString], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                showAlert(`Exported ${data.length} records to CSV`, 'success');
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                showAlert(`Export failed: ${error.message}`, 'error');
-            }
-        }
-
-        function exportAllAttendeesCSV() {
-            const savedAttendees = JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]');
-            
-            if (savedAttendees.length === 0) {
-                showAlert('No attendees to export', 'error');
-                return;
-            }
-            
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Name,Email,Phone,Account Number,Meeting,Meeting Date,Department,Purpose,Registration Date,Notes\n";
-            
-            savedAttendees.forEach(attendee => {
-                const purposeText = {
-                    'loan_consultation': 'Loan Consultation',
-                    'account_opening': 'Account Opening',
-                    'investment': 'Investment',
-                    'business': 'Business',
-                    'mortgage': 'Mortgage Inquiry',
-                    'credit_card': 'Credit Card Application',
-                    'other': 'Other'
-                }[attendee.purpose] || attendee.purpose;
-                
-                const row = [
-                    `"${attendee.name}"`,
-                    `"${attendee.email}"`,
-                    `"${attendee.phone}"`,
-                    `"${attendee.account || ''}"`,
-                    `"${attendee.meetingTitle || attendee.meeting || ''}"`,
-                    `"${attendee.meetingDate || ''}"`,
-                    `"${attendee.departmentName || attendee.department || ''}"`,
-                    `"${purposeText}"`,
-                    `"${attendee.registrationDate}"`,
-                    `"${attendee.notes || ''}"`
-                ].join(',');
-                
-                csvContent += row + "\n";
-            });
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const fileName = `bank_meeting_attendees_${new Date().toISOString().split('T')[0]}.csv`;
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert(`Exported ${savedAttendees.length} attendees`, 'success');
         }
 
         // ==================== UTILITY FUNCTIONS ====================
@@ -3639,101 +2963,27 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             
             if (connected === 'syncing') {
                 serverStatus.className = 'server-status syncing';
-                serverStatusText.innerHTML = '<span class="spinner"></span> Server: Syncing...';
-                if (statServer) statServer.textContent = 'Syncing';
+                serverStatusText.innerHTML = '<span class="spinner"></span> Connecting...';
+                if (statServer) statServer.textContent = 'Connecting';
+                debugLog('Server status: Connecting...');
             } else if (connected) {
                 serverStatus.className = 'server-status connected';
                 serverStatusText.textContent = 'Server: Connected';
                 if (statServer) statServer.textContent = 'Online';
                 appState.supabaseConnected = true;
+                debugLog('Server status: Connected ✓');
             } else {
                 serverStatus.className = 'server-status disconnected';
                 serverStatusText.textContent = 'Server: Disconnected';
                 if (statServer) statServer.textContent = 'Offline';
                 appState.supabaseConnected = false;
+                debugLog('Server status: Disconnected ✗');
             }
-        }
-
-        function showRealtimeNotification(notification) {
-            const notificationDiv = document.createElement('div');
-            notificationDiv.className = 'real-time-notification';
-            notificationDiv.innerHTML = `
-                <i class="fas fa-${notification.type === 'new_registration' ? 'user-plus' : 'calendar-check'}"></i>
-                <div class="real-time-notification-content">
-                    <strong>${notification.title}</strong>
-                    <p>${notification.message}</p>
-                    <div class="real-time-notification-time">
-                        ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </div>
-                </div>
-                <i class="fas fa-times close-notification" style="cursor: pointer;"></i>
-            `;
-            
-            // Remove existing notifications
-            const existing = document.querySelectorAll('.real-time-notification');
-            existing.forEach(n => n.remove());
-            
-            // Add to body
-            document.body.appendChild(notificationDiv);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (notificationDiv.parentNode) {
-                    notificationDiv.style.animation = 'fadeOut 0.3s ease-out';
-                    setTimeout(() => notificationDiv.remove(), 300);
-                }
-            }, 5000);
-            
-            // Close button
-            notificationDiv.querySelector('.close-notification').addEventListener('click', () => {
-                notificationDiv.remove();
-            });
-        }
-
-        function showLiveCounter(count) {
-            let counterDiv = document.getElementById('live-registration-counter');
-            
-            if (!counterDiv) {
-                counterDiv = document.createElement('div');
-                counterDiv.id = 'live-registration-counter';
-                counterDiv.className = 'live-registration-counter';
-                document.body.appendChild(counterDiv);
-            }
-            
-            counterDiv.innerHTML = `
-                <i class="fas fa-users"></i>
-                <span>Today's Registrations: <strong>${count}</strong></span>
-            `;
-        }
-
-        async function updateLiveRegistrationCounter() {
-            if (!appState.supabaseConnected) return;
-            
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const { data, error } = await supabase
-                    .from('attendees')
-                    .select('count')
-                    .gte('registration_date', today);
-                
-                if (!error && data) {
-                    const count = data[0]?.count || 0;
-                    showLiveCounter(count);
-                }
-            } catch (error) {
-                console.error('Error updating live counter:', error);
-            }
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         function showAlert(message, type = 'success') {
+            debugLog(`Alert: ${type} - ${message}`);
+            
             const alertContainer = document.getElementById('alert-container');
             if (alertContainer) {
                 const alertDiv = document.createElement('div');
@@ -3793,19 +3043,9 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             }
         }
 
-        function showSuccessModal(message) {
-            const successModal = document.getElementById('success-modal');
-            const successMessage = document.getElementById('success-message-text');
-            
-            if (successModal && successMessage) {
-                successMessage.textContent = message;
-                successModal.classList.remove('hidden');
-            }
-        }
-
         // ==================== UI UPDATE FUNCTIONS ====================
         function updateAllData() {
-            console.log("Updating all data...");
+            debugLog("Updating all data...");
             loadDataFromLocalStorage();
             updateStats();
             updateDashboard();
@@ -3833,37 +3073,17 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             statDepartments.textContent = totalDepartments;
         }
 
-        function updateServerStats() {
-            const dataStatus = document.getElementById('data-status');
-            if (dataStatus) {
-                const meetingsCount = appState.meetings.length;
-                const attendeesCount = appState.attendees.length;
-                const departmentsCount = appState.departments.length;
-                const adminsCount = appState.admins.length;
-                
-                dataStatus.innerHTML = `
-                    <strong>Local Storage Data:</strong><br>
-                    • Meetings: ${meetingsCount}<br>
-                    • Attendees: ${attendeesCount}<br>
-                    • Departments: ${departmentsCount}<br>
-                    • Admins: ${adminsCount}<br>
-                    <br>
-                    <strong>Last Updated:</strong> ${new Date().toLocaleString()}
-                `;
-            }
-            
-            updateBackupHistory();
-        }
-
-        // ==================== NAVIGATION FUNCTIONS ====================
         function initializeDashboard() {
-            console.log('Initializing dashboard...');
+            debugLog('Initializing dashboard...');
             
-            // Update admin email display
+            // Update admin email
             const adminEmailSpan = document.getElementById('current-admin-email');
             if (adminEmailSpan && appState.currentUser) {
                 adminEmailSpan.textContent = appState.currentUser.email;
             }
+            
+            // Update page title
+            document.getElementById('page-title').textContent = 'Dashboard';
             
             // Update stats
             updateAllData();
@@ -3874,7 +3094,7 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             // Setup modals
             setupModals();
             
-            console.log('Dashboard initialized');
+            debugLog('Dashboard initialized');
         }
 
         function setupNavigation() {
@@ -3884,13 +3104,14 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                 item.addEventListener('click', function() {
                     const pageName = this.getAttribute('data-page');
                     
-                    // Handle logout separately
+                    // Handle logout
                     if (this.id === 'logout-btn') {
                         showConfirmation(
                             'Logout',
                             'Are you sure you want to logout?',
                             function() {
-                                simpleLogout();
+                                localStorage.removeItem('current_admin');
+                                appState.currentUser = null;
                                 document.getElementById('dashboard-page').classList.remove('active');
                                 document.getElementById('login-page').classList.add('active');
                                 showAlert('Logged out successfully', 'success');
@@ -3900,7 +3121,7 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                         return;
                     }
                     
-                    // Update active nav item
+                    // Update active nav
                     navItems.forEach(nav => nav.classList.remove('active'));
                     this.classList.add('active');
                     
@@ -3910,10 +3131,8 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                         pageTitle.textContent = this.querySelector('span').textContent;
                     }
                     
-                    // Show selected page content
-                    const allPages = document.querySelectorAll('.page-content');
-                    allPages.forEach(page => page.classList.add('hidden'));
-                    
+                    // Show selected page
+                    document.querySelectorAll('.page-content').forEach(page => page.classList.add('hidden'));
                     const selectedPage = document.getElementById(pageName + '-content');
                     if (selectedPage) {
                         selectedPage.classList.remove('hidden');
@@ -3926,180 +3145,234 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tabName = this.getAttribute('data-tab');
-                    
-                    // Update active tab button
                     const parent = this.closest('.tab-nav');
+                    
                     parent.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Show selected tab content
                     const tabContents = this.closest('.content-card').querySelectorAll('.tab-content');
                     tabContents.forEach(tc => tc.classList.remove('active'));
                     
                     const selectedTab = document.getElementById(tabName);
-                    if (selectedTab) {
-                        selectedTab.classList.add('active');
-                    }
+                    if (selectedTab) selectedTab.classList.add('active');
                 });
             });
         }
 
         function setupModals() {
-            // Close modal buttons
-            const closeButtons = document.querySelectorAll('.close-modal');
-            closeButtons.forEach(btn => {
+            // Close buttons
+            document.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const modal = this.closest('.modal');
-                    if (modal) {
-                        modal.classList.add('hidden');
-                    }
+                    this.closest('.modal').classList.add('hidden');
                 });
             });
             
-            // Confirmation modal buttons
-            const confirmCancel = document.getElementById('confirm-cancel');
-            const confirmOk = document.getElementById('confirm-ok');
-            const successOk = document.getElementById('success-ok');
-            
-            if (confirmCancel) {
-                confirmCancel.addEventListener('click', function() {
-                    document.getElementById('confirmation-modal').classList.add('hidden');
-                    appState.pendingAction = null;
-                });
-            }
-            
-            if (confirmOk) {
-                confirmOk.addEventListener('click', function() {
-                    document.getElementById('confirmation-modal').classList.add('hidden');
-                    if (appState.pendingAction) {
-                        appState.pendingAction();
-                        appState.pendingAction = null;
-                    }
-                });
-            }
-            
-            if (successOk) {
-                successOk.addEventListener('click', function() {
-                    document.getElementById('success-modal').classList.add('hidden');
-                });
-            }
-            
-            // Close modals when clicking outside
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
+            // Click outside to close
+            document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', function(e) {
                     if (e.target === this) {
                         this.classList.add('hidden');
                     }
                 });
             });
+            
+            // Confirmation modal buttons
+            document.getElementById('confirm-cancel')?.addEventListener('click', function() {
+                document.getElementById('confirmation-modal').classList.add('hidden');
+                appState.pendingAction = null;
+            });
+            
+            document.getElementById('confirm-ok')?.addEventListener('click', function() {
+                document.getElementById('confirmation-modal').classList.add('hidden');
+                if (appState.pendingAction) {
+                    appState.pendingAction();
+                    appState.pendingAction = null;
+                }
+            });
+            
+            document.getElementById('success-ok')?.addEventListener('click', function() {
+                document.getElementById('success-modal').classList.add('hidden');
+            });
         }
 
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            debugLog("Setting up event listeners...");
+            
+            // Initialize Supabase
+            initializeSupabase();
+            
+            // Check for existing session
+            checkExistingSession();
+            
+            // Login form
+            document.getElementById('login-form')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                
+                debugLog(`Login attempt: ${email}`);
+                
+                const result = await simpleLogin(email, password);
+                
+                if (result.success) {
+                    // Success
+                    document.getElementById('login-page').classList.remove('active');
+                    document.getElementById('dashboard-page').classList.add('active');
+                    
+                    // Update admin email
+                    const adminEmailSpan = document.getElementById('current-admin-email');
+                    if (adminEmailSpan) {
+                        adminEmailSpan.textContent = result.user.email;
+                    }
+                    
+                    // Initialize dashboard
+                    initializeDashboard();
+                    
+                    // Try to connect to Supabase
+                    setTimeout(() => {
+                        testSupabaseConnection().then(connected => {
+                            if (connected) {
+                                showAlert('Connected to Supabase!', 'success');
+                            }
+                        });
+                    }, 500);
+                    
+                    showAlert(`Welcome back, ${result.user.name}!`, 'success');
+                } else {
+                    showLoginAlert(result.error || 'Invalid credentials');
+                }
+            });
+            
+            // Connect to Supabase button
+            document.getElementById('connect-server-btn')?.addEventListener('click', async function() {
+                debugLog('Connect button clicked');
+                showAlert('Connecting to Supabase...', 'info');
+                const success = await testSupabaseConnection();
+                if (!success) {
+                    showAlert('Failed to connect. Check debug console for details.', 'error');
+                }
+            });
+            
+            // Sync data button
+            document.getElementById('sync-data-btn')?.addEventListener('click', async function() {
+                if (!appState.supabaseConnected) {
+                    showAlert('Not connected to Supabase. Connect first.', 'error');
+                    return;
+                }
+                showAlert('Syncing data to Supabase...', 'info');
+                // Add sync logic here
+            });
+            
+            // Load from Supabase button
+            document.getElementById('load-from-server-btn')?.addEventListener('click', async function() {
+                if (!appState.supabaseConnected) {
+                    showAlert('Not connected to Supabase. Connect first.', 'error');
+                    return;
+                }
+                showAlert('Loading data from Supabase...', 'info');
+                // Add load logic here
+            });
+            
+            // Create meeting button
+            document.getElementById('create-meeting-btn')?.addEventListener('click', function() {
+                // Navigate to meetings page
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                document.querySelector('.nav-item[data-page="meetings"]').classList.add('active');
+                
+                document.querySelectorAll('.page-content').forEach(page => page.classList.add('hidden'));
+                document.getElementById('meetings-content').classList.remove('hidden');
+                
+                // Switch to create meeting tab
+                document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+                document.querySelector('.tab-btn[data-tab="create-meeting"]').classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById('create-meeting').classList.add('active');
+            });
+            
+            debugLog("Event listeners setup complete");
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog("Bank Meeting System initializing...");
+            
+            // Load data
+            loadDataFromLocalStorage();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Test connection on startup
+            setTimeout(async () => {
+                debugLog("Testing initial Supabase connection...");
+                await testSupabaseConnection();
+            }, 1000);
+            
+            debugLog("System ready");
+        });
+
+        // Add placeholder functions for referenced but not defined functions
         function updateDashboard() {
             // Update recent meetings table
             const recentMeetingsTable = document.getElementById('recent-meetings-table');
-            if (recentMeetingsTable) {
-                const recentMeetings = appState.meetings.slice(0, 5); // Get 5 most recent
-                
+            if (recentMeetingsTable && appState.meetings.length > 0) {
+                const recentMeetings = appState.meetings.slice(0, 5);
                 recentMeetingsTable.innerHTML = recentMeetings.map(meeting => {
                     const attendeeCount = appState.attendees.filter(a => a.meetingId === meeting.id).length;
-                    const maxAttendees = meeting.maxAttendees || 'Unlimited';
-                    
                     return `
                         <tr>
                             <td><strong>${meeting.title}</strong></td>
                             <td>${meeting.date} at ${meeting.time}</td>
                             <td>${meeting.department}</td>
-                            <td>${attendeeCount} / ${maxAttendees}</td>
+                            <td>${attendeeCount}</td>
                             <td><span class="status ${meeting.status}">${meeting.status}</span></td>
                             <td>
-                                <button class="btn btn-sm btn-primary view-meeting-btn" data-id="${meeting.id}">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                                <button class="btn btn-sm btn-primary">View</button>
                             </td>
                         </tr>
                     `;
                 }).join('');
-                
-                // Add event listeners to view buttons
-                document.querySelectorAll('.view-meeting-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const meetingId = parseInt(this.getAttribute('data-id'));
-                        showMeetingDetails(meetingId);
-                    });
-                });
             }
         }
 
         function updateMeetingsPage() {
-            // Update active meetings table
-            const activeMeetingsTable = document.getElementById('active-meetings-table');
-            if (activeMeetingsTable) {
-                const activeMeetings = appState.meetings.filter(m => m.status === 'active');
-                
-                activeMeetingsTable.innerHTML = activeMeetings.map(meeting => {
-                    const attendeeCount = appState.attendees.filter(a => a.meetingId === meeting.id).length;
-                    const maxAttendees = meeting.maxAttendees || 'Unlimited';
-                    
-                    return `
-                        <tr>
-                            <td><strong>${meeting.title}</strong></td>
-                            <td>${meeting.date} at ${meeting.time}</td>
-                            <td>${meeting.department}</td>
-                            <td>${meeting.location}</td>
-                            <td>${attendeeCount} / ${maxAttendees}</td>
-                            <td>
-                                <button class="btn btn-sm btn-warning generate-qr-btn" data-id="${meeting.id}">
-                                    <i class="fas fa-qrcode"></i> QR
-                                </button>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-primary view-meeting-btn-2" data-id="${meeting.id}">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-secondary edit-meeting-btn" data-id="${meeting.id}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger delete-meeting-btn" data-id="${meeting.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-            
-            // Update past meetings table
-            const pastMeetingsTable = document.getElementById('past-meetings-table');
-            if (pastMeetingsTable) {
-                const pastMeetings = appState.meetings.filter(m => m.status !== 'active');
-                
-                pastMeetingsTable.innerHTML = pastMeetings.map(meeting => {
-                    const attendeeCount = appState.attendees.filter(a => a.meetingId === meeting.id).length;
-                    const maxAttendees = meeting.maxAttendees || 'Unlimited';
-                    
-                    return `
-                        <tr>
-                            <td><strong>${meeting.title}</strong></td>
-                            <td>${meeting.date} at ${meeting.time}</td>
-                            <td>${meeting.department}</td>
-                            <td>${meeting.location}</td>
-                            <td>${attendeeCount} / ${maxAttendees}</td>
-                            <td><span class="status ${meeting.status}">${meeting.status}</span></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-            
-            // Update department dropdown in meeting form
-            const meetingDepartmentSelect = document.getElementById('meeting-department');
-            if (meetingDepartmentSelect) {
-                meetingDepartmentSelect.innerHTML = `
+            // Update department dropdown
+            const meetingDeptSelect = document.getElementById('meeting-department');
+            if (meetingDeptSelect) {
+                meetingDeptSelect.innerHTML = `
                     <option value="">Select Department</option>
                     ${appState.departments.map(dept => `
                         <option value="${dept.name}">${dept.name}</option>
                     `).join('')}
                 `;
+            }
+            
+            // Update active meetings table
+            const activeMeetingsTable = document.getElementById('active-meetings-table');
+            if (activeMeetingsTable) {
+                const activeMeetings = appState.meetings.filter(m => m.status === 'active');
+                activeMeetingsTable.innerHTML = activeMeetings.map(meeting => {
+                    const attendeeCount = appState.attendees.filter(a => a.meetingId === meeting.id).length;
+                    return `
+                        <tr>
+                            <td><strong>${meeting.title}</strong></td>
+                            <td>${meeting.date} at ${meeting.time}</td>
+                            <td>${meeting.department}</td>
+                            <td>${meeting.location}</td>
+                            <td>${attendeeCount}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning">QR Code</button>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">View</button>
+                                <button class="btn btn-sm btn-secondary">Edit</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             }
         }
 
@@ -4108,16 +3381,6 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
             const attendeesTable = document.getElementById('attendees-table');
             if (attendeesTable) {
                 attendeesTable.innerHTML = appState.attendees.map(attendee => {
-                    const purposeText = {
-                        'loan_consultation': 'Loan Consultation',
-                        'account_opening': 'Account Opening',
-                        'investment': 'Investment',
-                        'business': 'Business Banking',
-                        'mortgage': 'Mortgage Inquiry',
-                        'credit_card': 'Credit Card Application',
-                        'other': 'Other'
-                    }[attendee.purpose] || attendee.purpose;
-                    
                     return `
                         <tr>
                             <td><strong>${attendee.name}</strong></td>
@@ -4129,37 +3392,11 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                             <td>${attendee.department}</td>
                             <td>${attendee.registrationDate || 'N/A'}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary view-attendee-btn" data-id="${attendee.id}">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger delete-attendee-btn" data-id="${attendee.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <button class="btn btn-sm btn-primary">View</button>
                             </td>
                         </tr>
                     `;
                 }).join('');
-            }
-            
-            // Update meetings summary
-            const meetingsSummary = document.getElementById('meetings-summary');
-            if (meetingsSummary) {
-                const meetingCounts = {};
-                appState.attendees.forEach(attendee => {
-                    const meetingTitle = attendee.meetingTitle;
-                    if (meetingTitle) {
-                        meetingCounts[meetingTitle] = (meetingCounts[meetingTitle] || 0) + 1;
-                    }
-                });
-                
-                meetingsSummary.innerHTML = Object.entries(meetingCounts).map(([meeting, count]) => `
-                    <div class="meeting-summary-card">
-                        <div>
-                            <strong>${meeting}</strong>
-                            <p>${count} attendee(s)</p>
-                        </div>
-                    </div>
-                `).join('');
             }
         }
 
@@ -4170,7 +3407,6 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                 departmentsTable.innerHTML = appState.departments.map(dept => {
                     const meetingCount = appState.meetings.filter(m => m.department === dept.name).length;
                     const attendeeCount = appState.attendees.filter(a => a.department === dept.name).length;
-                    
                     return `
                         <tr>
                             <td><strong>${dept.name}</strong></td>
@@ -4179,12 +3415,7 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                             <td>${meetingCount}</td>
                             <td>${attendeeCount}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary edit-department-btn" data-id="${dept.id}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger delete-department-btn" data-id="${dept.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <button class="btn btn-sm btn-primary">Edit</button>
                             </td>
                         </tr>
                     `;
@@ -4206,700 +3437,32 @@ Title,Department,Date,Time,Location,Duration,Description,Max Attendees,Status
                             <td>${admin.lastLogin || 'Never'}</td>
                             <td><span class="status active">${admin.status}</span></td>
                             <td>
-                                <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <button class="btn btn-sm btn-danger">Delete</button>
                             </td>
                         </tr>
                     `;
                 }).join('');
             }
-            
-            // Update department dropdown in admin form
-            const adminDepartmentSelect = document.getElementById('admin-department');
-            if (adminDepartmentSelect) {
-                adminDepartmentSelect.innerHTML = `
-                    <option value="">Select Department</option>
-                    ${appState.departments.map(dept => `
-                        <option value="${dept.name}">${dept.name}</option>
-                    `).join('')}
+        }
+
+        function updateServerStats() {
+            const dataStatus = document.getElementById('data-status');
+            if (dataStatus) {
+                dataStatus.innerHTML = `
+                    <strong>Local Storage Data:</strong><br>
+                    • Meetings: ${appState.meetings.length}<br>
+                    • Attendees: ${appState.attendees.length}<br>
+                    • Departments: ${appState.departments.length}<br>
+                    • Admins: ${appState.admins.length}<br>
+                    <br>
+                    <strong>Last Updated:</strong> ${new Date().toLocaleString()}
                 `;
             }
         }
 
         function initializeCharts() {
-            try {
-                // Attendance Chart
-                const attendanceCtx = document.getElementById('attendanceChart')?.getContext('2d');
-                if (attendanceCtx && appState.charts.attendance) {
-                    appState.charts.attendance.destroy();
-                }
-                
-                if (attendanceCtx) {
-                    // Group attendees by meeting
-                    const meetingAttendance = {};
-                    appState.attendees.forEach(attendee => {
-                        const meetingTitle = attendee.meetingTitle;
-                        if (meetingTitle) {
-                            meetingAttendance[meetingTitle] = (meetingAttendance[meetingTitle] || 0) + 1;
-                        }
-                    });
-                    
-                    const meetings = Object.keys(meetingAttendance);
-                    const attendanceCounts = Object.values(meetingAttendance);
-                    
-                    appState.charts.attendance = new Chart(attendanceCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: meetings,
-                            datasets: [{
-                                label: 'Number of Attendees',
-                                data: attendanceCounts,
-                                backgroundColor: 'rgba(255, 219, 88, 0.7)',
-                                borderColor: 'rgba(255, 219, 88, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    labels: {
-                                        color: '#fff'
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        color: '#fff'
-                                    },
-                                    grid: {
-                                        color: 'rgba(255, 255, 255, 0.1)'
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        color: '#fff'
-                                    },
-                                    grid: {
-                                        color: 'rgba(255, 255, 255, 0.1)'
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-                
-                // Department Distribution Chart
-                const departmentCtx = document.getElementById('departmentChart')?.getContext('2d');
-                if (departmentCtx && appState.charts.department) {
-                    appState.charts.department.destroy();
-                }
-                
-                if (departmentCtx) {
-                    // Group attendees by department
-                    const departmentCounts = {};
-                    appState.attendees.forEach(attendee => {
-                        const department = attendee.department;
-                        if (department) {
-                            departmentCounts[department] = (departmentCounts[department] || 0) + 1;
-                        }
-                    });
-                    
-                    const departments = Object.keys(departmentCounts);
-                    const counts = Object.values(departmentCounts);
-                    
-                    // Generate colors
-                    const colors = [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ];
-                    
-                    appState.charts.department = new Chart(departmentCtx, {
-                        type: 'pie',
-                        data: {
-                            labels: departments,
-                            datasets: [{
-                                label: 'Attendees by Department',
-                                data: counts,
-                                backgroundColor: colors,
-                                borderColor: colors.map(c => c.replace('0.7', '1')),
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        color: '#fff'
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Error initializing charts:', error);
-            }
-        }
-
-        function showMeetingDetails(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) return;
-            
-            const attendees = appState.attendees.filter(a => a.meetingId === meetingId);
-            const attendeeCount = attendees.length;
-            const maxAttendees = meeting.maxAttendees || 'Unlimited';
-            
-            const modalContent = document.getElementById('meeting-details-content');
-            if (modalContent) {
-                modalContent.innerHTML = `
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: var(--mustard); margin-bottom: 10px;">${meeting.title}</h3>
-                        <p style="color: #ccc;">${meeting.description || 'No description provided.'}</p>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Date</label>
-                            <p style="color: white;">${meeting.date}</p>
-                        </div>
-                        <div class="form-group">
-                            <label>Time</label>
-                            <p style="color: white;">${meeting.time}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Department</label>
-                            <p style="color: white;">${meeting.department}</p>
-                        </div>
-                        <div class="form-group">
-                            <label>Location</label>
-                            <p style="color: white;">${meeting.location}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Duration</label>
-                            <p style="color: white;">${meeting.duration} hour(s)</p>
-                        </div>
-                        <div class="form-group">
-                            <label>Status</label>
-                            <p><span class="status ${meeting.status}">${meeting.status}</span></p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Attendance</label>
-                        <p style="color: white;">${attendeeCount} / ${maxAttendees} attendees</p>
-                    </div>
-                    
-                    ${attendees.length > 0 ? `
-                        <div class="form-group">
-                            <label>Attendee List</label>
-                            <div style="background: var(--light-gray); padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
-                                ${attendees.map(attendee => `
-                                    <div style="padding: 5px 0; border-bottom: 1px solid var(--border-color);">
-                                        <strong>${attendee.name}</strong> - ${attendee.email}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="header-actions" style="margin-top: 20px;">
-                        <button class="btn btn-primary" id="generate-qr-from-details" data-id="${meeting.id}">
-                            <i class="fas fa-qrcode"></i> Generate QR Code
-                        </button>
-                        <button class="btn btn-secondary close-meeting-details">
-                            Close
-                        </button>
-                    </div>
-                `;
-                
-                // Add event listeners
-                const generateQrBtn = document.getElementById('generate-qr-from-details');
-                if (generateQrBtn) {
-                    generateQrBtn.addEventListener('click', function() {
-                        const meetingId = parseInt(this.getAttribute('data-id'));
-                        showQrModal(meetingId);
-                        document.getElementById('meeting-details-modal').classList.add('hidden');
-                    });
-                }
-                
-                const closeBtn = modalContent.querySelector('.close-meeting-details');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', function() {
-                        document.getElementById('meeting-details-modal').classList.add('hidden');
-                    });
-                }
-                
-                // Show modal
-                document.getElementById('meeting-details-modal').classList.remove('hidden');
-            }
-        }
-
-        function showQrModal(meetingId) {
-            const meeting = appState.meetings.find(m => m.id === meetingId);
-            if (!meeting) return;
-            
-            // Update modal content
-            document.getElementById('qr-meeting-title').textContent = meeting.title;
-            document.getElementById('qr-meeting-date').textContent = meeting.date;
-            document.getElementById('qr-meeting-time').textContent = meeting.time;
-            document.getElementById('qr-meeting-location').textContent = meeting.location;
-            
-            // Generate registration URL
-            const registrationUrl = `${window.location.origin}${window.location.pathname}#registration-${meetingId}`;
-            document.getElementById('qr-meeting-link').textContent = registrationUrl;
-            
-            // Generate QR code
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
-            
-            try {
-                new QRCode(qrContainer, {
-                    text: registrationUrl,
-                    width: 200,
-                    height: 200,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            } catch (error) {
-                console.error('Error generating QR code:', error);
-                qrContainer.innerHTML = '<p style="color: red;">Error generating QR code</p>';
-            }
-            
-            // Add event listeners for buttons
-            const downloadQrBtn = document.getElementById('download-qr-btn');
-            if (downloadQrBtn) {
-                downloadQrBtn.onclick = function() {
-                    const canvas = qrContainer.querySelector('canvas');
-                    if (canvas) {
-                        const link = document.createElement('a');
-                        link.download = `qr_${meeting.title.replace(/\s+/g, '_')}.png`;
-                        link.href = canvas.toDataURL();
-                        link.click();
-                    }
-                };
-            }
-            
-            const copyLinkBtn = document.getElementById('copy-link-btn');
-            if (copyLinkBtn) {
-                copyLinkBtn.onclick = function() {
-                    navigator.clipboard.writeText(registrationUrl)
-                        .then(() => showAlert('Link copied to clipboard!', 'success'))
-                        .catch(err => showAlert('Failed to copy link', 'error'));
-                };
-            }
-            
-            // Show modal
-            document.getElementById('qr-modal').classList.remove('hidden');
-        }
-
-        // ==================== EVENT LISTENERS ====================
-        function setupEventListeners() {
-            console.log("Setting up event listeners...");
-            
-            // Initialize Supabase
-            initializeSupabase();
-            
-            // Check for existing session
-            const hasSession = checkExistingSession();
-            
-            // Login form
-            const loginForm = document.getElementById('login-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    const email = document.getElementById('email').value.trim();
-                    const password = document.getElementById('password').value;
-                    
-                    // Use simple login system
-                    const result = await simpleLogin(email, password);
-                    
-                    if (result.success) {
-                        // Login successful
-                        document.getElementById('login-page').classList.remove('active');
-                        document.getElementById('dashboard-page').classList.add('active');
-                        
-                        // Update admin email display
-                        const adminEmailSpan = document.getElementById('current-admin-email');
-                        if (adminEmailSpan) {
-                            adminEmailSpan.textContent = result.user.email;
-                        }
-                        
-                        // Initialize dashboard
-                        initializeDashboard();
-                        
-                        // Try to connect to Supabase in background
-                        testSupabaseConnection().then(connected => {
-                            if (connected) {
-                                initializeRealtimeUpdates();
-                                showAlert('Connected to Supabase!', 'success');
-                            }
-                        });
-                        
-                        showAlert(`Welcome back, ${result.user.name}!`, 'success');
-                    } else {
-                        // Login failed
-                        showLoginAlert(result.error || 'Invalid credentials');
-                    }
-                });
-            }
-            
-            // Connect to Supabase button
-            const connectBtn = document.getElementById('connect-server-btn');
-            if (connectBtn) {
-                connectBtn.addEventListener('click', async function() {
-                    const success = await testSupabaseConnection();
-                    if (success) {
-                        showAlert('Connected to Supabase successfully!', 'success');
-                        initializeRealtimeUpdates();
-                    } else {
-                        showAlert('Failed to connect to Supabase', 'error');
-                    }
-                });
-            }
-            
-            // Sync to Supabase button
-            const syncBtn = document.getElementById('sync-data-btn');
-            if (syncBtn) {
-                syncBtn.addEventListener('click', async function() {
-                    await syncAllToSupabase();
-                });
-            }
-            
-            // Load from Supabase button
-            const loadBtn = document.getElementById('load-from-server-btn');
-            if (loadBtn) {
-                loadBtn.addEventListener('click', async function() {
-                    await loadAllFromSupabase();
-                });
-            }
-            
-            // Backup now button
-            const backupBtn = document.getElementById('backup-now-btn');
-            if (backupBtn) {
-                backupBtn.addEventListener('click', async function() {
-                    await backupToSupabaseStorage();
-                });
-            }
-            
-            // CSV import button
-            const importCsvBtn = document.getElementById('import-csv-btn');
-            const csvUpload = document.getElementById('csv-upload');
-            const csvImportSection = document.getElementById('csv-import-section');
-            const confirmCsvUpload = document.getElementById('confirm-csv-upload');
-            const cancelCsvUpload = document.getElementById('cancel-csv-upload');
-            
-            if (importCsvBtn) {
-                importCsvBtn.addEventListener('click', function() {
-                    csvImportSection.classList.toggle('hidden');
-                });
-            }
-            
-            if (csvUpload) {
-                csvUpload.addEventListener('change', async function(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const tableSelect = document.getElementById('csv-table-select');
-                    const backupSelect = document.getElementById('csv-backup-first');
-                    const tableName = tableSelect ? tableSelect.value : 'attendees';
-                    const backupFirst = backupSelect ? backupSelect.value === 'yes' : true;
-                    
-                    if (backupFirst) {
-                        await backupToSupabaseStorage();
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = async function(event) {
-                        const csvText = event.target.result;
-                        const result = await importCSVToSupabase(csvText, tableName);
-                        
-                        if (result.success) {
-                            showAlert(`Successfully imported ${result.count} records from CSV`, 'success');
-                            await loadAllFromSupabase();
-                            csvImportSection.classList.add('hidden');
-                            csvUpload.value = '';
-                        } else {
-                            showAlert(`Import failed: ${result.error}`, 'error');
-                        }
-                    };
-                    reader.readAsText(file);
-                });
-            }
-            
-            if (confirmCsvUpload) {
-                confirmCsvUpload.addEventListener('click', function() {
-                    csvUpload.click();
-                });
-            }
-            
-            if (cancelCsvUpload) {
-                cancelCsvUpload.addEventListener('click', function() {
-                    csvImportSection.classList.add('hidden');
-                    csvUpload.value = '';
-                });
-            }
-            
-            // Export buttons
-            const exportAllCsvBtn = document.getElementById('export-all-csv');
-            if (exportAllCsvBtn) {
-                exportAllCsvBtn.addEventListener('click', exportAllAttendeesCSV);
-            }
-            
-            const exportMeetingsCsvBtn = document.getElementById('export-meetings-csv');
-            if (exportMeetingsCsvBtn) {
-                exportMeetingsCsvBtn.addEventListener('click', function() {
-                    exportSupabaseToCSV('meetings', 'meetings');
-                });
-            }
-            
-            const exportAttendeesBtn = document.getElementById('export-server-attendees-2');
-            if (exportAttendeesBtn) {
-                exportAttendeesBtn.addEventListener('click', function() {
-                    exportSupabaseToCSV('attendees', 'attendees');
-                });
-            }
-            
-            // Backup to JSON button
-            const backupJsonBtn = document.getElementById('backup-json');
-            if (backupJsonBtn) {
-                backupJsonBtn.addEventListener('click', function() {
-                    const data = {
-                        backupDate: new Date().toISOString(),
-                        version: '1.0',
-                        meetings: JSON.parse(localStorage.getItem('bankMeetingMeetings') || '[]'),
-                        attendees: JSON.parse(localStorage.getItem('bankMeetingAttendees') || '[]'),
-                        departments: JSON.parse(localStorage.getItem('bankMeetingDepartments') || '[]'),
-                        admins: JSON.parse(localStorage.getItem('bankMeetingAdmins') || '[]')
-                    };
-                    
-                    const jsonString = JSON.stringify(data, null, 2);
-                    const blob = new Blob([jsonString], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    
-                    link.href = url;
-                    link.download = `bank_meeting_backup_${new Date().toISOString().split('T')[0]}.json`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    setTimeout(() => URL.revokeObjectURL(url), 100);
-                    showAlert('All data backed up to JSON file!', 'success');
-                });
-            }
-            
-            // Backup to Supabase Storage button
-            const backupServerBtn = document.getElementById('backup-server');
-            if (backupServerBtn) {
-                backupServerBtn.addEventListener('click', async function() {
-                    await backupToSupabaseStorage();
-                });
-            }
-            
-            // Sync all data button
-            const syncAllBtn = document.getElementById('sync-all-data');
-            if (syncAllBtn) {
-                syncAllBtn.addEventListener('click', async function() {
-                    await syncAllToSupabase();
-                });
-            }
-            
-            // Load all from Supabase button
-            const loadAllBtn = document.getElementById('load-all-server');
-            if (loadAllBtn) {
-                loadAllBtn.addEventListener('click', async function() {
-                    await loadAllFromSupabase();
-                });
-            }
-            
-            // Clear local data button
-            const clearLocalBtn = document.getElementById('clear-local-data');
-            if (clearLocalBtn) {
-                clearLocalBtn.addEventListener('click', function() {
-                    showConfirmation(
-                        'Clear Local Data',
-                        'Are you sure you want to clear ALL local data? This cannot be undone!',
-                        function() {
-                            localStorage.clear();
-                            location.reload();
-                        },
-                        'danger'
-                    );
-                });
-            }
-            
-            // Auto-sync and auto-backup selectors
-            const autoSyncSelect = document.getElementById('auto-sync');
-            const autoBackupSelect = document.getElementById('auto-backup-select');
-            
-            if (autoSyncSelect) {
-                autoSyncSelect.addEventListener('change', function() {
-                    const minutes = parseInt(this.value);
-                    setupAutoSync(minutes);
-                });
-            }
-            
-            if (autoBackupSelect) {
-                autoBackupSelect.addEventListener('change', function() {
-                    const minutes = parseInt(this.value);
-                    setupAutoBackup(minutes);
-                });
-            }
-            
-            // Initialize with saved values
-            const savedAutoSync = localStorage.getItem('auto_sync') || 'off';
-            const savedAutoBackup = localStorage.getItem('auto_backup') || '0';
-            
-            if (autoSyncSelect) autoSyncSelect.value = savedAutoSync;
-            if (autoBackupSelect) autoBackupSelect.value = savedAutoBackup;
-            
-            setupAutoSync(savedAutoSync === 'off' ? 0 : parseInt(savedAutoSync));
-            setupAutoBackup(parseInt(savedAutoBackup));
-           
-        }
-
-        // ==================== AUTO SYNC & BACKUP ====================
-        function setupAutoSync(intervalMinutes) {
-            if (autoSyncInterval) {
-                clearInterval(autoSyncInterval);
-                autoSyncInterval = null;
-            }
-            
-            if (intervalMinutes > 0) {
-                const intervalMs = intervalMinutes * 60 * 1000;
-                autoSyncInterval = setInterval(async () => {
-                    if (appState.currentUser && appState.supabaseConnected) {
-                        console.log(`Auto-sync running at ${new Date().toLocaleString()}`);
-                        await syncAllToSupabase();
-                    }
-                }, intervalMs);
-                
-                localStorage.setItem('auto_sync', intervalMinutes.toString());
-                console.log(`Auto-sync set to run every ${intervalMinutes} minutes`);
-            } else {
-                localStorage.setItem('auto_sync', 'off');
-            }
-        }
-
-        function setupAutoBackup(intervalMinutes) {
-            if (autoBackupInterval) {
-                clearInterval(autoBackupInterval);
-                autoBackupInterval = null;
-            }
-            
-            if (intervalMinutes > 0) {
-                const intervalMs = intervalMinutes * 60 * 1000;
-                autoBackupInterval = setInterval(async () => {
-                    if (appState.currentUser && appState.supabaseConnected) {
-                        console.log(`Auto-backup running at ${new Date().toLocaleString()}`);
-                        await backupToSupabaseStorage();
-                    }
-                }, intervalMs);
-                
-                localStorage.setItem('auto_backup', intervalMinutes.toString());
-                console.log(`Auto-backup set to run every ${intervalMinutes} minutes`);
-            } else {
-                localStorage.setItem('auto_backup', '0');
-            }
-        }
-
-        // ==================== INITIALIZATION ====================
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log("Bank Meeting System initialized with Supabase integration");
-            
-            // Load data from localStorage
-            loadDataFromLocalStorage();
-            
-            // Initialize confirmation modal
-            initializeConfirmationModal();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Check for registration in URL hash
-            const hash = window.location.hash;
-            if (hash && hash.startsWith('#registration-')) {
-                const meetingId = parseInt(hash.replace('#registration-', ''));
-                if (meetingId && !isNaN(meetingId)) {
-                    document.getElementById('login-page').classList.remove('active');
-                    document.getElementById('dashboard-page').classList.remove('active');
-                    document.getElementById('registration-portal').style.display = 'block';
-                    document.getElementById('registration-portal').classList.add('active');
-                    // You would need to implement showRegistrationForm function
-                }
-            }
-            
-            // Check URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('registration') === 'true') {
-                const meetingId = parseInt(urlParams.get('meeting'));
-                if (meetingId) {
-                    document.getElementById('login-page').classList.remove('active');
-                    document.getElementById('dashboard-page').classList.remove('active');
-                    document.getElementById('registration-portal').style.display = 'block';
-                    document.getElementById('registration-portal').classList.add('active');
-                    // You would need to implement showRegistrationForm function
-                }
-            }
-            
-            // Test Supabase connection on startup
-            await testSupabaseConnection();
-            
-            // Initialize charts when page is fully loaded
-            setTimeout(() => {
-                if (appState.currentUser) {
-                    initializeCharts();
-                }
-            }, 100);
-        });
-
-        function initializeConfirmationModal() {
-            const confirmCancel = document.getElementById('confirm-cancel');
-            const confirmOk = document.getElementById('confirm-ok');
-            const successOk = document.getElementById('success-ok');
-            
-            if (confirmCancel) {
-                confirmCancel.addEventListener('click', function() {
-                    document.getElementById('confirmation-modal').classList.add('hidden');
-                    appState.pendingAction = null;
-                });
-            }
-            
-            if (confirmOk) {
-                confirmOk.addEventListener('click', function() {
-                    document.getElementById('confirmation-modal').classList.add('hidden');
-                    if (appState.pendingAction) {
-                        appState.pendingAction();
-                        appState.pendingAction = null;
-                    }
-                });
-            }
-            
-            if (successOk) {
-                successOk.addEventListener('click', function() {
-                    document.getElementById('success-modal').classList.add('hidden');
-                });
-            }
+            debugLog('Initializing charts...');
+            // Chart initialization logic would go here
         }
     </script>
 </body>
